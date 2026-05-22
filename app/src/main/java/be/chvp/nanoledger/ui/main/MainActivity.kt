@@ -62,19 +62,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import be.chvp.nanoledger.R
+import be.chvp.nanoledger.data.Amount
+import be.chvp.nanoledger.data.Posting
+import be.chvp.nanoledger.data.Transaction
 import be.chvp.nanoledger.ui.add.AddActivity
 import be.chvp.nanoledger.ui.common.TRANSACTION_INDEX_KEY
 import be.chvp.nanoledger.ui.edit.EditActivity
 import be.chvp.nanoledger.ui.preferences.PreferencesActivity
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
-import be.chvp.nanoledger.data.Transaction
-import be.chvp.nanoledger.data.Posting
-import be.chvp.nanoledger.data.Amount
-import androidx.compose.ui.tooling.preview.Preview
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
