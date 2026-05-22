@@ -1,6 +1,7 @@
 package be.chvp.nanoledger.ui.main
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -76,6 +77,7 @@ import be.chvp.nanoledger.ui.edit.EditActivity
 import be.chvp.nanoledger.ui.preferences.PreferencesActivity
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.core.net.toUri
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -86,8 +88,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
-            val searching by mainViewModel.searching.observeAsState()
-            val selected by mainViewModel.selectedIndex.observeAsState()
 
             val latestReadError by mainViewModel.latestReadError.observeAsState()
             val readErrorMessage = stringResource(R.string.error_reading_file)
@@ -138,102 +138,162 @@ class MainActivity : ComponentActivity() {
                 mainViewModel.refresh()
             }
 
-            var fabHeight by remember { mutableIntStateOf(0) }
-            val fabOffsetDp = with(LocalDensity.current) { fabHeight.toDp() + 16.dp }
-
             NanoLedgerTheme {
-                Scaffold(
-                    topBar = {
-                        if (selected != null) {
-                            SelectionBar()
-                        } else if (searching ?: false) {
-                            SearchBar()
-                        } else {
-                            MainBar()
-                        }
+                MainScreen(
+                    onAddClick = {
+                        startActivity(Intent(this, AddActivity::class.java))
                     },
-                    floatingActionButton = {
-                        if (fileUri != null) {
-                            FloatingActionButton(
-                                onClick = {
-                                    startActivity(
-                                        Intent(this, AddActivity::class.java),
-                                    )
-                                },
-                                modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
-                            ) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = stringResource(R.string.add),
-                                )
-                            }
-                        }
+                    onSettingsClick = {
+                        startActivity(Intent(this, PreferencesActivity::class.java))
                     },
-                    modifier = Modifier.imePadding(),
-                ) { contentPadding ->
-                    if (fileUri != null) {
-                        MainContent(contentPadding, fabOffsetDp)
-                    } else {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(contentPadding),
-                            verticalArrangement = Arrangement.Center,
-                        ) {
-                            Text(
-                                stringResource(R.string.no_file_yet),
-                                style = MaterialTheme.typography.headlineLarge,
-                                textAlign = TextAlign.Center,
-                                modifier =
-                                    Modifier.align(Alignment.CenterHorizontally).padding(
-                                        horizontal = 16.dp,
-                                    ),
-                            )
-                            Text(
-                                stringResource(R.string.go_to_settings),
-                                style =
-                                    MaterialTheme.typography.headlineLarge.copy(
-                                        textDecoration = TextDecoration.Underline,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    ),
-                                textAlign = TextAlign.Center,
-                                modifier =
-                                    Modifier
-                                        .align(Alignment.CenterHorizontally)
-                                        .padding(
-                                            horizontal = 16.dp,
-                                        ).clickable {
-                                            startActivity(
-                                                Intent(this@MainActivity, PreferencesActivity::class.java),
-                                            )
-                                        },
-                            )
-                        }
-                    }
-                }
+                    onCopyClick = { index ->
+                        val intent = Intent(this, AddActivity::class.java)
+                        intent.putExtra(TRANSACTION_INDEX_KEY, index)
+                        mainViewModel.toggleSelect(index)
+                        startActivity(intent)
+                    },
+                    onEditClick = { index ->
+                        val intent = Intent(this, EditActivity::class.java)
+                        intent.putExtra(TRANSACTION_INDEX_KEY, index)
+                        mainViewModel.toggleSelect(index)
+                        startActivity(intent)
+                    },
+                )
             }
         }
     }
 }
 
 @Composable
-fun MainContent(
-    contentPadding: PaddingValues,
-    bottomOffset: Dp,
+fun MainScreen(
     mainViewModel: MainViewModel = viewModel(),
+    onAddClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onCopyClick: (Int) -> Unit,
+    onEditClick: (Int) -> Unit,
 ) {
+    val fileUri by mainViewModel.fileUri.observeAsState()
     val transactions by mainViewModel.filteredTransactions.observeAsState()
+    val searching by mainViewModel.searching.observeAsState()
     val query by mainViewModel.query.observeAsState()
     val isRefreshing by mainViewModel.isRefreshing.observeAsState()
     val selected by mainViewModel.selectedIndex.observeAsState()
-    MainContent(
+
+    MainScreen(
+        fileUri = fileUri,
         transactions = transactions,
+        searching = searching ?: false,
         query = query ?: "",
         isRefreshing = isRefreshing ?: false,
         selected = selected,
         onRefresh = { mainViewModel.refresh() },
         onToggleSelect = { mainViewModel.toggleSelect(it) },
-        contentPadding = contentPadding,
-        bottomOffset = bottomOffset,
+        onSearchClick = { mainViewModel.setSearching(true) },
+        onSettingsClick = onSettingsClick,
+        onStopSearching = {
+            mainViewModel.setSearching(false)
+            mainViewModel.setQuery("")
+        },
+        onQueryChange = { mainViewModel.setQuery(it) },
+        onStopSelection = { selected?.let { mainViewModel.toggleSelect(it) } },
+        onCopyClick = { selected?.let { onCopyClick(it) } },
+        onEditClick = { selected?.let { onEditClick(it) } },
+        onDeleteClick = { mainViewModel.deleteSelected() },
+        onAddClick = onAddClick,
     )
+}
+
+@Composable
+fun MainScreen(
+    fileUri: Uri?,
+    transactions: List<Pair<Int, Transaction>>?,
+    searching: Boolean,
+    query: String,
+    isRefreshing: Boolean,
+    selected: Int?,
+    onRefresh: () -> Unit,
+    onToggleSelect: (Int) -> Unit,
+    onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onStopSearching: () -> Unit,
+    onQueryChange: (String) -> Unit,
+    onStopSelection: () -> Unit,
+    onCopyClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onAddClick: () -> Unit,
+) {
+    var fabHeight by remember { mutableIntStateOf(0) }
+    val fabOffsetDp = with(LocalDensity.current) { fabHeight.toDp() + 16.dp }
+
+    Scaffold(
+        topBar = {
+            if (selected != null) {
+                SelectionBar(onStopSelection, onCopyClick, onEditClick, onDeleteClick)
+            } else if (searching) {
+                SearchBar(query, onQueryChange, onStopSearching)
+            } else {
+                MainBar(onSearchClick, onSettingsClick)
+            }
+        },
+        floatingActionButton = {
+            if (fileUri != null) {
+                FloatingActionButton(
+                    onClick = onAddClick,
+                    modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add),
+                    )
+                }
+            }
+        },
+        modifier = Modifier.imePadding(),
+    ) { contentPadding ->
+        if (fileUri != null) {
+            MainContent(
+                transactions = transactions,
+                query = query,
+                isRefreshing = isRefreshing,
+                selected = selected,
+                onRefresh = onRefresh,
+                onToggleSelect = onToggleSelect,
+                contentPadding = contentPadding,
+                bottomOffset = fabOffsetDp,
+            )
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(contentPadding),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    stringResource(R.string.no_file_yet),
+                    style = MaterialTheme.typography.headlineLarge,
+                    textAlign = TextAlign.Center,
+                    modifier =
+                        Modifier.align(Alignment.CenterHorizontally).padding(
+                            horizontal = 16.dp,
+                        ),
+                )
+                Text(
+                    stringResource(R.string.go_to_settings),
+                    style =
+                        MaterialTheme.typography.headlineLarge.copy(
+                            textDecoration = TextDecoration.Underline,
+                            color = MaterialTheme.colorScheme.primary,
+                        ),
+                    textAlign = TextAlign.Center,
+                    modifier =
+                        Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(
+                                horizontal = 16.dp,
+                            ).clickable { onSettingsClick() },
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -318,18 +378,16 @@ fun MainContent(
     }
 }
 
+
 @Composable
-fun MainBar(mainViewModel: MainViewModel = viewModel()) {
-    val context = LocalContext.current
+fun MainBar(onSearchClick: () -> Unit, onSettingsClick: () -> Unit) {
     TopAppBar(
         title = { Text(stringResource(R.string.app_name)) },
         actions = {
-            IconButton(onClick = { mainViewModel.setSearching(true) }) {
+            IconButton(onClick = onSearchClick) {
                 Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.search))
             }
-            IconButton(onClick = {
-                context.startActivity(Intent(context, PreferencesActivity::class.java))
-            }) {
+            IconButton(onClick = onSettingsClick) {
                 Icon(
                     Icons.Default.Settings,
                     contentDescription = stringResource(R.string.settings),
@@ -345,16 +403,18 @@ fun MainBar(mainViewModel: MainViewModel = viewModel()) {
     )
 }
 
+
 @Composable
-fun SelectionBar(mainViewModel: MainViewModel = viewModel()) {
-    val context = LocalContext.current
-    val selected by mainViewModel.selectedIndex.observeAsState()
+fun SelectionBar(
+    onStopSelection: () -> Unit,
+    onCopyClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
     TopAppBar(
         navigationIcon = {
             IconButton(
-                onClick = {
-                    mainViewModel.toggleSelect(selected!!)
-                },
+                onClick = onStopSelection,
                 modifier = Modifier.padding(start = 8.dp),
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.stop_selection))
@@ -362,23 +422,13 @@ fun SelectionBar(mainViewModel: MainViewModel = viewModel()) {
         },
         title = { },
         actions = {
-            IconButton(onClick = {
-                val intent = Intent(context, AddActivity::class.java)
-                intent.putExtra(TRANSACTION_INDEX_KEY, selected!!)
-                mainViewModel.toggleSelect(selected!!)
-                context.startActivity(intent)
-            }) {
+            IconButton(onClick = onCopyClick) {
                 Icon(painterResource(R.drawable.baseline_difference_24), contentDescription = stringResource(R.string.copy_and_edit))
             }
-            IconButton(onClick = {
-                val intent = Intent(context, EditActivity::class.java)
-                intent.putExtra(TRANSACTION_INDEX_KEY, selected!!)
-                mainViewModel.toggleSelect(selected!!)
-                context.startActivity(intent)
-            }) {
+            IconButton(onClick = onEditClick) {
                 Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit))
             }
-            IconButton(onClick = { mainViewModel.deleteSelected() }) {
+            IconButton(onClick = onDeleteClick) {
                 Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
             }
         },
@@ -392,22 +442,23 @@ fun SelectionBar(mainViewModel: MainViewModel = viewModel()) {
     )
 
     BackHandler {
-        mainViewModel.toggleSelect(selected!!)
+        onStopSelection()
     }
 }
 
+
 @Composable
-fun SearchBar(mainViewModel: MainViewModel = viewModel()) {
+fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onStopSearching: () -> Unit,
+) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
-    val query by mainViewModel.query.observeAsState()
     TopAppBar(
         navigationIcon = {
             IconButton(
-                onClick = {
-                    mainViewModel.setSearching(false)
-                    mainViewModel.setQuery("")
-                },
+                onClick = onStopSearching,
                 modifier = Modifier.padding(start = 8.dp),
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.stop_searching))
@@ -415,8 +466,8 @@ fun SearchBar(mainViewModel: MainViewModel = viewModel()) {
         },
         title = {
             TextField(
-                query ?: "",
-                { mainViewModel.setQuery(it) },
+                query,
+                onQueryChange,
                 singleLine = true,
                 placeholder = {
                     Text(
@@ -458,8 +509,60 @@ fun SearchBar(mainViewModel: MainViewModel = viewModel()) {
         focusRequester.requestFocus()
     }
     BackHandler {
-        mainViewModel.setSearching(false)
-        mainViewModel.setQuery("")
+        onStopSearching()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenPreview() {
+    NanoLedgerTheme {
+        MainScreen(
+            fileUri = "content://test".toUri(),
+            transactions = listOf(
+                0 to Transaction(
+                    firstLine = 0,
+                    lastLine = 2,
+                    date = "2023-08-31",
+                    status = "*",
+                    code = null,
+                    payee = "Payee",
+                    note = "Note",
+                    postings = listOf(
+                        Posting("assets", Amount("-5.00", "€", "€ -5.00"), null, null, null, null),
+                        Posting("expenses", Amount("5.00", "€", "€ 5.00"), null, null, null, null)
+                    )
+                ),
+                1 to Transaction(
+                    firstLine = 3,
+                    lastLine = 5,
+                    date = "2023-09-01",
+                    status = "!",
+                    code = "123",
+                    payee = "Another Payee",
+                    note = null,
+                    postings = listOf(
+                        Posting("assets", Amount("-10.00", "€", "€ -10.00"), null, null, null, null),
+                        Posting("expenses", Amount("10.00", "€", "€ 10.00"), null, null, null, null)
+                    )
+                )
+            ),
+            searching = false,
+            query = "",
+            isRefreshing = false,
+            selected = null,
+            onRefresh = {},
+            onToggleSelect = {},
+            onSearchClick = {},
+            onSettingsClick = {},
+            onStopSearching = {},
+            onQueryChange = {},
+            onStopSelection = {},
+            onCopyClick = {},
+            onEditClick = {},
+            onDeleteClick = {},
+            onAddClick = {},
+        )
     }
 }
 
