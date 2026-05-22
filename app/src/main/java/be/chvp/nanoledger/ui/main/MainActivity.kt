@@ -71,6 +71,10 @@ import be.chvp.nanoledger.ui.common.TRANSACTION_INDEX_KEY
 import be.chvp.nanoledger.ui.edit.EditActivity
 import be.chvp.nanoledger.ui.preferences.PreferencesActivity
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
+import be.chvp.nanoledger.data.Transaction
+import be.chvp.nanoledger.data.Posting
+import be.chvp.nanoledger.data.Amount
+import androidx.compose.ui.tooling.preview.Preview
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -216,28 +220,54 @@ fun MainContent(
     bottomOffset: Dp,
     mainViewModel: MainViewModel = viewModel(),
 ) {
-    val context = LocalContext.current
     val transactions by mainViewModel.filteredTransactions.observeAsState()
     val query by mainViewModel.query.observeAsState()
     val isRefreshing by mainViewModel.isRefreshing.observeAsState()
     val selected by mainViewModel.selectedIndex.observeAsState()
-    PullToRefreshBox(isRefreshing = (isRefreshing ?: false), onRefresh = {
-        mainViewModel.refresh()
-    }, contentAlignment = Alignment.TopCenter, modifier = Modifier.padding(contentPadding)) {
-        if ((transactions?.size ?: 0) > 0 || (isRefreshing ?: true)) {
+    MainContent(
+        transactions = transactions,
+        query = query ?: "",
+        isRefreshing = isRefreshing ?: false,
+        selected = selected,
+        onRefresh = { mainViewModel.refresh() },
+        onToggleSelect = { mainViewModel.toggleSelect(it) },
+        contentPadding = contentPadding,
+        bottomOffset = bottomOffset,
+    )
+}
+
+@Composable
+fun MainContent(
+    transactions: List<Pair<Int, Transaction>>?,
+    query: String,
+    isRefreshing: Boolean,
+    selected: Int?,
+    onRefresh: () -> Unit,
+    onToggleSelect: (Int) -> Unit,
+    contentPadding: PaddingValues,
+    bottomOffset: Dp,
+) {
+    val context = LocalContext.current
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        contentAlignment = Alignment.TopCenter,
+        modifier = Modifier.padding(contentPadding),
+    ) {
+        if (transactions != null && (transactions.isNotEmpty() || isRefreshing)) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(transactions?.size ?: 0) {
-                    val index = transactions!!.size - it - 1
-                    val (originalIndex, transaction) = transactions!![index]
+                items(transactions.size) {
+                    val index = transactions.size - it - 1
+                    val (originalIndex, transaction) = transactions[index]
                     TransactionCard(
                         transaction,
                         originalIndex == selected,
-                        { mainViewModel.toggleSelect(originalIndex) },
+                        { onToggleSelect(originalIndex) },
                         Modifier.fillMaxWidth().padding(
                             8.dp,
                             if (it == 0) 8.dp else 4.dp,
                             8.dp,
-                            if (it == transactions!!.size - 1) 8.dp else 4.dp,
+                            if (it == transactions.size - 1) 8.dp else 4.dp,
                         ),
                     )
                 }
@@ -252,7 +282,7 @@ fun MainContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 item {
-                    if (query.equals("")) {
+                    if (query == "") {
                         Text(
                             stringResource(R.string.no_transactions_yet),
                             style = MaterialTheme.typography.headlineLarge,
@@ -430,5 +460,49 @@ fun SearchBar(mainViewModel: MainViewModel = viewModel()) {
     BackHandler {
         mainViewModel.setSearching(false)
         mainViewModel.setQuery("")
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainContentPreview() {
+    NanoLedgerTheme {
+        MainContent(
+            transactions = listOf(
+                0 to Transaction(
+                    firstLine = 0,
+                    lastLine = 2,
+                    date = "2023-08-31",
+                    status = "*",
+                    code = null,
+                    payee = "Payee",
+                    note = "Note",
+                    postings = listOf(
+                        Posting("assets", Amount("-5.00", "€", "€ -5.00"), null, null, null, null),
+                        Posting("expenses", Amount("5.00", "€", "€ 5.00"), null, null, null, null)
+                    )
+                ),
+                1 to Transaction(
+                    firstLine = 3,
+                    lastLine = 5,
+                    date = "2023-09-01",
+                    status = "!",
+                    code = "123",
+                    payee = "Another Payee",
+                    note = null,
+                    postings = listOf(
+                        Posting("assets", Amount("-10.00", "€", "€ -10.00"), null, null, null, null),
+                        Posting("expenses", Amount("10.00", "€", "€ 10.00"), null, null, null, null)
+                    )
+                )
+            ),
+            query = "",
+            isRefreshing = false,
+            selected = null,
+            onRefresh = {},
+            onToggleSelect = {},
+            contentPadding = PaddingValues(0.dp),
+            bottomOffset = 0.dp
+        )
     }
 }

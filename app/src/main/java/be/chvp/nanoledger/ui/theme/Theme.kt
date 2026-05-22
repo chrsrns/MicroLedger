@@ -46,8 +46,9 @@ fun NanoLedgerTheme(
 
     val view = LocalView.current
     SideEffect {
-        val window = (view.context as Activity).window
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+        (view.context as? Activity)?.window?.let { window ->
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+        }
     }
 
     MaterialTheme(
