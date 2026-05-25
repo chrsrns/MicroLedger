@@ -101,6 +101,81 @@ data class Posting(
         return result.trimEnd()
     }
 
+    /**
+     * Formats this posting with support for currency-only amounts (no quantity).
+     *
+     * Unlike [format], this lenient version will output amounts that have a
+     * currency but no quantity. This is useful for template postings where
+     * only the currency is specified (e.g., "Expenses:Misc  EUR").
+     *
+     * Uses [Amount.formatLenient] for amount and assertion formatting to
+     * preserve currency-only values during serialization.
+     *
+     * @param width The desired width for alignment (minimum 2 spaces between account and amount)
+     * @param currencyBeforeAmount If true, currency appears before quantity
+     * @param currencyAmountSpacing If true, adds a space between currency and quantity
+     * @param currencyEnabled If false, returns only quantities (or empty amounts)
+     * @return Formatted posting line with 4-space indentation
+     */
+    fun formatLenient(
+        width: Int,
+        currencyBeforeAmount: Boolean,
+        currencyAmountSpacing: Boolean,
+        currencyEnabled: Boolean,
+    ): String {
+        var fullAmountString = ""
+        // Support amount with quantity, currency-only, or both
+        if ((amount?.quantity ?: "") != "" || (amount?.currency ?: "") != "") {
+            fullAmountString +=
+                amount!!.formatLenient(
+                    currencyBeforeAmount,
+                    currencyAmountSpacing,
+                    currencyEnabled,
+                )
+        }
+        if ((cost?.amount?.quantity ?: "") != "" || (cost?.amount?.currency ?: "") != "") {
+            fullAmountString += ' ' +
+                    cost!!.format(
+                        currencyBeforeAmount,
+                        currencyAmountSpacing,
+                        currencyEnabled,
+                    )
+        }
+        if ((assertion?.quantity ?: "") != "" || (assertion?.currency ?: "") != "") {
+            fullAmountString += " = " +
+                    assertion!!.formatLenient(
+                        currencyBeforeAmount,
+                        currencyAmountSpacing,
+                        currencyEnabled,
+                    )
+        }
+        if ((assertionCost?.amount?.quantity ?: "") != "" ||
+            (
+                    assertionCost?.amount?.currency
+                        ?: ""
+                    ) != ""
+        ) {
+            fullAmountString += ' ' +
+                    assertionCost!!.format(
+                        currencyBeforeAmount,
+                        currencyAmountSpacing,
+                        currencyEnabled,
+                    )
+        }
+        fullAmountString = fullAmountString.trim()
+        val fillWidth =
+            (width - fullAmountString.length - (account ?: "").length - 4).coerceAtLeast(2)
+        val spaces = " ".repeat(fillWidth)
+        if (isComment()) {
+            return "    ; $comment"
+        }
+        var result = "    ${account ?: ""}$spaces$fullAmountString"
+        if ((comment ?: "") != "") {
+            result += "  ; $comment"
+        }
+        return result.trimEnd()
+    }
+
     fun isEmpty(): Boolean {
         if ((account ?: "") != "") {
             return false
