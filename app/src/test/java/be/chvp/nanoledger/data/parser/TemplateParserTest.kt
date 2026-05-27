@@ -1,7 +1,7 @@
 package be.chvp.nanoledger.data.parser
 
 import be.chvp.nanoledger.data.TransactionTemplate
-import be.chvp.nanoledger.data.parser.TemplateParser.parseTemplates
+import be.chvp.nanoledger.data.parser.TemplateParser.extractTemplates
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -19,7 +19,7 @@ class TemplateParserTest {
                 |; account: Expenses:Food:Groceries  USD 100.56
                 |; template-end
             """.trimMargin()
-        val result = parseTemplates(fileContent)
+        val result = extractTemplates(fileContent.split('\n'))
 
         assertEquals(1, result.size)
         val template: TransactionTemplate = result[0]
@@ -51,7 +51,7 @@ class TemplateParserTest {
                 |; account: Expenses:Misc  EUR
                 |; template-end
             """.trimMargin()
-        val result = parseTemplates(fileContent)
+        val result = extractTemplates(fileContent.split('\n'))
 
         assertEquals(1, result.size)
         val template: TransactionTemplate = result[0]
@@ -77,7 +77,7 @@ class TemplateParserTest {
     @Test
     fun canParseMultipleTemplates() {
         val result =
-            parseTemplates(
+            extractTemplates(
                 """
                 |; template-start: Grocery Run
                 |; id: 550e8400-e29b-41d4-a716-446655440000
@@ -94,7 +94,7 @@ class TemplateParserTest {
                 |; status: *
                 |; account: Expenses:Food:Coffee        EUR
                 |; template-end
-        """.trimMargin()
+                """.trimMargin().split('\n'),
             )
 
         assertEquals(2, result.size)
@@ -123,7 +123,7 @@ class TemplateParserTest {
     @Test
     fun canParseTemplateWithMultiplePostings() {
         val result =
-            parseTemplates(
+            extractTemplates(
                 """
                 |; template-start: Dinner Out
                 |; id: 770e8400-e29b-41d4-a716-446655440002
@@ -134,7 +134,7 @@ class TemplateParserTest {
                 |; account: Assets:Bank:Checking            EUR
                 |; account: Liabilities:CreditCard   USD
                 |; template-end
-        """.trimMargin()
+                """.trimMargin().split('\n'),
             )
 
         assertEquals(1, result.size)
@@ -157,7 +157,8 @@ class TemplateParserTest {
 
     @Test
     fun canParseTemplateWithFullPosting() {
-        val fileContent = """
+        val fileContent =
+            """
                 |; template-start: Investment Purchase
                 |; id: 990e8400-e29b-41d4-a716-446655440004
                 |; payee: Brokerage
@@ -165,7 +166,7 @@ class TemplateParserTest {
                 |; account: Assets:Investments:Stocks   10 AAPL @@ $150.00 = 10 AAPL @ $150.00  ; with cost and assertion
                 |; template-end
             """.trimMargin()
-        val result = parseTemplates(fileContent)
+        val result = extractTemplates(fileContent.split('\n'))
 
         assertEquals(1, result.size)
         val template: TransactionTemplate = result[0]
@@ -197,7 +198,8 @@ class TemplateParserTest {
 
     @Test
     fun canParseTemplateWithFullPostingWithoutAmount() {
-        val fileContent = """
+        val fileContent =
+            """
                 |; template-start: Investment Purchase
                 |; id: 990e8400-e29b-41d4-a716-446655440004
                 |; payee: Brokerage
@@ -205,7 +207,7 @@ class TemplateParserTest {
                 |; account: Assets:Investments:Stocks  AAPL @@ $ 150.00 = AAPL 10 @ $ 150.00  ; with cost and assertion
                 |; template-end
             """.trimMargin()
-        val result = parseTemplates(fileContent)
+        val result = extractTemplates(fileContent.split('\n'))
 
         assertEquals(1, result.size)
         val template: TransactionTemplate = result[0]
@@ -236,7 +238,7 @@ class TemplateParserTest {
 
         assertEquals(
             fileContent,
-            template.toCommentLines().joinToString("\n")
+            template.toCommentLines().joinToString("\n"),
         )
     }
 }

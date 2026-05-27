@@ -1,36 +1,73 @@
 package be.chvp.nanoledger.data.parser
 
+import be.chvp.nanoledger.data.Posting
 import be.chvp.nanoledger.data.TransactionTemplate
+import be.chvp.nanoledger.data.extractPostingLenient
 
 object TemplateParser {
-    fun parseTemplates(fileContent: String): List<TransactionTemplate> {
-        val lines = fileContent.lines()
+    fun extractTemplates(lines: List<String>): List<TransactionTemplate> {
         val templates = mutableListOf<TransactionTemplate>()
-        var currentTemplateLines = mutableListOf<String>()
-        var inTemplate = false
 
-        for (line in lines) {
-            val trimmed = line.trim()
+        var i = 0
+        while (i < lines.size) {
+            val line = lines[i].trim()
+            i += 1
 
             // Stop if we hit a non-comment line (templates only at the beginning)
-            if (!trimmed.startsWith(";")) {
+            if (!line.startsWith(";")) {
                 break
             }
 
-            if (trimmed.startsWith("; template-start:")) {
-                inTemplate = true
-                currentTemplateLines = mutableListOf(trimmed)
-            } else if (inTemplate) {
-                currentTemplateLines.add(trimmed)
+            if (line.startsWith("; template-start:")) {
+                val firstLine = i - 1
+                var lastLine = firstLine
+                val name = line.substringAfter("; template-start:").trim()
+                var id: String? = null
+                var payee: String? = null
+                var note: String? = null
+                var status: String? = null
+                var code: String? = null
+                val postings = mutableListOf<Posting>()
 
-                if (trimmed == "; template-end") {
-                    val template = TransactionTemplate.fromCommentLines(currentTemplateLines)
-                    if (template != null) {
-                        templates.add(template)
+                while (i < lines.size) {
+                    val currTemplateLine = lines[i].trim()
+
+                    if (currTemplateLine.startsWith("; template-end")) {
+                        lastLine = i
+                        i += 1
+                        break
                     }
-                    inTemplate = false
-                    currentTemplateLines = mutableListOf()
+                    val content = currTemplateLine.substringAfter("; ")
+                    when {
+                        content.startsWith("id: ") -> id = content.substringAfter("id: ")
+                        content.startsWith("payee: ") -> payee = content.substringAfter("payee: ")
+                        content.startsWith("note: ") -> note = content.substringAfter("note: ")
+                        content.startsWith("status: ") ->
+                            status =
+                                content.substringAfter("status: ")
+
+                        content.startsWith("code: ") -> code = content.substringAfter("code: ")
+                        content.startsWith("account: ") ->
+                            postings.add(extractPostingLenient(content.substringAfter("account: ")))
+                    }
+
+                    i += 1
                 }
+                if (id == null || firstLine == lastLine) continue
+
+                templates.add(
+                    TransactionTemplate(
+                        firstLine,
+                        lastLine,
+                        id = id,
+                        name = name,
+                        payee = payee,
+                        note = note,
+                        status = status,
+                        code = code,
+                        postings = postings,
+                    ),
+                )
             }
         }
 

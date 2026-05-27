@@ -5,9 +5,10 @@ import be.chvp.nanoledger.data.parser.COST_SPLIT_REGEX
 import be.chvp.nanoledger.data.parser.POSTING_SPLIT_REGEX
 import be.chvp.nanoledger.data.parser.QUANTITY_AT_END_REGEX
 import be.chvp.nanoledger.data.parser.QUANTITY_AT_START_REGEX
-import java.util.UUID
 
 data class TransactionTemplate(
+    val firstLine: Int,
+    val lastLine: Int,
     val id: String,
     val name: String,
     val payee: String?,
@@ -40,51 +41,6 @@ data class TransactionTemplate(
         }
         lines.add("; template-end")
         return lines
-    }
-
-    companion object {
-        fun fromCommentLines(lines: List<String>): TransactionTemplate? {
-            if (lines.isEmpty()) return null
-
-            val firstLine = lines.first()
-            if (!firstLine.startsWith("; template-start:")) return null
-
-            val name = firstLine.substringAfter("; template-start:").trim()
-            var id: String? = null
-            var payee: String? = null
-            var note: String? = null
-            var status: String? = null
-            var code: String? = null
-            val postings = mutableListOf<Posting>()
-
-            for (line in lines.drop(1)) {
-                if (line == "; template-end") break
-                if (!line.startsWith("; ")) continue
-
-                val content = line.substringAfter("; ")
-                when {
-                    content.startsWith("id: ") -> id = content.substringAfter("id: ")
-                    content.startsWith("payee: ") -> payee = content.substringAfter("payee: ")
-                    content.startsWith("note: ") -> note = content.substringAfter("note: ")
-                    content.startsWith("status: ") -> status = content.substringAfter("status: ")
-                    content.startsWith("code: ") -> code = content.substringAfter("code: ")
-                    content.startsWith("account: ") ->
-                        postings.add(extractPostingLenient(content.substringAfter("account: ")))
-                }
-            }
-
-            if (id == null) return null
-
-            return TransactionTemplate(
-                id = id,
-                name = name,
-                payee = payee,
-                note = note,
-                status = status,
-                code = code,
-                postings = postings,
-            )
-        }
     }
 }
 
