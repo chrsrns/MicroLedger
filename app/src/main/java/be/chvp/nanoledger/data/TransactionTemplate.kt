@@ -25,7 +25,7 @@ data class TransactionTemplate(
         note?.let { lines.add("; note: $it") }
         status?.let { lines.add("; status: $it") }
         code?.let { lines.add("; code: $it") }
-        postings.forEach { posting ->
+        postings.filter { !it.account.isNullOrEmpty() }.forEach { posting ->
             posting.let {
                 lines.add(
                     "; account: ${

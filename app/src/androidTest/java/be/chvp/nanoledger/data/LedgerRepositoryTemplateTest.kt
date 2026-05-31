@@ -533,4 +533,105 @@ class LedgerRepositoryTemplateTest {
         assertEquals(CostType.UNIT, posting.cost?.type)
         assertEquals("0.92", posting.cost?.amount?.quantity)
     }
+
+    @Test
+    fun testAddTemplateIgnoresInvalidPostingWithEmptyAccount() = runTest {
+        val uri = setupRepository(startingTransactionsPortion.trimMargin())
+        val templateWithInvalidPosting = TransactionTemplate(
+            firstLine = 0,
+            lastLine = 0,
+            id = "invalid-posting-id",
+            name = "Template with Empty Account",
+            payee = "Test Payee",
+            note = "Test note",
+            status = "",
+            code = "",
+            postings = listOf(
+                Posting(
+                    account = "Assets:Valid",
+                    amount = Amount(
+                        quantity = "100",
+                        currency = "EUR",
+                        original = "EUR 100"
+                    ),
+                    cost = null,
+                    assertion = null,
+                    assertionCost = null,
+                    comment = null
+                ),
+                Posting(
+                    account = "",
+                    amount = Amount(
+                        quantity = "",
+                        currency = "EUR",
+                        original = ""
+                    ),
+                    cost = null,
+                    assertion = null,
+                    assertionCost = null,
+                    comment = null
+                ),
+                Posting(
+                    account = "Liabilities:AlsoValid",
+                    amount = Amount(
+                        quantity = "",
+                        currency = "EUR",
+                        original = ""
+                    ),
+                    cost = null,
+                    assertion = null,
+                    assertionCost = null,
+                    comment = null
+                )
+            )
+        )
+
+        addTemplate(uri, templateWithInvalidPosting)
+
+        val template = repository.templates.value!!.find { it.id == "invalid-posting-id" }!!
+        assertEquals(2, template.postings.size)
+        assertEquals("Assets:Valid", template.postings[0].account)
+        assertEquals("Liabilities:AlsoValid", template.postings[1].account)
+
+        val content = repository.fileContents.value!!.joinToString("\n")
+        assert(content.contains("account: Assets:Valid"))
+        assert(content.contains("account: Liabilities:AlsoValid"))
+        assert(!content.contains("account: EUR"))
+    }
+
+    @Test
+    fun testUpdateTemplateIgnoresInvalidPostingWithEmptyAccount() = runTest {
+        val uri = setupRepository(startingLedgerContent)
+        val originalTemplate = repository.templates.value!![0]
+        val updatedTemplate = originalTemplate.copy(
+            postings = listOf(
+                Posting(
+                    account = "Expenses:Valid",
+                    amount = Amount(quantity = "50", currency = "USD", original = "USD 50"),
+                    cost = null,
+                    assertion = null,
+                    assertionCost = null,
+                    comment = null
+                ),
+                Posting(
+                    account = "",
+                    amount = Amount(quantity = "", currency = "USD", original = ""),
+                    cost = null,
+                    assertion = null,
+                    assertionCost = null,
+                    comment = null
+                )
+            )
+        )
+
+        updateTemplate(uri, updatedTemplate)
+
+        val template = repository.templates.value!![0]
+        assertEquals(1, template.postings.size)
+        assertEquals("Expenses:Valid", template.postings[0].account)
+
+        val content = repository.fileContents.value!!.joinToString("\n")
+        assert(content.contains("account: Expenses:Valid"))
+        assert(!content.contains("account: USD"))
+    }
 }
