@@ -9,6 +9,7 @@ androidx-test-ui-automator = "2.3.0"
 appcompat = "1.7.1"
 compose-bom = "2026.05.00"
 core-ktx = "1.18.0"
+core-testing = "2.2.0"
 hilt = "2.59.2"
 kotlin = "2.3.21"
 ksp = "2.3.8"
@@ -18,6 +19,7 @@ lifecycle = "2.10.0"
 [libraries]
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activity" }
+androidx-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "core-testing" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 androidx-test-orchestrator = { group = "androidx.test", name = "orchestrator", version.ref = "androidx-test-orchestrator" }
 androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidx-test-rules" }
