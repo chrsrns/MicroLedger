@@ -74,32 +74,6 @@ object TemplateParser {
         return templates
     }
 
-    fun extractNonTemplateContent(fileContent: String): String {
-        val lines = fileContent.lines()
-        val result = mutableListOf<String>()
-        var skipUntilEnd = false
-
-        for (line in lines) {
-            val trimmed = line.trim()
-
-            if (skipUntilEnd) {
-                if (trimmed == "; template-end") {
-                    skipUntilEnd = false
-                }
-                continue
-            }
-
-            if (trimmed.startsWith("; template-start:")) {
-                skipUntilEnd = true
-                continue
-            }
-
-            result.add(line)
-        }
-
-        return result.joinToString("\n").trimStart()
-    }
-
     fun buildTemplateSection(templates: List<TransactionTemplate>): String {
         if (templates.isEmpty()) return ""
 
