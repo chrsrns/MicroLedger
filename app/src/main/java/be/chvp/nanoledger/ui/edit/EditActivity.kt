@@ -43,6 +43,8 @@ import be.chvp.nanoledger.ui.common.FieldSelector
 import be.chvp.nanoledger.ui.common.TRANSACTION_INDEX_KEY
 import be.chvp.nanoledger.ui.common.TransactionForm
 import be.chvp.nanoledger.ui.main.MainActivity
+import be.chvp.nanoledger.ui.templates.EDIT_TEMPLATE_ID_KEY
+import be.chvp.nanoledger.ui.templates.TemplateFormActivity
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers.Main
@@ -152,7 +154,16 @@ fun Bar(viewModel: EditViewModel) {
                 )
             }
         },
-        actions = { FieldSelector(viewModel) },
+        actions = {
+            FieldSelector(
+                viewModel = viewModel,
+                onTemplateCreated = { templateId ->
+                    val intent = Intent(context, TemplateFormActivity::class.java)
+                    intent.putExtra(EDIT_TEMPLATE_ID_KEY, templateId)
+                    context.startActivity(intent)
+                },
+            )
+        },
         colors =
             TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primary,

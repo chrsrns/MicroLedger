@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -203,13 +204,27 @@ fun TransactionForm(
 }
 
 @Composable
-fun FieldSelector(viewModel: TransactionFormViewModel) {
+fun FieldSelector(
+    viewModel: TransactionFormViewModel,
+    onTemplateCreated: ((String) -> Unit)? = null,
+) {
     var expanded by remember { mutableStateOf(false) }
+    var showSaveTemplateDialog by remember { mutableStateOf(false) }
     val status by viewModel.status.observeAsState()
     val code by viewModel.code.observeAsState()
     val payee by viewModel.payee.observeAsState()
     val note by viewModel.note.observeAsState()
     val currencyEnabled by viewModel.currencyEnabled.observeAsState(true)
+
+    if (showSaveTemplateDialog) {
+        SaveAsTemplateDialog(
+            viewModel = viewModel,
+            initialName = payee ?: "",
+            onDismiss = { showSaveTemplateDialog = false },
+            onTemplateCreated = onTemplateCreated,
+        )
+    }
+
     Box {
         IconButton(onClick = { expanded = !expanded }) {
             Icon(
@@ -283,8 +298,77 @@ fun FieldSelector(viewModel: TransactionFormViewModel) {
                     expanded = false
                 },
             )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.save_as_template)) },
+                onClick = {
+                    showSaveTemplateDialog = true
+                    expanded = false
+                },
+            )
         }
     }
+}
+
+@Composable
+fun SaveAsTemplateDialog(
+    viewModel: TransactionFormViewModel,
+    initialName: String,
+    onDismiss: () -> Unit,
+    onTemplateCreated: ((String) -> Unit)? = null,
+) {
+    var templateName by remember { mutableStateOf(initialName) }
+    val scope = rememberCoroutineScope()
+    val saving by viewModel.saving.observeAsState(false)
+
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text(stringResource(R.string.save_as_template)) },
+        text = {
+            OutlinedTextField(
+                value = templateName,
+                onValueChange = { templateName = it },
+                label = { Text(stringResource(R.string.template_name)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !saving,
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (templateName.isNotBlank()) {
+                        scope.launch {
+                            viewModel.saveAsTemplate(templateName) { templateId ->
+                                onDismiss()
+                                if (templateId != null) {
+                                    onTemplateCreated?.invoke(templateId)
+                                }
+                            }
+                        }
+                    }
+                },
+                enabled = templateName.isNotBlank() && !saving,
+            ) {
+                if (saving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.width(24.dp),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text(stringResource(R.string.save))
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = { onDismiss() },
+                enabled = !saving,
+            ) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable

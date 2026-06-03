@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
 import androidx.lifecycle.switchMap
+import androidx.lifecycle.viewModelScope
 import be.chvp.nanoledger.data.Amount
 import be.chvp.nanoledger.data.Cost
 import be.chvp.nanoledger.data.CostType
@@ -13,13 +14,16 @@ import be.chvp.nanoledger.data.LedgerRepository
 import be.chvp.nanoledger.data.Posting
 import be.chvp.nanoledger.data.PreferencesDataSource
 import be.chvp.nanoledger.data.Transaction
+import be.chvp.nanoledger.data.TransactionTemplate
 import be.chvp.nanoledger.ui.util.Event
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.math.BigDecimal
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
+import java.util.UUID
 
 val dateFormat = SimpleDateFormat("yyyy-MM-dd")
 
@@ -194,6 +198,56 @@ abstract class TransactionFormViewModel(
     }
 
     abstract fun save(onFinish: suspend () -> Unit)
+
+    fun saveAsTemplate(
+        name: String,
+        onFinish: suspend (String?) -> Unit,
+    ) {
+        val uri = preferencesDataSource.getFileUri()
+        if (uri == null) {
+            viewModelScope.launch { onFinish(null) }
+            return
+        }
+        setSaving(true)
+        viewModelScope.launch {
+            val templateId = UUID.randomUUID().toString()
+            val template =
+                TransactionTemplate(
+                    firstLine = -1,
+                    lastLine = -1,
+                    id = templateId,
+                    name = name,
+                    payee = payee.value,
+                    note = note.value,
+                    status = status.value,
+                    code = code.value,
+                    postings = postings.value ?: emptyList(),
+                )
+            ledgerRepository.addTemplate(
+                uri,
+                template,
+                onFinish = {
+                    postSaving(false)
+                    viewModelScope.launch { onFinish(templateId) }
+                },
+                onMismatch = {
+                    postSaving(false)
+                    postMismatch(Event(0))
+                    viewModelScope.launch { onFinish(null) }
+                },
+                onWriteError = { e: IOException ->
+                    postSaving(false)
+                    postError(Event(e))
+                    viewModelScope.launch { onFinish(null) }
+                },
+                onReadError = { e: IOException ->
+                    postSaving(false)
+                    postError(Event(e))
+                    viewModelScope.launch { onFinish(null) }
+                },
+            )
+        }
+    }
 
     fun setFromTransaction(transaction: Transaction) {
         setDate(transaction.date)

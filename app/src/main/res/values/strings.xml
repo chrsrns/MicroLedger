@@ -86,4 +86,14 @@
     <string name="status_unmarked">Unmarked</string>
     <string name="stop_searching">Stop searching</string>
     <string name="stop_selection">Stop selection</string>
+    <string name="templates">Templates</string>
+    <string name="no_templates_yet">No templates yet</string>
+    <string name="create_template">Create a template from an existing transaction</string>
+    <string name="add_template">Add template</string>
+    <string name="edit_template">Edit template</string>
+    <string name="template_name">Template name</string>
+    <string name="save_as_template">Save as template</string>
+    <string name="template_actions_message">What would you like to do with this template?</string>
+    <string name="template_not_found">Template not found</string>
+    <string name="template_accounts_more">+%d more</string>
 </resources>

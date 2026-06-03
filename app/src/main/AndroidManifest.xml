@@ -32,6 +32,14 @@
             android:exported="false"
             android:name=".ui.edit.EditActivity"
             />
+        <activity
+            android:exported="false"
+            android:name=".ui.templates.TemplatesActivity"
+            />
+        <activity
+            android:exported="false"
+            android:name=".ui.templates.TemplateFormActivity"
+            />
     </application>
 
 </manifest>
