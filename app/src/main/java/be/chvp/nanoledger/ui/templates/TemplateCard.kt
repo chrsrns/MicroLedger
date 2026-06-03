@@ -12,9 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import be.chvp.nanoledger.R
+import be.chvp.nanoledger.data.Posting
 import be.chvp.nanoledger.data.TransactionTemplate
+import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
 
 @Composable
 fun TemplateCard(
@@ -72,6 +75,61 @@ fun TemplateCard(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TemplateCardPreview() {
+    NanoLedgerTheme {
+        TemplateCard(
+            template =
+                TransactionTemplate(
+                    firstLine = 0,
+                    lastLine = 0,
+                    id = "1",
+                    name = "Simple Template",
+                    payee = "Some Payee",
+                    note = null,
+                    status = null,
+                    code = null,
+                    postings =
+                        listOf(
+                            Posting("Assets:Checking", null, null, null, null, null),
+                            Posting("Expenses:Groceries", null, null, null, null, null),
+                        ),
+                ),
+            onClick = {},
+            modifier = Modifier.padding(8.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TemplateCardComplexPreview() {
+    NanoLedgerTheme {
+        TemplateCard(
+            template =
+                TransactionTemplate(
+                    firstLine = 0,
+                    lastLine = 0,
+                    id = "2",
+                    name = "Complex Template",
+                    payee = "Another Payee",
+                    note = "A note",
+                    status = "*",
+                    code = "123",
+                    postings =
+                        listOf(
+                            Posting("Assets:Checking", null, null, null, null, null),
+                            Posting("Expenses:Food", null, null, null, null, null),
+                            Posting("Expenses:Drink", null, null, null, null, null),
+                        ),
+                ),
+            onClick = {},
+            modifier = Modifier.padding(8.dp),
+        )
     }
 }
 

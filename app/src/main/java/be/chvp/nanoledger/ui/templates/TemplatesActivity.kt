@@ -49,9 +49,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import be.chvp.nanoledger.R
+import be.chvp.nanoledger.data.Posting
 import be.chvp.nanoledger.data.TransactionTemplate
 import be.chvp.nanoledger.ui.add.AddActivity
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
@@ -136,6 +138,27 @@ fun TemplatesScreen(
     val templates by templatesViewModel.templates.observeAsState(emptyList())
     val saving by templatesViewModel.saving.observeAsState(false)
 
+    TemplatesScreenContent(
+        templates = templates,
+        saving = saving,
+        onBackClick = onBackClick,
+        onAddClick = onAddClick,
+        onTemplateClick = onTemplateClick,
+        onEditClick = onEditClick,
+        onDeleteClick = onDeleteClick,
+    )
+}
+
+@Composable
+fun TemplatesScreenContent(
+    templates: List<TransactionTemplate>,
+    saving: Boolean,
+    onBackClick: () -> Unit,
+    onAddClick: () -> Unit,
+    onTemplateClick: (TransactionTemplate) -> Unit,
+    onEditClick: (TransactionTemplate) -> Unit,
+    onDeleteClick: (String) -> Unit,
+) {
     var templateToDelete by remember { mutableStateOf<TransactionTemplate?>(null) }
 
     var fabHeight by remember { mutableIntStateOf(0) }
@@ -307,4 +330,53 @@ fun TemplateActionsDialog(
             }
         },
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TemplatesScreenPreview() {
+    NanoLedgerTheme {
+        TemplatesScreenContent(
+            templates =
+                listOf(
+                    TransactionTemplate(
+                        firstLine = 0,
+                        lastLine = 0,
+                        id = "1",
+                        name = "Simple Template",
+                        payee = "Some Payee",
+                        note = null,
+                        status = null,
+                        code = null,
+                        postings =
+                            listOf(
+                                Posting("Assets:Checking", null, null, null, null, null),
+                                Posting("Expenses:Groceries", null, null, null, null, null),
+                            ),
+                    ),
+                    TransactionTemplate(
+                        firstLine = 0,
+                        lastLine = 0,
+                        id = "2",
+                        name = "Complex Template",
+                        payee = "Another Payee",
+                        note = "A note",
+                        status = "*",
+                        code = "123",
+                        postings =
+                            listOf(
+                                Posting("Assets:Checking", null, null, null, null, null),
+                                Posting("Expenses:Food", null, null, null, null, null),
+                                Posting("Expenses:Drink", null, null, null, null, null),
+                            ),
+                    ),
+                ),
+            saving = false,
+            onBackClick = {},
+            onAddClick = {},
+            onTemplateClick = {},
+            onEditClick = {},
+            onDeleteClick = {},
+        )
+    }
 }
