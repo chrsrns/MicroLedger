@@ -387,4 +387,117 @@ class AccountBalanceCalculatorTest {
         assertEquals(BigDecimal("2500.00"), result.assets[0].balance)
         assertTrue(result.liabilities.isEmpty())
     }
+
+    // -------------------------------------------------------------------------
+    // A1: malformed quantity string should be treated as zero
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun malformedQuantityStringShouldTreatAsZero() {
+        val transactions = listOf(
+            transaction(
+                date = "2024-01-15",
+                payee = "Bad Amount",
+                firstLine = 1,
+                lastLine = 3,
+                postings = listOf(
+                    posting("Assets:Checking", amount("not-a-number")),
+                    posting("Equity:Opening Balances", amount("-1000.00")),
+                ),
+            ),
+            // A valid posting alongside the malformed one to confirm valid ones still work
+            openingTransaction(amount = "500.00", date = "2024-01-16", firstLine = 4),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        // The malformed quantity contributes 0; only the valid 500.00 should appear
+        val checkingBalance = result.assets.find { it.account == "Assets:Checking" }
+        assertEquals(BigDecimal("500.00"), checkingBalance?.balance)
+    }
+
+    // -------------------------------------------------------------------------
+    // A2: single-level account names (no ":" separator) should be classified
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun singleLevelAccountNameShouldBeClassifiedCorrectly() {
+        val transactions = listOf(
+            transaction(
+                date = "2024-01-15",
+                payee = "Single Level Accounts",
+                firstLine = 1,
+                lastLine = 3,
+                postings = listOf(
+                    posting("Assets", amount("1000.00")),
+                    posting("Equity", amount("-1000.00")),
+                ),
+            ),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        assertEquals(1, result.assets.size)
+        assertEquals("Assets", result.assets[0].account)
+        assertEquals(BigDecimal("1000.00"), result.assets[0].balance)
+        assertEquals(1, result.equity.size)
+        assertEquals("Equity", result.equity[0].account)
+    }
+
+    // -------------------------------------------------------------------------
+    // A3: mixed-case account type prefixes should still be classified
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun mixedCaseAccountTypesShouldBeClassifiedCorrectly() {
+        val transactions = listOf(
+            transaction(
+                date = "2024-01-15",
+                payee = "Mixed Case Setup",
+                firstLine = 1,
+                lastLine = 6,
+                postings = listOf(
+                    posting("ASSETS:Cash", amount("1000.00")),
+                    posting("Liabilities:LOAN", amount("-200.00")),
+                    posting("EqUiTy:Opening", amount("-300.00")),
+                    posting("INCOME:Salary", amount("-400.00")),
+                    posting("Expenses:FOOD", amount("-100.00")),
+                ),
+            ),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        assertEquals(1, result.assets.size)
+        assertEquals(1, result.liabilities.size)
+        assertEquals(1, result.equity.size)
+        assertEquals(1, result.income.size)
+        assertEquals(1, result.expenses.size)
+    }
+
+    // -------------------------------------------------------------------------
+    // A5: an account whose only posting is exactly 0.00 should still appear
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun accountWithOnlyZeroAmountPostingShouldAppearWithZeroBalance() {
+        val transactions = listOf(
+            transaction(
+                date = "2024-01-15",
+                payee = "Zero Posting",
+                firstLine = 1,
+                lastLine = 3,
+                postings = listOf(
+                    posting("Assets:Checking", amount("0.00")),
+                    posting("Equity:Opening", amount("0.00")),
+                ),
+            ),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        assertEquals(1, result.assets.size)
+        assertEquals("Assets:Checking", result.assets[0].account)
+        assertEquals(0, result.assets[0].balance.compareTo(BigDecimal.ZERO))
+    }
 }

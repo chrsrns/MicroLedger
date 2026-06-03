@@ -553,4 +553,310 @@ class MonthlyCashFlowCalculatorTest {
         // Net: 5150 - 1636.70 = 3513.30
         assertEquals(BigDecimal("3513.30"), result.netFlow)
     }
+
+    // -------------------------------------------------------------------------
+    // C1–C7: calculateForYear tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun calculateForYearShouldReturnTwelveResults() {
+        val result = calculator.calculateForYear(emptyList(), 2024, ".")
+
+        assertEquals(12, result.size)
+    }
+
+    @Test
+    fun calculateForYearEmptyTransactionsShouldReturnTwelveZeroFlowMonths() {
+        val result = calculator.calculateForYear(emptyList(), 2024, ".")
+
+        assertEquals(12, result.size)
+        result.forEach { month ->
+            assertEquals(BigDecimal.ZERO, month.totalIncome)
+            assertEquals(BigDecimal.ZERO, month.totalExpenses)
+            assertEquals(BigDecimal.ZERO, month.netFlow)
+        }
+    }
+
+    @Test
+    fun calculateForYearResultsShouldBeOrderedJanuaryToDecember() {
+        val result = calculator.calculateForYear(emptyList(), 2024, ".")
+
+        assertEquals(12, result.size)
+        val expectedPeriods = (1..12).map { month ->
+            "2024-%02d".format(month)
+        }
+        result.forEachIndexed { index, cashFlowResult ->
+            assertEquals(expectedPeriods[index], cashFlowResult.period)
+        }
+    }
+
+    @Test
+    fun calculateForYearPeriodStringShouldIdentifyEachMonth() {
+        val result = calculator.calculateForYear(emptyList(), 2025, ".")
+
+        assertEquals("2025-01", result[0].period)
+        assertEquals("2025-06", result[5].period)
+        assertEquals("2025-12", result[11].period)
+    }
+
+    @Test
+    fun calculateForYearShouldMatchCalculateForMonthForEachMonth() {
+        val transactions = listOf(
+            incomeTransaction(amount = "3000.00", date = "2024-03-10", firstLine = 1),
+            expenseTransaction(amount = "150.00", date = "2024-07-22", firstLine = 4),
+            incomeTransaction(amount = "500.00", date = "2024-11-05", firstLine = 7),
+        )
+
+        val yearResult = calculator.calculateForYear(transactions, 2024, ".")
+
+        (1..12).forEach { month ->
+            val monthResult = calculator.calculateForMonth(transactions, 2024, month, ".")
+            val yearMonthResult = yearResult[month - 1]
+            assertEquals(
+                monthResult.totalIncome,
+                yearMonthResult.totalIncome,
+                "totalIncome mismatch for month $month",
+            )
+            assertEquals(
+                monthResult.totalExpenses,
+                yearMonthResult.totalExpenses,
+                "totalExpenses mismatch for month $month",
+            )
+            assertEquals(
+                monthResult.netFlow,
+                yearMonthResult.netFlow,
+                "netFlow mismatch for month $month",
+            )
+            assertEquals(
+                monthResult.period,
+                yearMonthResult.period,
+                "period mismatch for month $month",
+            )
+        }
+    }
+
+    @Test
+    fun calculateForYearShouldOnlyIncludeTransactionsFromThatYear() {
+        val transactions = listOf(
+            incomeTransaction(amount = "1000.00", date = "2023-06-15", firstLine = 1),
+            incomeTransaction(amount = "2000.00", date = "2024-06-15", firstLine = 4),
+            incomeTransaction(amount = "3000.00", date = "2025-06-15", firstLine = 7),
+        )
+
+        val result = calculator.calculateForYear(transactions, 2024, ".")
+
+        // Only the 2024 transaction should appear; sum across all months
+        val totalIncomeAcrossYear = result.fold(BigDecimal.ZERO) { acc, m -> acc + m.totalIncome }
+        assertEquals(BigDecimal("2000.00"), totalIncomeAcrossYear)
+    }
+
+    @Test
+    fun calculateForYearWithTransactionsSpanningMultipleMonthsShouldDistributeCorrectly() {
+        val transactions = listOf(
+            incomeTransaction(amount = "5000.00", date = "2024-01-15", firstLine = 1),
+            expenseTransaction(amount = "300.00", date = "2024-03-20", firstLine = 4),
+        )
+
+        val result = calculator.calculateForYear(transactions, 2024, ".")
+
+        // January: income only
+        assertEquals(BigDecimal("5000.00"), result[0].totalIncome)
+        assertEquals(BigDecimal.ZERO, result[0].totalExpenses)
+
+        // February: nothing
+        assertEquals(BigDecimal.ZERO, result[1].totalIncome)
+        assertEquals(BigDecimal.ZERO, result[1].totalExpenses)
+
+        // March: expense only
+        assertEquals(BigDecimal.ZERO, result[2].totalIncome)
+        assertEquals(BigDecimal("300.00"), result[2].totalExpenses)
+
+        // All other months: zero
+        (3..11).forEach { idx ->
+            assertEquals(
+                BigDecimal.ZERO,
+                result[idx].totalIncome,
+                "month ${idx + 1} should have no income"
+            )
+            assertEquals(
+                BigDecimal.ZERO,
+                result[idx].totalExpenses,
+                "month ${idx + 1} should have no expenses"
+            )
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // M1: malformed date handling
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun malformedDateStringShouldBeIgnoredGracefully() {
+        val transactions = listOf(
+            transaction(
+                date = "not-a-date",
+                payee = "Bad Date",
+                firstLine = 1,
+                lastLine = 3,
+                postings = listOf(
+                    posting("Income:Salary", amount("-1000.00")),
+                    posting("Assets:Checking", amount("1000.00")),
+                ),
+            ),
+            transaction(
+                date = "2024/01/15",
+                payee = "Wrong Separator",
+                firstLine = 4,
+                lastLine = 6,
+                postings = listOf(
+                    posting("Expenses:Food", amount("50.00")),
+                    posting("Assets:Checking", amount("-50.00")),
+                ),
+            ),
+            // A valid transaction in January to confirm the filter works
+            incomeTransaction(amount = "2000.00", date = "2024-01-10", firstLine = 7),
+        )
+
+        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+
+        // Only the valid transaction should be included; the malformed-date ones are excluded
+        assertEquals(BigDecimal("2000.00"), result.totalIncome)
+        assertEquals(BigDecimal.ZERO, result.totalExpenses)
+    }
+
+    // -------------------------------------------------------------------------
+    // M3: asset/equity postings do not contribute to income or expenses
+    // M4: liability postings do not contribute to income or expenses
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun assetAndEquityPostingsShouldNotContributeToCashFlow() {
+        val transactions = listOf(
+            // Asset-to-asset transfer
+            transaction(
+                date = "2024-01-10",
+                payee = "Transfer to Savings",
+                firstLine = 1,
+                lastLine = 3,
+                postings = listOf(
+                    posting("Assets:Savings", amount("500.00")),
+                    posting("Assets:Checking", amount("-500.00")),
+                ),
+            ),
+            // Equity opening balance
+            openingTransaction(date = "2024-01-01", firstLine = 4),
+            // A real income to confirm non-zero output is possible
+            incomeTransaction(amount = "1000.00", date = "2024-01-15", firstLine = 7),
+        )
+
+        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+
+        // Asset and equity postings must not inflate income or expenses
+        assertEquals(BigDecimal("1000.00"), result.totalIncome)
+        assertEquals(BigDecimal.ZERO, result.totalExpenses)
+    }
+
+    @Test
+    fun liabilityPostingsShouldNotContributeToCashFlow() {
+        val transactions = listOf(
+            // Credit card charge: expense + liability, no asset
+            liabilityTransaction(
+                expenseAccount = "Expenses:Food",
+                amount = "120.00",
+                date = "2024-01-12",
+                firstLine = 1,
+            ),
+            // Liability repayment: asset decreases, liability decreases
+            transaction(
+                date = "2024-01-20",
+                payee = "Credit Card Payment",
+                firstLine = 4,
+                lastLine = 6,
+                postings = listOf(
+                    posting("Liabilities:Credit Card", amount("120.00")),
+                    posting("Assets:Checking", amount("-120.00")),
+                ),
+            ),
+        )
+
+        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+
+        // The liability postings themselves should not appear in income
+        // The expense posting from liabilityTransaction should still count
+        assertEquals(BigDecimal.ZERO, result.totalIncome)
+        assertEquals(BigDecimal("120.00"), result.totalExpenses)
+    }
+
+    // -------------------------------------------------------------------------
+    // M5: multi-currency income/expenses are summed numerically
+    // (CashFlowResult exposes a single BigDecimal total, with no currency axis)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun multiCurrencyIncomeAndExpensesShouldSumAcrossCurrencies() {
+        val transactions = listOf(
+            incomeTransaction(
+                amount = "1000.00",
+                currency = "USD",
+                date = "2024-01-10",
+                firstLine = 1
+            ),
+            incomeTransaction(
+                amount = "500.00",
+                currency = "EUR",
+                date = "2024-01-12",
+                firstLine = 4
+            ),
+            expenseTransaction(
+                amount = "200.00",
+                currency = "USD",
+                date = "2024-01-15",
+                firstLine = 7
+            ),
+            expenseTransaction(
+                amount = "100.00",
+                currency = "EUR",
+                date = "2024-01-18",
+                firstLine = 10
+            ),
+        )
+
+        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+
+        // Quantities are summed regardless of currency
+        assertEquals(BigDecimal("1500.00"), result.totalIncome)
+        assertEquals(BigDecimal("300.00"), result.totalExpenses)
+        assertEquals(BigDecimal("1200.00"), result.netFlow)
+    }
+
+    // -------------------------------------------------------------------------
+    // M2: a single transaction touching both income and expense accounts
+    // should have both sides counted independently
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun incomeAndExpensePostingsInSameTransactionShouldBothBeCounted() {
+        val transactions = listOf(
+            transaction(
+                date = "2024-01-15",
+                payee = "Refund With Fee",
+                firstLine = 1,
+                lastLine = 4,
+                postings = listOf(
+                    // Income side (credit, stored negative)
+                    posting("Income:Refund", amount("-100.00")),
+                    // Expense side (debit, stored positive)
+                    posting("Expenses:Fee", amount("30.00")),
+                    // Asset settles the difference
+                    posting("Assets:Checking", amount("70.00")),
+                ),
+            ),
+        )
+
+        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+
+        assertEquals(BigDecimal("100.00"), result.totalIncome)
+        assertEquals(BigDecimal("30.00"), result.totalExpenses)
+        assertEquals(BigDecimal("70.00"), result.netFlow)
+    }
 }

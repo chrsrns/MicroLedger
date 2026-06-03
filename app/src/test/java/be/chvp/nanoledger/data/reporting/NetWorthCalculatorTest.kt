@@ -252,4 +252,174 @@ class NetWorthCalculatorTest {
         assertEquals(BigDecimal("800.00"), result.totalLiabilities)
         assertEquals(BigDecimal("2200.00"), result.netWorth)
     }
+
+    // -------------------------------------------------------------------------
+    // N1: malformed quantity string should be treated as zero
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun malformedQuantityStringShouldTreatAsZero() {
+        val transactions = listOf(
+            transaction(
+                date = "2024-01-15",
+                payee = "Bad Amount",
+                firstLine = 1,
+                lastLine = 3,
+                postings = listOf(
+                    posting("Assets:Checking", amount("not-a-number")),
+                    posting("Equity:Opening Balances", amount("-1000.00")),
+                ),
+            ),
+            // A valid asset posting alongside the malformed one
+            openingTransaction(amount = "500.00", date = "2024-01-16", firstLine = 4),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        // The malformed quantity contributes 0; only the valid 500.00 should count
+        assertEquals(BigDecimal("500.00"), result.totalAssets)
+        assertEquals(BigDecimal.ZERO, result.totalLiabilities)
+        assertEquals(BigDecimal("500.00"), result.netWorth)
+    }
+
+    // -------------------------------------------------------------------------
+    // N5: equity, income, and expense postings do not affect net worth
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun equityIncomeAndExpensePostingsShouldNotAffectNetWorth() {
+        val transactions = listOf(
+            // Opening balance posts to equity — should not show in assets/liabilities
+            openingTransaction(amount = "2000.00", date = "2024-01-01", firstLine = 1),
+            // Income transaction: asset receives money, income decreases
+            incomeTransaction(amount = "3000.00", date = "2024-01-05", firstLine = 4),
+            // Expense transaction: expense account increases, asset decreases
+            expenseTransaction(amount = "400.00", date = "2024-01-10", firstLine = 7),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        // totalAssets = 2000 (opening) + 3000 (income deposit) - 400 (expense withdrawal) = 4600
+        assertEquals(BigDecimal("4600.00"), result.totalAssets)
+        // Liabilities are untouched
+        assertEquals(BigDecimal.ZERO, result.totalLiabilities)
+        // Equity, income, and expense postings do not themselves contribute to assets or liabilities
+        assertEquals(BigDecimal("4600.00"), result.netWorth)
+    }
+
+    // -------------------------------------------------------------------------
+    // N6: netWorth == totalAssets - totalLiabilities invariant
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun netWorthAlwaysEqualsAssetMinusLiabilities() {
+        val transactions = listOf(
+            openingTransaction(amount = "5000.00", date = "2024-01-01", firstLine = 1),
+            liabilityTransaction(amount = "1200.00", date = "2024-01-05", firstLine = 4),
+            incomeTransaction(amount = "3500.00", date = "2024-01-10", firstLine = 7),
+            expenseTransaction(amount = "250.00", date = "2024-01-15", firstLine = 10),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        // The invariant must hold regardless of the specific values
+        assertEquals(
+            result.totalAssets - result.totalLiabilities,
+            result.netWorth,
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // N2: liabilities held in multiple currencies should sum into totalLiabilities
+    // (symmetric with the existing multi-currency assets test)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun multiCurrencyLiabilitiesShouldSum() {
+        val transactions = listOf(
+            transaction(
+                date = "2024-01-15",
+                payee = "USD Credit Card",
+                firstLine = 1,
+                lastLine = 3,
+                postings = listOf(
+                    posting("Liabilities:Credit Card", amount("-800.00", "USD")),
+                    posting("Assets:Checking", amount("800.00", "USD")),
+                ),
+            ),
+            transaction(
+                date = "2024-01-16",
+                payee = "EUR Loan",
+                firstLine = 4,
+                lastLine = 6,
+                postings = listOf(
+                    posting("Liabilities:Loan", amount("-300.00", "EUR")),
+                    posting("Assets:Checking", amount("300.00", "EUR")),
+                ),
+            ),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        // Liabilities across currencies are summed numerically
+        assertEquals(BigDecimal("1100.00"), result.totalLiabilities)
+    }
+
+    // -------------------------------------------------------------------------
+    // N4: mixed-case account type prefixes should still contribute to net worth
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun mixedCaseAccountTypesShouldContributeToNetWorth() {
+        val transactions = listOf(
+            transaction(
+                date = "2024-01-15",
+                payee = "Mixed Case Setup",
+                firstLine = 1,
+                lastLine = 4,
+                postings = listOf(
+                    posting("ASSETS:Checking", amount("3000.00")),
+                    posting("LIABILITIES:Loan", amount("-800.00")),
+                    posting("EqUiTy:Opening", amount("-2200.00")),
+                ),
+            ),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        assertEquals(BigDecimal("3000.00"), result.totalAssets)
+        assertEquals(BigDecimal("800.00"), result.totalLiabilities)
+        assertEquals(BigDecimal("2200.00"), result.netWorth)
+    }
+
+    // -------------------------------------------------------------------------
+    // N3: a liability account holding a positive stored balance (unusual, e.g.
+    // an overpaid credit card) should still be reflected consistently
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun positiveBalanceLiabilityShouldBeReflectedConsistently() {
+        val transactions = listOf(
+            transaction(
+                date = "2024-01-15",
+                payee = "Overpaid Credit Card",
+                firstLine = 1,
+                lastLine = 3,
+                postings = listOf(
+                    // Positive stored amount on a liability account
+                    posting("Liabilities:Credit Card", amount("500.00")),
+                    posting("Assets:Checking", amount("-500.00")),
+                ),
+            ),
+        )
+
+        val result = calculator.calculate(transactions, ".")
+
+        // Assets reduced by the 500 withdrawal
+        assertEquals(BigDecimal("-500.00"), result.totalAssets)
+        // A positive liability posting negates to a negative liability total
+        assertEquals(BigDecimal("-500.00"), result.totalLiabilities)
+        // Invariant still holds: netWorth == assets - liabilities
+        assertEquals(result.totalAssets - result.totalLiabilities, result.netWorth)
+    }
 }
