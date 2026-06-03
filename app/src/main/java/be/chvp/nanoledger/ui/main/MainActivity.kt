@@ -75,8 +75,8 @@ import be.chvp.nanoledger.data.Posting
 import be.chvp.nanoledger.data.Transaction
 import be.chvp.nanoledger.ui.add.AddActivity
 import be.chvp.nanoledger.ui.common.TRANSACTION_INDEX_KEY
-import be.chvp.nanoledger.ui.edit.EditActivity
 import be.chvp.nanoledger.ui.dashboard.DashboardActivity
+import be.chvp.nanoledger.ui.edit.EditActivity
 import be.chvp.nanoledger.ui.preferences.PreferencesActivity
 import be.chvp.nanoledger.ui.templates.TemplatesActivity
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
@@ -279,7 +279,10 @@ fun MainScreen(
             )
         } else {
             Column(
-                modifier = Modifier.fillMaxSize().padding(contentPadding),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding),
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text(
@@ -287,9 +290,11 @@ fun MainScreen(
                     style = MaterialTheme.typography.headlineLarge,
                     textAlign = TextAlign.Center,
                     modifier =
-                        Modifier.align(Alignment.CenterHorizontally).padding(
-                            horizontal = 16.dp,
-                        ),
+                        Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(
+                                horizontal = 16.dp,
+                            ),
                 )
                 Text(
                     stringResource(R.string.go_to_settings),
@@ -304,7 +309,8 @@ fun MainScreen(
                             .align(Alignment.CenterHorizontally)
                             .padding(
                                 horizontal = 16.dp,
-                            ).clickable { onSettingsClick() },
+                            )
+                            .clickable { onSettingsClick() },
                 )
             }
         }
@@ -338,16 +344,22 @@ fun MainContent(
                         transaction,
                         originalIndex == selected,
                         { onToggleSelect(originalIndex) },
-                        Modifier.fillMaxWidth().padding(
-                            8.dp,
-                            if (it == 0) 8.dp else 4.dp,
-                            8.dp,
-                            if (it == transactions.size - 1) 8.dp else 4.dp,
-                        ),
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                8.dp,
+                                if (it == 0) 8.dp else 4.dp,
+                                8.dp,
+                                if (it == transactions.size - 1) 8.dp else 4.dp,
+                            ),
                     )
                 }
                 item {
-                    Box(Modifier.height(bottomOffset).fillMaxWidth())
+                    Box(
+                        Modifier
+                            .height(bottomOffset)
+                            .fillMaxWidth(),
+                    )
                 }
             }
         } else {
@@ -373,11 +385,13 @@ fun MainContent(
                                 ),
                             textAlign = TextAlign.Center,
                             modifier =
-                                Modifier.padding(horizontal = 16.dp).clickable {
-                                    context.startActivity(
-                                        Intent(context, AddActivity::class.java),
-                                    )
-                                },
+                                Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .clickable {
+                                        context.startActivity(
+                                            Intent(context, AddActivity::class.java),
+                                        )
+                                    },
                         )
                     } else {
                         Text(
@@ -447,13 +461,19 @@ fun SelectionBar(
                 onClick = onStopSelection,
                 modifier = Modifier.padding(start = 8.dp),
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.stop_selection))
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.stop_selection),
+                )
             }
         },
         title = { },
         actions = {
             IconButton(onClick = onCopyClick) {
-                Icon(painterResource(R.drawable.baseline_difference_24), contentDescription = stringResource(R.string.copy_and_edit))
+                Icon(
+                    painterResource(R.drawable.baseline_difference_24),
+                    contentDescription = stringResource(R.string.copy_and_edit),
+                )
             }
             IconButton(onClick = onEditClick) {
                 Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit))
@@ -490,7 +510,10 @@ fun SearchBar(
                 onClick = onStopSearching,
                 modifier = Modifier.padding(start = 8.dp),
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.stop_searching))
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.stop_searching),
+                )
             }
         },
         title = {
@@ -516,7 +539,11 @@ fun SearchBar(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                     ),
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).testTag("search-field"),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .testTag("search-field"),
                 keyboardActions =
                     KeyboardActions(
                         onDone = {
@@ -551,35 +578,63 @@ fun MainScreenPreview() {
             transactions =
                 listOf(
                     0 to
-                        Transaction(
-                            firstLine = 0,
-                            lastLine = 2,
-                            date = "2023-08-31",
-                            status = "*",
-                            code = null,
-                            payee = "Payee",
-                            note = "Note",
-                            postings =
-                                listOf(
-                                    Posting("assets", Amount("-5.00", "€", "€ -5.00"), null, null, null, null),
-                                    Posting("expenses", Amount("5.00", "€", "€ 5.00"), null, null, null, null),
-                                ),
-                        ),
+                            Transaction(
+                                firstLine = 0,
+                                lastLine = 2,
+                                date = "2023-08-31",
+                                status = "*",
+                                code = null,
+                                payee = "Payee",
+                                note = "Note",
+                                postings =
+                                    listOf(
+                                        Posting(
+                                            "assets",
+                                            Amount("-5.00", "€", "€ -5.00"),
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                        ),
+                                        Posting(
+                                            "expenses",
+                                            Amount("5.00", "€", "€ 5.00"),
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                        ),
+                                    ),
+                            ),
                     1 to
-                        Transaction(
-                            firstLine = 3,
-                            lastLine = 5,
-                            date = "2023-09-01",
-                            status = "!",
-                            code = "123",
-                            payee = "Another Payee",
-                            note = null,
-                            postings =
-                                listOf(
-                                    Posting("assets", Amount("-10.00", "€", "€ -10.00"), null, null, null, null),
-                                    Posting("expenses", Amount("10.00", "€", "€ 10.00"), null, null, null, null),
-                                ),
-                        ),
+                            Transaction(
+                                firstLine = 3,
+                                lastLine = 5,
+                                date = "2023-09-01",
+                                status = "!",
+                                code = "123",
+                                payee = "Another Payee",
+                                note = null,
+                                postings =
+                                    listOf(
+                                        Posting(
+                                            "assets",
+                                            Amount("-10.00", "€", "€ -10.00"),
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                        ),
+                                        Posting(
+                                            "expenses",
+                                            Amount("10.00", "€", "€ 10.00"),
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                        ),
+                                    ),
+                            ),
                 ),
             searching = false,
             query = "",
@@ -610,35 +665,63 @@ fun MainContentPreview() {
             transactions =
                 listOf(
                     0 to
-                        Transaction(
-                            firstLine = 0,
-                            lastLine = 2,
-                            date = "2023-08-31",
-                            status = "*",
-                            code = null,
-                            payee = "Payee",
-                            note = "Note",
-                            postings =
-                                listOf(
-                                    Posting("assets", Amount("-5.00", "€", "€ -5.00"), null, null, null, null),
-                                    Posting("expenses", Amount("5.00", "€", "€ 5.00"), null, null, null, null),
-                                ),
-                        ),
+                            Transaction(
+                                firstLine = 0,
+                                lastLine = 2,
+                                date = "2023-08-31",
+                                status = "*",
+                                code = null,
+                                payee = "Payee",
+                                note = "Note",
+                                postings =
+                                    listOf(
+                                        Posting(
+                                            "assets",
+                                            Amount("-5.00", "€", "€ -5.00"),
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                        ),
+                                        Posting(
+                                            "expenses",
+                                            Amount("5.00", "€", "€ 5.00"),
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                        ),
+                                    ),
+                            ),
                     1 to
-                        Transaction(
-                            firstLine = 3,
-                            lastLine = 5,
-                            date = "2023-09-01",
-                            status = "!",
-                            code = "123",
-                            payee = "Another Payee",
-                            note = null,
-                            postings =
-                                listOf(
-                                    Posting("assets", Amount("-10.00", "€", "€ -10.00"), null, null, null, null),
-                                    Posting("expenses", Amount("10.00", "€", "€ 10.00"), null, null, null, null),
-                                ),
-                        ),
+                            Transaction(
+                                firstLine = 3,
+                                lastLine = 5,
+                                date = "2023-09-01",
+                                status = "!",
+                                code = "123",
+                                payee = "Another Payee",
+                                note = null,
+                                postings =
+                                    listOf(
+                                        Posting(
+                                            "assets",
+                                            Amount("-10.00", "€", "€ -10.00"),
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                        ),
+                                        Posting(
+                                            "expenses",
+                                            Amount("10.00", "€", "€ 10.00"),
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                        ),
+                                    ),
+                            ),
                 ),
             query = "",
             isRefreshing = false,
