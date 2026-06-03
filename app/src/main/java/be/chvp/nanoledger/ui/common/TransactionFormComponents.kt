@@ -62,12 +62,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import be.chvp.nanoledger.R
+import be.chvp.nanoledger.data.Amount
 import be.chvp.nanoledger.data.CostType
 import be.chvp.nanoledger.data.Posting
+import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
 import kotlinx.coroutines.launch
 
 const val TRANSACTION_INDEX_KEY = "transaction_index"
@@ -164,21 +167,36 @@ fun TransactionForm(
                             .weight(0.25f)
                             .width((8 * 16).sp.toDp()),
                     )
-                    StatusSelector(viewModel, Modifier.width((3 * 16).sp.toDp()))
+                    val status by viewModel.status.observeAsState()
+                    StatusSelector(
+                        status,
+                        { viewModel.setStatus(it) },
+                        Modifier.width((3 * 16).sp.toDp())
+                    )
+                    val code by viewModel.code.observeAsState()
                     CodeField(
-                        viewModel,
+                        code,
+                        { viewModel.setCode(it) },
                         Modifier
                             .weight(0.5f)
                             .width((16 * 16).sp.toDp()),
                     )
+                    val payee by viewModel.payee.observeAsState()
+                    val options by viewModel.possiblePayees.observeAsState()
                     PayeeSelector(
-                        viewModel,
+                        payee,
+                        options ?: emptyList(),
+                        { viewModel.setPayee(it) },
                         Modifier
                             .weight(0.5f)
                             .width((16 * 16).sp.toDp()),
                     )
+                    val note by viewModel.note.observeAsState()
+                    val possibleNotes by viewModel.possibleNotes.observeAsState()
                     NoteSelector(
-                        viewModel,
+                        note,
+                        possibleNotes ?: emptyList(),
+                        { viewModel.setNote(it) },
                         Modifier
                             .weight(0.75f)
                             .width((16 * 16).sp.toDp()),
@@ -419,10 +437,10 @@ fun DateSelector(
 
 @Composable
 fun StatusSelector(
-    viewModel: TransactionFormViewModel,
+    status: String?,
+    onStatusChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val status by viewModel.status.observeAsState()
     val options = listOf(" ", "!", "*")
     var expanded by rememberSaveable { mutableStateOf(false) }
     if (status != null) {
@@ -432,7 +450,7 @@ fun StatusSelector(
             modifier = modifier,
         ) {
             OutlinedTextField(
-                value = (status ?: ""),
+                value = status,
                 onValueChange = {},
                 readOnly = true,
                 modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
@@ -452,7 +470,7 @@ fun StatusSelector(
                     DropdownMenuItem(
                         text = { Text(it) },
                         onClick = {
-                            viewModel.setStatus(it)
+                            onStatusChange(it)
                             expanded = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -465,15 +483,15 @@ fun StatusSelector(
 
 @Composable
 fun CodeField(
-    viewModel: TransactionFormViewModel,
+    code: String?,
+    onCodeChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val code by viewModel.code.observeAsState()
     if (code != null) {
         OutlinedTextField(
-            (code ?: ""),
-            { viewModel.setCode(it) },
-            modifier,
+            code,
+            onValueChange = onCodeChange,
+            modifier = modifier,
             label = { Text(stringResource(R.string.code), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         )
     }
@@ -481,16 +499,16 @@ fun CodeField(
 
 @Composable
 fun PayeeSelector(
-    viewModel: TransactionFormViewModel,
+    payee: String?,
+    options: List<String>,
+    onPayeeChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val payee by viewModel.payee.observeAsState()
-    val options by viewModel.possiblePayees.observeAsState()
     if (payee != null) {
         OutlinedLooseDropdown(
-            options ?: emptyList(),
-            payee ?: "",
-            { viewModel.setPayee(it) },
+            options,
+            payee,
+            onPayeeChange,
             modifier,
         ) { Text(stringResource(R.string.payee), maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
@@ -498,16 +516,16 @@ fun PayeeSelector(
 
 @Composable
 fun NoteSelector(
-    viewModel: TransactionFormViewModel,
+    note: String?,
+    options: List<String>,
+    onNoteChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val note by viewModel.note.observeAsState()
-    val options by viewModel.possibleNotes.observeAsState()
     if (note != null) {
         OutlinedLooseDropdown(
-            options ?: emptyList(),
-            note ?: "",
-            { viewModel.setNote(it) },
+            options,
+            note,
+            onNoteChange,
             modifier,
         ) { Text(stringResource(R.string.note), maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
@@ -515,10 +533,31 @@ fun NoteSelector(
 
 @Composable
 fun PostingRow(
-    index: Int,
     posting: Posting,
     showAmountHint: Boolean,
-    viewModel: TransactionFormViewModel,
+    accounts: List<String>,
+    currencyEnabled: Boolean,
+    currencyBeforeAmount: Boolean,
+    unbalancedAmount: String?,
+    onCommentChange: (String) -> Unit,
+    onAccountChange: (String) -> Unit,
+    onRemovePosting: () -> Unit,
+    onCurrencyChange: (String) -> Unit,
+    onAmountChange: (String) -> Unit,
+    onCostTypeChange: (CostType) -> Unit,
+    onCostCurrencyChange: (String) -> Unit,
+    onCostAmountChange: (String) -> Unit,
+    onAssertionCurrencyChange: (String) -> Unit,
+    onAssertionAmountChange: (String) -> Unit,
+    onAssertionCostTypeChange: (CostType) -> Unit,
+    onAssertionCostCurrencyChange: (String) -> Unit,
+    onAssertionCostAmountChange: (String) -> Unit,
+    onToggleAccount: (Boolean) -> Unit,
+    onToggleAmount: (Boolean) -> Unit,
+    onToggleCost: (Boolean) -> Unit,
+    onToggleAssertion: (Boolean) -> Unit,
+    onToggleAssertionCost: (Boolean) -> Unit,
+    onToggleComment: (Boolean) -> Unit,
 ) {
     FlowRow(
         modifier =
@@ -532,24 +571,39 @@ fun PostingRow(
         with(LocalDensity.current) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 if (posting.isComment()) {
-                    CommentField(posting.comment ?: "", index, viewModel, Modifier.weight(1.0f))
+                    CommentField(posting.comment ?: "", onCommentChange, Modifier.weight(1.0f))
                 } else {
-                    AccountSelector(index, posting.account ?: "", viewModel, Modifier.weight(1.0f))
+                    AccountSelector(
+                        posting.account ?: "",
+                        accounts,
+                        onAccountChange,
+                        Modifier.weight(1.0f)
+                    )
                 }
-                PostingFieldSelector(viewModel, index, posting)
-                IconButton(onClick = { viewModel.removePosting(index) }) {
+                PostingFieldSelector(
+                    posting,
+                    onToggleAccount,
+                    onToggleAmount,
+                    onToggleCost,
+                    onToggleAssertion,
+                    onToggleAssertionCost,
+                    onToggleComment,
+                )
+                IconButton(onClick = onRemovePosting) {
                     Icon(Icons.Default.RemoveCircleOutline, contentDescription = stringResource(R.string.remove_posting))
                 }
             }
             if (posting.amount != null) {
                 CurrencyAndAmountFields(
-                    viewModel,
                     posting.amount.currency,
                     posting.amount.quantity,
+                    currencyEnabled,
+                    currencyBeforeAmount,
                     showAmountHint,
+                    unbalancedAmount,
+                    onCurrencyChange,
+                    onAmountChange,
                     Modifier.weight(1.0f),
-                    saveCurrency = { viewModel.setCurrency(index, it) },
-                    saveAmount = { viewModel.setAmount(index, it) },
                 )
                 if (posting.cost != null) {
                     Row(
@@ -559,17 +613,19 @@ fun PostingRow(
                                 .width((20 * 16).sp.toDp())
                                 .weight(1.0f),
                     ) {
-                        CostTypeSelector(posting.cost.type) { viewModel.setCostType(index, it) }
+                        CostTypeSelector(posting.cost.type, onCostTypeChange)
                         CurrencyAndAmountFields(
-                            viewModel,
                             posting.cost.amount.currency,
                             posting.cost.amount.quantity,
+                            currencyEnabled,
+                            currencyBeforeAmount,
                             false,
+                            null,
+                            onCostCurrencyChange,
+                            onCostAmountChange,
                             Modifier
                                 .weight(1.0f)
                                 .padding(start = 4.dp),
-                            saveCurrency = { viewModel.setCostCurrency(index, it) },
-                            saveAmount = { viewModel.setCostAmount(index, it) },
                         )
                     }
                 }
@@ -584,15 +640,17 @@ fun PostingRow(
                 ) {
                     Text("=", modifier = Modifier.padding(horizontal = 4.dp))
                     CurrencyAndAmountFields(
-                        viewModel,
                         posting.assertion.currency,
                         posting.assertion.quantity,
+                        currencyEnabled,
+                        currencyBeforeAmount,
                         false,
+                        null,
+                        onAssertionCurrencyChange,
+                        onAssertionAmountChange,
                         Modifier
                             .weight(1.0f)
                             .padding(start = 4.dp),
-                        saveCurrency = { viewModel.setAssertionCurrency(index, it) },
-                        saveAmount = { viewModel.setAssertionAmount(index, it) },
                     )
                 }
                 if (posting.assertionCost != null) {
@@ -603,38 +661,80 @@ fun PostingRow(
                                 .width((20 * 16).sp.toDp())
                                 .weight(1.0f),
                     ) {
-                        CostTypeSelector(posting.assertionCost.type) {
-                            viewModel.setAssertionCostType(
-                                index,
-                                it,
-                            )
-                        }
+                        CostTypeSelector(posting.assertionCost.type, onAssertionCostTypeChange)
                         CurrencyAndAmountFields(
-                            viewModel,
                             posting.assertionCost.amount.currency,
                             posting.assertionCost.amount.quantity,
+                            currencyEnabled,
+                            currencyBeforeAmount,
                             false,
+                            null,
+                            onAssertionCostCurrencyChange,
+                            onAssertionCostAmountChange,
                             Modifier
                                 .weight(1.0f)
                                 .padding(start = 4.dp),
-                            saveCurrency = { viewModel.setAssertionCostCurrency(index, it) },
-                            saveAmount = { viewModel.setAssertionCostAmount(index, it) },
                         )
                     }
                 }
             }
             if (!posting.isComment() && posting.comment != null) {
-                CommentField(posting.comment, index, viewModel, Modifier.fillMaxWidth())
+                CommentField(posting.comment, onCommentChange, Modifier.fillMaxWidth())
             }
         }
     }
 }
 
 @Composable
-fun PostingFieldSelector(
-    viewModel: TransactionFormViewModel,
+fun PostingRow(
     index: Int,
     posting: Posting,
+    showAmountHint: Boolean,
+    viewModel: TransactionFormViewModel,
+) {
+    val accounts by viewModel.accounts.observeAsState()
+    val currencyEnabled by viewModel.currencyEnabled.observeAsState(true)
+    val currencyBeforeAmount by viewModel.currencyBeforeAmount.observeAsState(true)
+    val unbalancedAmount by viewModel.unbalancedAmount.observeAsState()
+
+    PostingRow(
+        posting,
+        showAmountHint,
+        accounts ?: emptyList(),
+        currencyEnabled,
+        currencyBeforeAmount,
+        unbalancedAmount,
+        { viewModel.setComment(index, it) },
+        { viewModel.setAccount(index, it) },
+        { viewModel.removePosting(index) },
+        { viewModel.setCurrency(index, it) },
+        { viewModel.setAmount(index, it) },
+        { viewModel.setCostType(index, it) },
+        { viewModel.setCostCurrency(index, it) },
+        { viewModel.setCostAmount(index, it) },
+        { viewModel.setAssertionCurrency(index, it) },
+        { viewModel.setAssertionAmount(index, it) },
+        { viewModel.setAssertionCostType(index, it) },
+        { viewModel.setAssertionCostCurrency(index, it) },
+        { viewModel.setAssertionCostAmount(index, it) },
+        { viewModel.toggleAccount(index, it) },
+        { viewModel.toggleAmount(index, it) },
+        { viewModel.toggleCost(index, it) },
+        { viewModel.toggleAssertion(index, it) },
+        { viewModel.toggleAssertionCost(index, it) },
+        { viewModel.toggleComment(index, it) },
+    )
+}
+
+@Composable
+fun PostingFieldSelector(
+    posting: Posting,
+    onToggleAccount: (Boolean) -> Unit,
+    onToggleAmount: (Boolean) -> Unit,
+    onToggleCost: (Boolean) -> Unit,
+    onToggleAssertion: (Boolean) -> Unit,
+    onToggleAssertionCost: (Boolean) -> Unit,
+    onToggleComment: (Boolean) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
@@ -654,7 +754,7 @@ fun PostingFieldSelector(
                     )
                 },
                 onClick = {
-                    viewModel.toggleAccount(index, posting.account == null)
+                    onToggleAccount(posting.account == null)
                     expanded = false
                 },
             )
@@ -667,7 +767,7 @@ fun PostingFieldSelector(
                     )
                 },
                 onClick = {
-                    viewModel.toggleAmount(index, posting.amount == null)
+                    onToggleAmount(posting.amount == null)
                     expanded = false
                 },
             )
@@ -680,7 +780,7 @@ fun PostingFieldSelector(
                     )
                 },
                 onClick = {
-                    viewModel.toggleCost(index, posting.cost == null)
+                    onToggleCost(posting.cost == null)
                     expanded = false
                 },
             )
@@ -693,7 +793,7 @@ fun PostingFieldSelector(
                     )
                 },
                 onClick = {
-                    viewModel.toggleAssertion(index, posting.assertion == null)
+                    onToggleAssertion(posting.assertion == null)
                     expanded = false
                 },
             )
@@ -706,7 +806,7 @@ fun PostingFieldSelector(
                     )
                 },
                 onClick = {
-                    viewModel.toggleAssertionCost(index, posting.assertionCost == null)
+                    onToggleAssertionCost(posting.assertionCost == null)
                     expanded = false
                 },
             )
@@ -719,7 +819,7 @@ fun PostingFieldSelector(
                     )
                 },
                 onClick = {
-                    viewModel.toggleComment(index, posting.comment == null)
+                    onToggleComment(posting.comment == null)
                     expanded = false
                 },
             )
@@ -728,15 +828,31 @@ fun PostingFieldSelector(
 }
 
 @Composable
+fun PostingFieldSelector(
+    viewModel: TransactionFormViewModel,
+    index: Int,
+    posting: Posting,
+) {
+    PostingFieldSelector(
+        posting,
+        { viewModel.toggleAccount(index, it) },
+        { viewModel.toggleAmount(index, it) },
+        { viewModel.toggleCost(index, it) },
+        { viewModel.toggleAssertion(index, it) },
+        { viewModel.toggleAssertionCost(index, it) },
+        { viewModel.toggleComment(index, it) },
+    )
+}
+
+@Composable
 fun CommentField(
     comment: String,
-    index: Int,
-    viewModel: TransactionFormViewModel,
+    onCommentChange: (String) -> Unit,
     modifier: Modifier,
 ) {
     OutlinedTextField(
         comment,
-        onValueChange = { viewModel.setComment(index, it) },
+        onValueChange = onCommentChange,
         singleLine = true,
         label = { Text(stringResource(R.string.comment), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         modifier = modifier,
@@ -790,31 +906,32 @@ fun CostTypeSelector(
 
 @Composable
 fun CurrencyAndAmountFields(
-    viewModel: TransactionFormViewModel,
     currency: String,
     quantity: String,
+    currencyEnabled: Boolean,
+    currencyBeforeAmount: Boolean,
     showAmountHint: Boolean,
+    unbalancedAmount: String?,
+    onCurrencyChange: (String) -> Unit,
+    onAmountChange: (String) -> Unit,
     modifier: Modifier,
-    saveCurrency: (newCurrencyString: String) -> Unit,
-    saveAmount: (newAmountString: String) -> Unit,
 ) {
-    val currencyEnabled by viewModel.currencyEnabled.observeAsState(true)
-    val currencyBeforeAmount by viewModel.currencyBeforeAmount.observeAsState(true)
-
     with(LocalDensity.current) {
         Row(modifier = modifier.width((15 * 16).sp.toDp()), verticalAlignment = Alignment.Bottom) {
             if (currencyEnabled && currencyBeforeAmount) {
-                CurrencyField(currency, Modifier.padding(end = 4.dp)) { saveCurrency(it) }
+                CurrencyField(currency, onCurrencyChange, Modifier.padding(end = 4.dp))
             }
 
-            AmountField(quantity, showAmountHint, viewModel, Modifier.weight(1f)) {
-                saveAmount(it)
-            }
+            AmountField(
+                quantity,
+                showAmountHint,
+                unbalancedAmount,
+                onAmountChange,
+                Modifier.weight(1f)
+            )
 
             if (currencyEnabled && !currencyBeforeAmount) {
-                CurrencyField(currency, Modifier.padding(start = 4.dp)) {
-                    saveCurrency(it)
-                }
+                CurrencyField(currency, onCurrencyChange, Modifier.padding(start = 4.dp))
             }
         }
     }
@@ -823,13 +940,13 @@ fun CurrencyAndAmountFields(
 @Composable
 fun CurrencyField(
     currency: String,
+    onCurrencyChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    save: (newCurrencyString: String) -> Unit,
 ) {
     with(LocalDensity.current) {
         OutlinedTextField(
             value = currency,
-            onValueChange = { save(it) },
+            onValueChange = onCurrencyChange,
             singleLine = true,
             modifier = modifier.width((6 * 16).sp.toDp()),
             colors =
@@ -846,14 +963,13 @@ fun CurrencyField(
 fun AmountField(
     quantity: String,
     showAmountHint: Boolean,
-    viewModel: TransactionFormViewModel,
+    unbalancedAmount: String?,
+    onAmountChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    save: (newAmountString: String) -> Unit,
 ) {
-    val unbalancedAmount by viewModel.unbalancedAmount.observeAsState()
     OutlinedTextField(
         value = quantity,
-        onValueChange = { save(it) },
+        onValueChange = onAmountChange,
         singleLine = true,
         colors =
             ExposedDropdownMenuDefaults.textFieldColors(
@@ -881,14 +997,13 @@ fun AmountField(
 
 @Composable
 fun AccountSelector(
-    index: Int,
     value: String,
-    viewModel: TransactionFormViewModel,
+    options: List<String>,
+    onAccountChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val options by viewModel.accounts.observeAsState()
-    val filteredOptions = options?.filter { it.contains(value, ignoreCase = true) } ?: emptyList()
-    OutlinedLooseDropdown(filteredOptions, value, { viewModel.setAccount(index, it) }, modifier) {
+    val filteredOptions = options.filter { it.contains(value, ignoreCase = true) }
+    OutlinedLooseDropdown(filteredOptions, value, onAccountChange, modifier) {
         Text(stringResource(R.string.account), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
@@ -956,3 +1071,123 @@ fun shouldShowDropdown(
     options: List<String>,
     currentValue: String,
 ): Boolean = options.size > 1 || (options.size == 1 && options[0] != currentValue)
+
+@Preview(showBackground = true)
+@Composable
+fun StatusSelectorPreview() {
+    NanoLedgerTheme {
+        StatusSelector(status = "*", onStatusChange = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CodeFieldPreview() {
+    NanoLedgerTheme {
+        CodeField(code = "123", onCodeChange = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PayeeSelectorPreview() {
+    NanoLedgerTheme {
+        PayeeSelector(
+            payee = "Sample Payee",
+            options = listOf("Sample Payee", "Another Payee"),
+            onPayeeChange = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun NoteSelectorPreview() {
+    NanoLedgerTheme {
+        NoteSelector(
+            note = "Sample Note",
+            options = listOf("Sample Note", "Another Note"),
+            onNoteChange = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PostingRowPreview() {
+    NanoLedgerTheme {
+        PostingRow(
+            posting =
+                Posting(
+                    account = "assets:checking",
+                    amount = Amount("-10.00", "EUR", "EUR -10.00"),
+                    cost = null,
+                    assertion = null,
+                    assertionCost = null,
+                    comment = "Sample comment",
+                ),
+            showAmountHint = false,
+            accounts = listOf("assets:checking", "expenses:food"),
+            currencyEnabled = true,
+            currencyBeforeAmount = true,
+            unbalancedAmount = "0.00 EUR",
+            onCommentChange = {},
+            onAccountChange = {},
+            onRemovePosting = {},
+            onCurrencyChange = {},
+            onAmountChange = {},
+            onCostTypeChange = {},
+            onCostCurrencyChange = {},
+            onCostAmountChange = {},
+            onAssertionCurrencyChange = {},
+            onAssertionAmountChange = {},
+            onAssertionCostTypeChange = {},
+            onAssertionCostCurrencyChange = {},
+            onAssertionCostAmountChange = {},
+            onToggleAccount = {},
+            onToggleAmount = {},
+            onToggleCost = {},
+            onToggleAssertion = {},
+            onToggleAssertionCost = {},
+            onToggleComment = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CostTypeSelectorPreview() {
+    NanoLedgerTheme {
+        CostTypeSelector(costType = CostType.UNIT, save = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CurrencyAndAmountFieldsPreview() {
+    NanoLedgerTheme {
+        CurrencyAndAmountFields(
+            currency = "EUR",
+            quantity = "10.00",
+            currencyEnabled = true,
+            currencyBeforeAmount = true,
+            showAmountHint = false,
+            unbalancedAmount = null,
+            onCurrencyChange = {},
+            onAmountChange = {},
+            modifier = Modifier,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AccountSelectorPreview() {
+    NanoLedgerTheme {
+        AccountSelector(
+            value = "assets",
+            options = listOf("assets:checking", "assets:savings", "expenses:food"),
+            onAccountChange = {},
+        )
+    }
+}

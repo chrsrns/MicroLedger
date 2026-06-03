@@ -55,10 +55,14 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import be.chvp.nanoledger.R
+import be.chvp.nanoledger.data.Amount
+import be.chvp.nanoledger.data.CostType
+import be.chvp.nanoledger.data.Posting
 import be.chvp.nanoledger.ui.common.CodeField
 import be.chvp.nanoledger.ui.common.NoteSelector
 import be.chvp.nanoledger.ui.common.PayeeSelector
@@ -230,6 +234,106 @@ fun TemplateForm(
     contentPadding: PaddingValues,
     bottomOffset: Dp,
 ) {
+    val status by viewModel.status.observeAsState()
+    val code by viewModel.code.observeAsState()
+    val payee by viewModel.payee.observeAsState()
+    val possiblePayees by viewModel.possiblePayees.observeAsState()
+    val note by viewModel.note.observeAsState()
+    val possibleNotes by viewModel.possibleNotes.observeAsState()
+    val postings by viewModel.postings.observeAsState()
+    val accounts by viewModel.accounts.observeAsState()
+    val currencyEnabled by viewModel.currencyEnabled.observeAsState(true)
+    val currencyBeforeAmount by viewModel.currencyBeforeAmount.observeAsState(true)
+    val unbalancedAmount by viewModel.unbalancedAmount.observeAsState()
+
+    TemplateForm(
+        status = status,
+        onStatusChange = { viewModel.setStatus(it) },
+        code = code,
+        onCodeChange = { viewModel.setCode(it) },
+        payee = payee,
+        possiblePayees = possiblePayees ?: emptyList(),
+        onPayeeChange = { viewModel.setPayee(it) },
+        note = note,
+        possibleNotes = possibleNotes ?: emptyList(),
+        onNoteChange = { viewModel.setNote(it) },
+        postings = postings,
+        accounts = accounts ?: emptyList(),
+        currencyEnabled = currencyEnabled,
+        currencyBeforeAmount = currencyBeforeAmount,
+        unbalancedAmount = unbalancedAmount,
+        onPostingCommentChange = { i, it -> viewModel.setComment(i, it) },
+        onPostingAccountChange = { i, it -> viewModel.setAccount(i, it) },
+        onRemovePosting = { viewModel.removePosting(it) },
+        onPostingCurrencyChange = { i, it -> viewModel.setCurrency(i, it) },
+        onPostingAmountChange = { i, it -> viewModel.setAmount(i, it) },
+        onPostingCostTypeChange = { i, it -> viewModel.setCostType(i, it) },
+        onPostingCostCurrencyChange = { i, it -> viewModel.setCostCurrency(i, it) },
+        onPostingCostAmountChange = { i, it -> viewModel.setCostAmount(i, it) },
+        onPostingAssertionCurrencyChange = { i, it -> viewModel.setAssertionCurrency(i, it) },
+        onPostingAssertionAmountChange = { i, it -> viewModel.setAssertionAmount(i, it) },
+        onPostingAssertionCostTypeChange = { i, it -> viewModel.setAssertionCostType(i, it) },
+        onPostingAssertionCostCurrencyChange = { i, it ->
+            viewModel.setAssertionCostCurrency(
+                i,
+                it
+            )
+        },
+        onPostingAssertionCostAmountChange = { i, it -> viewModel.setAssertionCostAmount(i, it) },
+        onPostingToggleAccount = { i, it -> viewModel.toggleAccount(i, it) },
+        onPostingToggleAmount = { i, it -> viewModel.toggleAmount(i, it) },
+        onPostingToggleCost = { i, it -> viewModel.toggleCost(i, it) },
+        onPostingToggleAssertion = { i, it -> viewModel.toggleAssertion(i, it) },
+        onPostingToggleAssertionCost = { i, it -> viewModel.toggleAssertionCost(i, it) },
+        onPostingToggleComment = { i, it -> viewModel.toggleComment(i, it) },
+        templateName = templateName,
+        onTemplateNameChange = onTemplateNameChange,
+        contentPadding = contentPadding,
+        bottomOffset = bottomOffset,
+    )
+}
+
+@Composable
+fun TemplateForm(
+    status: String?,
+    onStatusChange: (String) -> Unit,
+    code: String?,
+    onCodeChange: (String) -> Unit,
+    payee: String?,
+    possiblePayees: List<String>,
+    onPayeeChange: (String) -> Unit,
+    note: String?,
+    possibleNotes: List<String>,
+    onNoteChange: (String) -> Unit,
+    postings: List<Posting>?,
+    accounts: List<String>,
+    currencyEnabled: Boolean,
+    currencyBeforeAmount: Boolean,
+    unbalancedAmount: String?,
+    onPostingCommentChange: (Int, String) -> Unit,
+    onPostingAccountChange: (Int, String) -> Unit,
+    onRemovePosting: (Int) -> Unit,
+    onPostingCurrencyChange: (Int, String) -> Unit,
+    onPostingAmountChange: (Int, String) -> Unit,
+    onPostingCostTypeChange: (Int, CostType) -> Unit,
+    onPostingCostCurrencyChange: (Int, String) -> Unit,
+    onPostingCostAmountChange: (Int, String) -> Unit,
+    onPostingAssertionCurrencyChange: (Int, String) -> Unit,
+    onPostingAssertionAmountChange: (Int, String) -> Unit,
+    onPostingAssertionCostTypeChange: (Int, CostType) -> Unit,
+    onPostingAssertionCostCurrencyChange: (Int, String) -> Unit,
+    onPostingAssertionCostAmountChange: (Int, String) -> Unit,
+    onPostingToggleAccount: (Int, Boolean) -> Unit,
+    onPostingToggleAmount: (Int, Boolean) -> Unit,
+    onPostingToggleCost: (Int, Boolean) -> Unit,
+    onPostingToggleAssertion: (Int, Boolean) -> Unit,
+    onPostingToggleAssertionCost: (Int, Boolean) -> Unit,
+    onPostingToggleComment: (Int, Boolean) -> Unit,
+    templateName: String,
+    onTemplateNameChange: (String) -> Unit,
+    contentPadding: PaddingValues,
+    bottomOffset: Dp,
+) {
     Box(
         modifier =
             Modifier
@@ -261,34 +365,67 @@ fun TemplateForm(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     itemVerticalAlignment = Alignment.Bottom,
                 ) {
-                    StatusSelector(viewModel, Modifier.width((3 * 16).sp.toDp()))
+                    StatusSelector(status, onStatusChange, Modifier.width((3 * 16).sp.toDp()))
                     CodeField(
-                        viewModel,
-                        Modifier
+                        code, onCodeChange, Modifier
                             .weight(0.5f)
-                            .width((16 * 16).sp.toDp()),
+                            .width((16 * 16).sp.toDp())
                     )
                     PayeeSelector(
-                        viewModel,
+                        payee,
+                        possiblePayees,
+                        onPayeeChange,
                         Modifier
                             .weight(0.5f)
-                            .width((16 * 16).sp.toDp()),
+                            .width((16 * 16).sp.toDp())
                     )
                     NoteSelector(
-                        viewModel,
+                        note,
+                        possibleNotes,
+                        onNoteChange,
                         Modifier
                             .weight(0.75f)
-                            .width((16 * 16).sp.toDp()),
+                            .width((16 * 16).sp.toDp())
                     )
                 }
-                val postings by viewModel.postings.observeAsState()
                 postings?.forEachIndexed { i, posting ->
                     HorizontalDivider(
                         Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
                     )
-                    PostingRow(i, posting, posting.isEmpty(), viewModel)
+                    PostingRow(
+                        posting = posting,
+                        showAmountHint = posting.isEmpty(),
+                        accounts = accounts,
+                        currencyEnabled = currencyEnabled,
+                        currencyBeforeAmount = currencyBeforeAmount,
+                        unbalancedAmount = unbalancedAmount,
+                        onCommentChange = { onPostingCommentChange(i, it) },
+                        onAccountChange = { onPostingAccountChange(i, it) },
+                        onRemovePosting = { onRemovePosting(i) },
+                        onCurrencyChange = { onPostingCurrencyChange(i, it) },
+                        onAmountChange = { onPostingAmountChange(i, it) },
+                        onCostTypeChange = { onPostingCostTypeChange(i, it) },
+                        onCostCurrencyChange = { onPostingCostCurrencyChange(i, it) },
+                        onCostAmountChange = { onPostingCostAmountChange(i, it) },
+                        onAssertionCurrencyChange = { onPostingAssertionCurrencyChange(i, it) },
+                        onAssertionAmountChange = { onPostingAssertionAmountChange(i, it) },
+                        onAssertionCostTypeChange = { onPostingAssertionCostTypeChange(i, it) },
+                        onAssertionCostCurrencyChange = {
+                            onPostingAssertionCostCurrencyChange(
+                                i,
+                                it
+                            )
+                        },
+                        onAssertionCostAmountChange = { onPostingAssertionCostAmountChange(i, it) },
+                        onToggleAccount = { onPostingToggleAccount(i, it) },
+                        onToggleAmount = { onPostingToggleAmount(i, it) },
+                        onToggleCost = { onPostingToggleCost(i, it) },
+                        onToggleAssertion = { onPostingToggleAssertion(i, it) },
+                        onToggleAssertionCost = { onPostingToggleAssertionCost(i, it) },
+                        onToggleComment = { onPostingToggleComment(i, it) },
+                    )
                 }
             }
             Box(
@@ -297,5 +434,70 @@ fun TemplateForm(
                     .fillMaxWidth(),
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TemplateFormPreview() {
+    NanoLedgerTheme {
+        TemplateForm(
+            status = "*",
+            onStatusChange = {},
+            code = "123",
+            onCodeChange = {},
+            payee = "Sample Payee",
+            possiblePayees = listOf("Sample Payee", "Other Payee"),
+            onPayeeChange = {},
+            note = "Sample Note",
+            possibleNotes = listOf("Sample Note", "Other Note"),
+            onNoteChange = {},
+            postings =
+                listOf(
+                    Posting(
+                        "assets:checking",
+                        Amount("-10.00", "EUR", "EUR -10.00"),
+                        null,
+                        null,
+                        null,
+                        null,
+                    ),
+                    Posting(
+                        "expenses:food",
+                        Amount("10.00", "EUR", "EUR 10.00"),
+                        null,
+                        null,
+                        null,
+                        null,
+                    ),
+                ),
+            accounts = listOf("assets:checking", "expenses:food", "income:salary"),
+            currencyEnabled = true,
+            currencyBeforeAmount = true,
+            unbalancedAmount = "0.00 EUR",
+            onPostingCommentChange = { _, _ -> },
+            onPostingAccountChange = { _, _ -> },
+            onRemovePosting = { _ -> },
+            onPostingCurrencyChange = { _, _ -> },
+            onPostingAmountChange = { _, _ -> },
+            onPostingCostTypeChange = { _, _ -> },
+            onPostingCostCurrencyChange = { _, _ -> },
+            onPostingCostAmountChange = { _, _ -> },
+            onPostingAssertionCurrencyChange = { _, _ -> },
+            onPostingAssertionAmountChange = { _, _ -> },
+            onPostingAssertionCostTypeChange = { _, _ -> },
+            onPostingAssertionCostCurrencyChange = { _, _ -> },
+            onPostingAssertionCostAmountChange = { _, _ -> },
+            onPostingToggleAccount = { _, _ -> },
+            onPostingToggleAmount = { _, _ -> },
+            onPostingToggleCost = { _, _ -> },
+            onPostingToggleAssertion = { _, _ -> },
+            onPostingToggleAssertionCost = { _, _ -> },
+            onPostingToggleComment = { _, _ -> },
+            templateName = "My Template",
+            onTemplateNameChange = {},
+            contentPadding = PaddingValues(16.dp),
+            bottomOffset = 0.dp,
+        )
     }
 }
