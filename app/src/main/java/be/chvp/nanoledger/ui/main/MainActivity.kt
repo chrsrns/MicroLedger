@@ -419,7 +419,6 @@ fun MainBar(
     )
 }
 
-
 @Composable
 fun SelectionBar(
     onStopSelection: () -> Unit,
@@ -461,7 +460,6 @@ fun SelectionBar(
         onStopSelection()
     }
 }
-
 
 @Composable
 fun SearchBar(
@@ -535,34 +533,39 @@ fun MainScreenPreview() {
     NanoLedgerTheme {
         MainScreen(
             fileUri = "content://test".toUri(),
-            transactions = listOf(
-                0 to Transaction(
-                    firstLine = 0,
-                    lastLine = 2,
-                    date = "2023-08-31",
-                    status = "*",
-                    code = null,
-                    payee = "Payee",
-                    note = "Note",
-                    postings = listOf(
-                        Posting("assets", Amount("-5.00", "€", "€ -5.00"), null, null, null, null),
-                        Posting("expenses", Amount("5.00", "€", "€ 5.00"), null, null, null, null)
-                    )
+            transactions =
+                listOf(
+                    0 to
+                        Transaction(
+                            firstLine = 0,
+                            lastLine = 2,
+                            date = "2023-08-31",
+                            status = "*",
+                            code = null,
+                            payee = "Payee",
+                            note = "Note",
+                            postings =
+                                listOf(
+                                    Posting("assets", Amount("-5.00", "€", "€ -5.00"), null, null, null, null),
+                                    Posting("expenses", Amount("5.00", "€", "€ 5.00"), null, null, null, null),
+                                ),
+                        ),
+                    1 to
+                        Transaction(
+                            firstLine = 3,
+                            lastLine = 5,
+                            date = "2023-09-01",
+                            status = "!",
+                            code = "123",
+                            payee = "Another Payee",
+                            note = null,
+                            postings =
+                                listOf(
+                                    Posting("assets", Amount("-10.00", "€", "€ -10.00"), null, null, null, null),
+                                    Posting("expenses", Amount("10.00", "€", "€ 10.00"), null, null, null, null),
+                                ),
+                        ),
                 ),
-                1 to Transaction(
-                    firstLine = 3,
-                    lastLine = 5,
-                    date = "2023-09-01",
-                    status = "!",
-                    code = "123",
-                    payee = "Another Payee",
-                    note = null,
-                    postings = listOf(
-                        Posting("assets", Amount("-10.00", "€", "€ -10.00"), null, null, null, null),
-                        Posting("expenses", Amount("10.00", "€", "€ 10.00"), null, null, null, null)
-                    )
-                )
-            ),
             searching = false,
             query = "",
             isRefreshing = false,
@@ -571,6 +574,7 @@ fun MainScreenPreview() {
             onToggleSelect = {},
             onSearchClick = {},
             onSettingsClick = {},
+            onTemplatesClick = {},
             onStopSearching = {},
             onQueryChange = {},
             onStopSelection = {},
@@ -587,41 +591,46 @@ fun MainScreenPreview() {
 fun MainContentPreview() {
     NanoLedgerTheme {
         MainContent(
-            transactions = listOf(
-                0 to Transaction(
-                    firstLine = 0,
-                    lastLine = 2,
-                    date = "2023-08-31",
-                    status = "*",
-                    code = null,
-                    payee = "Payee",
-                    note = "Note",
-                    postings = listOf(
-                        Posting("assets", Amount("-5.00", "€", "€ -5.00"), null, null, null, null),
-                        Posting("expenses", Amount("5.00", "€", "€ 5.00"), null, null, null, null)
-                    )
+            transactions =
+                listOf(
+                    0 to
+                        Transaction(
+                            firstLine = 0,
+                            lastLine = 2,
+                            date = "2023-08-31",
+                            status = "*",
+                            code = null,
+                            payee = "Payee",
+                            note = "Note",
+                            postings =
+                                listOf(
+                                    Posting("assets", Amount("-5.00", "€", "€ -5.00"), null, null, null, null),
+                                    Posting("expenses", Amount("5.00", "€", "€ 5.00"), null, null, null, null),
+                                ),
+                        ),
+                    1 to
+                        Transaction(
+                            firstLine = 3,
+                            lastLine = 5,
+                            date = "2023-09-01",
+                            status = "!",
+                            code = "123",
+                            payee = "Another Payee",
+                            note = null,
+                            postings =
+                                listOf(
+                                    Posting("assets", Amount("-10.00", "€", "€ -10.00"), null, null, null, null),
+                                    Posting("expenses", Amount("10.00", "€", "€ 10.00"), null, null, null, null),
+                                ),
+                        ),
                 ),
-                1 to Transaction(
-                    firstLine = 3,
-                    lastLine = 5,
-                    date = "2023-09-01",
-                    status = "!",
-                    code = "123",
-                    payee = "Another Payee",
-                    note = null,
-                    postings = listOf(
-                        Posting("assets", Amount("-10.00", "€", "€ -10.00"), null, null, null, null),
-                        Posting("expenses", Amount("10.00", "€", "€ 10.00"), null, null, null, null)
-                    )
-                )
-            ),
             query = "",
             isRefreshing = false,
             selected = null,
             onRefresh = {},
             onToggleSelect = {},
             contentPadding = PaddingValues(0.dp),
-            bottomOffset = 0.dp
+            bottomOffset = 0.dp,
         )
     }
 }
