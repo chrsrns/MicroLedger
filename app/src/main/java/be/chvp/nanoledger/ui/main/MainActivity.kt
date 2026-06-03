@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
@@ -75,6 +76,7 @@ import be.chvp.nanoledger.data.Transaction
 import be.chvp.nanoledger.ui.add.AddActivity
 import be.chvp.nanoledger.ui.common.TRANSACTION_INDEX_KEY
 import be.chvp.nanoledger.ui.edit.EditActivity
+import be.chvp.nanoledger.ui.dashboard.DashboardActivity
 import be.chvp.nanoledger.ui.preferences.PreferencesActivity
 import be.chvp.nanoledger.ui.templates.TemplatesActivity
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
@@ -144,6 +146,9 @@ class MainActivity : ComponentActivity() {
                     onAddClick = {
                         startActivity(Intent(this, AddActivity::class.java))
                     },
+                    onDashboardClick = {
+                        startActivity(Intent(this, DashboardActivity::class.java))
+                    },
                     onSettingsClick = {
                         startActivity(Intent(this, PreferencesActivity::class.java))
                     },
@@ -172,6 +177,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     mainViewModel: MainViewModel = viewModel(),
     onAddClick: () -> Unit,
+    onDashboardClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onTemplatesClick: () -> Unit,
     onCopyClick: (Int) -> Unit,
@@ -194,6 +200,7 @@ fun MainScreen(
         onRefresh = { mainViewModel.refresh() },
         onToggleSelect = { mainViewModel.toggleSelect(it) },
         onSearchClick = { mainViewModel.setSearching(true) },
+        onDashboardClick = onDashboardClick,
         onSettingsClick = onSettingsClick,
         onTemplatesClick = onTemplatesClick,
         onStopSearching = {
@@ -220,6 +227,7 @@ fun MainScreen(
     onRefresh: () -> Unit,
     onToggleSelect: (Int) -> Unit,
     onSearchClick: () -> Unit,
+    onDashboardClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onTemplatesClick: () -> Unit,
     onStopSearching: () -> Unit,
@@ -240,7 +248,7 @@ fun MainScreen(
             } else if (searching) {
                 SearchBar(query, onQueryChange, onStopSearching)
             } else {
-                MainBar(onSearchClick, onSettingsClick, onTemplatesClick)
+                MainBar(onSearchClick, onDashboardClick, onSettingsClick, onTemplatesClick)
             }
         },
         floatingActionButton = {
@@ -388,6 +396,7 @@ fun MainContent(
 @Composable
 fun MainBar(
     onSearchClick: () -> Unit,
+    onDashboardClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onTemplatesClick: () -> Unit,
 ) {
@@ -396,6 +405,12 @@ fun MainBar(
         actions = {
             IconButton(onClick = onSearchClick) {
                 Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.search))
+            }
+            IconButton(onClick = onDashboardClick) {
+                Icon(
+                    Icons.Filled.Dashboard,
+                    contentDescription = stringResource(R.string.dashboard),
+                )
             }
             IconButton(onClick = onTemplatesClick) {
                 Icon(
@@ -573,6 +588,7 @@ fun MainScreenPreview() {
             onRefresh = {},
             onToggleSelect = {},
             onSearchClick = {},
+            onDashboardClick = {},
             onSettingsClick = {},
             onTemplatesClick = {},
             onStopSearching = {},

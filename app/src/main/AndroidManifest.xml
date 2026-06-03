@@ -40,6 +40,10 @@
             android:exported="false"
             android:name=".ui.templates.TemplateFormActivity"
             />
+        <activity
+            android:exported="false"
+            android:name=".ui.dashboard.DashboardActivity"
+            />
     </application>
 
 </manifest>
