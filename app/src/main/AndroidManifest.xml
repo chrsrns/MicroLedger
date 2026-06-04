@@ -44,6 +44,10 @@
             android:exported="false"
             android:name=".ui.dashboard.DashboardActivity"
             />
+        <activity
+            android:exported="false"
+            android:name=".ui.accounttransactions.AccountTransactionsActivity"
+            />
     </application>
 
 </manifest>

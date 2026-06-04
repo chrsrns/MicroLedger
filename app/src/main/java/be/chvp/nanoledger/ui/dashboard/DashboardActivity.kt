@@ -1,10 +1,12 @@
 package be.chvp.nanoledger.ui.dashboard
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -43,12 +47,12 @@ import be.chvp.nanoledger.R
 import be.chvp.nanoledger.data.reporting.AccountBalanceCalculator
 import be.chvp.nanoledger.data.reporting.MonthlyCashFlowCalculator
 import be.chvp.nanoledger.data.reporting.NetWorthCalculator
+import be.chvp.nanoledger.ui.accounttransactions.AccountTransactionsActivity
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
+import be.chvp.nanoledger.ui.util.amountColor
+import be.chvp.nanoledger.ui.util.formatAmount
 import dagger.hilt.android.AndroidEntryPoint
 import java.math.BigDecimal
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
-import java.util.Locale
 
 @AndroidEntryPoint
 class DashboardActivity : ComponentActivity() {
@@ -60,6 +64,7 @@ class DashboardActivity : ComponentActivity() {
         setContent {
             NanoLedgerTheme {
                 DashboardScreen(
+                    context = this,
                     onBackClick = { finish() },
                 )
             }
@@ -69,6 +74,7 @@ class DashboardActivity : ComponentActivity() {
 
 @Composable
 fun DashboardScreen(
+    context: ComponentActivity,
     dashboardViewModel: DashboardViewModel = viewModel(),
     onBackClick: () -> Unit,
 ) {
@@ -83,6 +89,9 @@ fun DashboardScreen(
         cashFlow = cashFlow,
         decimalSeparator = decimalSeparator,
         onBackClick = onBackClick,
+        onAccountClick = {
+            context.startActivity(Intent(context, AccountTransactionsActivity::class.java))
+        },
     )
 }
 
@@ -93,6 +102,7 @@ fun DashboardScreenContent(
     cashFlow: MonthlyCashFlowCalculator.CashFlowResult?,
     decimalSeparator: String,
     onBackClick: () -> Unit,
+    onAccountClick: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -128,7 +138,7 @@ fun DashboardScreenContent(
         ) {
             NetWorthCard(netWorth, decimalSeparator)
             CashFlowCard(cashFlow, decimalSeparator)
-            AccountBalancesCard(accountBalances, decimalSeparator)
+            AccountBalancesCard(accountBalances, decimalSeparator, onAccountClick)
         }
     }
 }
@@ -208,8 +218,12 @@ fun CashFlowCard(
 fun AccountBalancesCard(
     accountBalances: AccountBalanceCalculator.AccountBalancesResult?,
     decimalSeparator: String,
+    onClick: () -> Unit,
 ) {
-    DashboardCard(title = stringResource(R.string.account_balances)) {
+    DashboardCard(
+        title = stringResource(R.string.account_balances),
+        onClick = onClick,
+    ) {
         if (accountBalances == null || (accountBalances.assets.isEmpty() && accountBalances.liabilities.isEmpty())) {
             NoDataText()
         } else {
@@ -219,6 +233,7 @@ fun AccountBalancesCard(
                     AmountRow(
                         label = balance.account,
                         amount = balance.balance,
+                        currency = balance.currency,
                         decimalSeparator = decimalSeparator,
                         labelStyle = MaterialTheme.typography.bodySmall,
                     )
@@ -233,6 +248,7 @@ fun AccountBalancesCard(
                     AmountRow(
                         label = balance.account,
                         amount = balance.balance,
+                        currency = balance.currency,
                         decimalSeparator = decimalSeparator,
                         negate = true,
                         labelStyle = MaterialTheme.typography.bodySmall,
@@ -247,9 +263,20 @@ fun AccountBalancesCard(
 fun DashboardCard(
     title: String,
     subtitle: String? = null,
+    onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            ),
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 title,
@@ -288,6 +315,7 @@ fun AmountRow(
     negate: Boolean = false,
     bold: Boolean = false,
     labelStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
+    currency: String? = null,
 ) {
     val displayAmount = if (negate) amount.negate() else amount
     Row(
@@ -303,12 +331,26 @@ fun AmountRow(
             fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.weight(1f),
         )
-        Text(
-            formatAmount(displayAmount, decimalSeparator),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
-            color = amountColor(displayAmount),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!currency.isNullOrBlank()) {
+                Text(
+                    currency,
+                    modifier = Modifier.width(40.dp),
+                    textAlign = TextAlign.End,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalContentColor.current.copy(alpha = 0.6f),
+                )
+                Spacer(Modifier.width(4.dp))
+            }
+            Text(
+                formatAmount(displayAmount, decimalSeparator),
+                modifier = Modifier.widthIn(min = 80.dp),
+                textAlign = TextAlign.End,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
+                color = amountColor(displayAmount),
+            )
+        }
     }
 }
 
@@ -321,30 +363,6 @@ fun NoDataText() {
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
     )
-}
-
-fun formatAmount(
-    amount: BigDecimal,
-    decimalSeparator: String,
-): String {
-    // Honor the user's configured decimal separator (see PreferencesDataSource);
-    // pick a sensible grouping separator that doesn't collide with it.
-    val separator = decimalSeparator.firstOrNull() ?: '.'
-    val symbols =
-        DecimalFormatSymbols(Locale.US).apply {
-            this.decimalSeparator = separator
-            groupingSeparator = if (separator == ',') '.' else ','
-        }
-    return DecimalFormat("#,##0.00", symbols).format(amount)
-}
-
-@Composable
-fun amountColor(amount: BigDecimal): Color {
-    return when {
-        amount > BigDecimal.ZERO -> MaterialTheme.colorScheme.primary
-        amount < BigDecimal.ZERO -> MaterialTheme.colorScheme.error
-        else -> LocalContentColor.current
-    }
 }
 
 @Preview(showBackground = true)
@@ -362,7 +380,7 @@ fun DashboardScreenPreview() {
                     AccountBalanceCalculator.AccountBalance(
                         "Assets:Checking",
                         BigDecimal("3000.00"),
-                        "$"
+                        "PHP"
                     ),
                     AccountBalanceCalculator.AccountBalance(
                         "Assets:Savings",
@@ -374,7 +392,7 @@ fun DashboardScreenPreview() {
                     AccountBalanceCalculator.AccountBalance(
                         "Liabilities:Credit Card",
                         BigDecimal("1550.00"),
-                        "$"
+                        "EUR"
                     ),
                 ),
                 equity = emptyList(),
@@ -389,6 +407,7 @@ fun DashboardScreenPreview() {
             ),
             decimalSeparator = ".",
             onBackClick = {},
+            onAccountClick = {},
         )
     }
 }

@@ -104,9 +104,11 @@
     <string name="account_balances">Account Balances</string>
     <string name="assets">Assets</string>
     <string name="liabilities">Liabilities</string>
+    <string name="equity">Equity</string>
     <string name="cash_flow_this_month">Cash Flow This Month</string>
     <string name="income">Income</string>
     <string name="expenses">Expenses</string>
     <string name="net_flow">Net Flow</string>
     <string name="no_data">No data yet</string>
+    <string name="no_transactions_for_account">No transactions found for this account</string>
 </resources>
