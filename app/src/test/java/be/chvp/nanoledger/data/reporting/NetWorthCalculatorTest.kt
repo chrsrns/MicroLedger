@@ -29,19 +29,21 @@ class NetWorthCalculatorTest {
 
     @Test
     fun assetsAndLiabilitiesShouldCalculateCorrectNetWorth() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Setup",
-                firstLine = 1,
-                lastLine = 4,
-                postings = listOf(
-                    posting("Assets:Checking", amount("5000.00")),
-                    posting("Liabilities:Credit Card", amount("-500.00")),
-                    posting("Equity:Opening Balances", amount("-4500.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Setup",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("5000.00")),
+                            posting("Liabilities:Credit Card", amount("-500.00")),
+                            posting("Equity:Opening Balances", amount("-4500.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -52,26 +54,27 @@ class NetWorthCalculatorTest {
 
     @Test
     fun multipleTransactionsShouldAggregateCorrectly() {
-        val transactions = listOf(
-            openingTransaction(
-                amount = "1000.00",
-                date = "2024-01-01",
-                payee = "Opening",
-                firstLine = 1
-            ),
-            incomeTransaction(
-                amount = "2000.00",
-                date = "2024-01-15",
-                payee = "Paycheck",
-                firstLine = 4
-            ),
-            liabilityTransaction(
-                amount = "150.00",
-                date = "2024-01-20",
-                payee = "Credit Card Purchase",
-                firstLine = 7,
-            ),
-        )
+        val transactions =
+            listOf(
+                openingTransaction(
+                    amount = "1000.00",
+                    date = "2024-01-01",
+                    payee = "Opening",
+                    firstLine = 1,
+                ),
+                incomeTransaction(
+                    amount = "2000.00",
+                    date = "2024-01-15",
+                    payee = "Paycheck",
+                    firstLine = 4,
+                ),
+                liabilityTransaction(
+                    amount = "150.00",
+                    date = "2024-01-20",
+                    payee = "Credit Card Purchase",
+                    firstLine = 7,
+                ),
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -85,28 +88,31 @@ class NetWorthCalculatorTest {
 
     @Test
     fun multiCurrencyAssetsShouldSumSeparately() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "USD Opening",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Checking", amount("1000.00", "USD")),
-                    posting("Equity:Opening", amount("-1000.00", "USD")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "USD Opening",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("1000.00", "USD")),
+                            posting("Equity:Opening", amount("-1000.00", "USD")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-15",
-                payee = "Euro Account Opening",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Assets:Euro Account", amount("500.00", "EUR")),
-                    posting("Equity:Opening", amount("-500.00", "EUR")),
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Euro Account Opening",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Assets:Euro Account", amount("500.00", "EUR")),
+                            posting("Equity:Opening", amount("-500.00", "EUR")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -119,25 +125,27 @@ class NetWorthCalculatorTest {
 
     @Test
     fun postingsWithoutAmountShouldBeIgnored() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Store",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Expenses:Food", amount("50.00")),
-                    be.chvp.nanoledger.data.Posting(
-                        account = "Assets:Checking",
-                        amount = null,
-                        cost = null,
-                        assertion = null,
-                        assertionCost = null,
-                        comment = null,
-                    ),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Store",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Expenses:Food", amount("50.00")),
+                            be.chvp.nanoledger.data.Posting(
+                                account = "Assets:Checking",
+                                amount = null,
+                                cost = null,
+                                assertion = null,
+                                assertionCost = null,
+                                comment = null,
+                            ),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -150,18 +158,20 @@ class NetWorthCalculatorTest {
 
     @Test
     fun negativeAssetBalanceShouldReduceNetWorth() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Overdraft",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Checking", amount("-200.00")),
-                    posting("Equity:Adjustment", amount("200.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Overdraft",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("-200.00")),
+                            posting("Equity:Adjustment", amount("200.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -173,30 +183,33 @@ class NetWorthCalculatorTest {
 
     @Test
     fun multipleAssetAndLiabilityAccountsShouldAggregateCorrectly() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-01",
-                payee = "Setup",
-                firstLine = 1,
-                lastLine = 4,
-                postings = listOf(
-                    posting("Assets:Checking", amount("3000.00")),
-                    posting("Assets:Savings", amount("5000.00")),
-                    posting("Equity:Opening", amount("-8000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-01",
+                    payee = "Setup",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("3000.00")),
+                            posting("Assets:Savings", amount("5000.00")),
+                            posting("Equity:Opening", amount("-8000.00")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-15",
-                payee = "Credit Cards",
-                firstLine = 5,
-                lastLine = 8,
-                postings = listOf(
-                    posting("Liabilities:Credit Card", amount("-500.00")),
-                    posting("Liabilities:Loan", amount("-2000.00")),
-                    posting("Assets:Checking", amount("2500.00")),
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Credit Cards",
+                    firstLine = 5,
+                    lastLine = 8,
+                    postings =
+                        listOf(
+                            posting("Liabilities:Credit Card", amount("-500.00")),
+                            posting("Liabilities:Loan", amount("-2000.00")),
+                            posting("Assets:Checking", amount("2500.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -210,18 +223,20 @@ class NetWorthCalculatorTest {
 
     @Test
     fun lowercaseAssetAccountShouldContributeToNetWorth() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Opening Balance",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("assets:checking", amount("2000.00")),
-                    posting("equity:opening", amount("-2000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Opening Balance",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("assets:checking", amount("2000.00")),
+                            posting("equity:opening", amount("-2000.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -232,19 +247,21 @@ class NetWorthCalculatorTest {
 
     @Test
     fun lowercaseLiabilityAccountShouldContributeToNetWorth() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Setup",
-                firstLine = 1,
-                lastLine = 4,
-                postings = listOf(
-                    posting("assets:checking", amount("3000.00")),
-                    posting("liabilities:credit card", amount("-800.00")),
-                    posting("equity:opening balances", amount("-2200.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Setup",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            posting("assets:checking", amount("3000.00")),
+                            posting("liabilities:credit card", amount("-800.00")),
+                            posting("equity:opening balances", amount("-2200.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -259,20 +276,22 @@ class NetWorthCalculatorTest {
 
     @Test
     fun malformedQuantityStringShouldTreatAsZero() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Bad Amount",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Checking", amount("not-a-number")),
-                    posting("Equity:Opening Balances", amount("-1000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Bad Amount",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("not-a-number")),
+                            posting("Equity:Opening Balances", amount("-1000.00")),
+                        ),
                 ),
-            ),
-            // A valid asset posting alongside the malformed one
-            openingTransaction(amount = "500.00", date = "2024-01-16", firstLine = 4),
-        )
+                // A valid asset posting alongside the malformed one
+                openingTransaction(amount = "500.00", date = "2024-01-16", firstLine = 4),
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -288,14 +307,15 @@ class NetWorthCalculatorTest {
 
     @Test
     fun equityIncomeAndExpensePostingsShouldNotAffectNetWorth() {
-        val transactions = listOf(
-            // Opening balance posts to equity — should not show in assets/liabilities
-            openingTransaction(amount = "2000.00", date = "2024-01-01", firstLine = 1),
-            // Income transaction: asset receives money, income decreases
-            incomeTransaction(amount = "3000.00", date = "2024-01-05", firstLine = 4),
-            // Expense transaction: expense account increases, asset decreases
-            expenseTransaction(amount = "400.00", date = "2024-01-10", firstLine = 7),
-        )
+        val transactions =
+            listOf(
+                // Opening balance posts to equity — should not show in assets/liabilities
+                openingTransaction(amount = "2000.00", date = "2024-01-01", firstLine = 1),
+                // Income transaction: asset receives money, income decreases
+                incomeTransaction(amount = "3000.00", date = "2024-01-05", firstLine = 4),
+                // Expense transaction: expense account increases, asset decreases
+                expenseTransaction(amount = "400.00", date = "2024-01-10", firstLine = 7),
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -313,12 +333,13 @@ class NetWorthCalculatorTest {
 
     @Test
     fun netWorthAlwaysEqualsAssetMinusLiabilities() {
-        val transactions = listOf(
-            openingTransaction(amount = "5000.00", date = "2024-01-01", firstLine = 1),
-            liabilityTransaction(amount = "1200.00", date = "2024-01-05", firstLine = 4),
-            incomeTransaction(amount = "3500.00", date = "2024-01-10", firstLine = 7),
-            expenseTransaction(amount = "250.00", date = "2024-01-15", firstLine = 10),
-        )
+        val transactions =
+            listOf(
+                openingTransaction(amount = "5000.00", date = "2024-01-01", firstLine = 1),
+                liabilityTransaction(amount = "1200.00", date = "2024-01-05", firstLine = 4),
+                incomeTransaction(amount = "3500.00", date = "2024-01-10", firstLine = 7),
+                expenseTransaction(amount = "250.00", date = "2024-01-15", firstLine = 10),
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -336,28 +357,31 @@ class NetWorthCalculatorTest {
 
     @Test
     fun multiCurrencyLiabilitiesShouldSum() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "USD Credit Card",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Liabilities:Credit Card", amount("-800.00", "USD")),
-                    posting("Assets:Checking", amount("800.00", "USD")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "USD Credit Card",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Liabilities:Credit Card", amount("-800.00", "USD")),
+                            posting("Assets:Checking", amount("800.00", "USD")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-16",
-                payee = "EUR Loan",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Liabilities:Loan", amount("-300.00", "EUR")),
-                    posting("Assets:Checking", amount("300.00", "EUR")),
+                transaction(
+                    date = "2024-01-16",
+                    payee = "EUR Loan",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Liabilities:Loan", amount("-300.00", "EUR")),
+                            posting("Assets:Checking", amount("300.00", "EUR")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -371,19 +395,21 @@ class NetWorthCalculatorTest {
 
     @Test
     fun mixedCaseAccountTypesShouldContributeToNetWorth() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Mixed Case Setup",
-                firstLine = 1,
-                lastLine = 4,
-                postings = listOf(
-                    posting("ASSETS:Checking", amount("3000.00")),
-                    posting("LIABILITIES:Loan", amount("-800.00")),
-                    posting("EqUiTy:Opening", amount("-2200.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Mixed Case Setup",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            posting("ASSETS:Checking", amount("3000.00")),
+                            posting("LIABILITIES:Loan", amount("-800.00")),
+                            posting("EqUiTy:Opening", amount("-2200.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -399,19 +425,21 @@ class NetWorthCalculatorTest {
 
     @Test
     fun positiveBalanceLiabilityShouldBeReflectedConsistently() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Overpaid Credit Card",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    // Positive stored amount on a liability account
-                    posting("Liabilities:Credit Card", amount("500.00")),
-                    posting("Assets:Checking", amount("-500.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Overpaid Credit Card",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            // Positive stored amount on a liability account
+                            posting("Liabilities:Credit Card", amount("500.00")),
+                            posting("Assets:Checking", amount("-500.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 

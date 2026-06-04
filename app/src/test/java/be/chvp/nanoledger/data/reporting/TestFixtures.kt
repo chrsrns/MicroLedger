@@ -20,14 +20,15 @@ fun amount(
 fun posting(
     account: String,
     amount: Amount,
-): Posting = Posting(
-    account = account,
-    amount = amount,
-    cost = null,
-    assertion = null,
-    assertionCost = null,
-    comment = null,
-)
+): Posting =
+    Posting(
+        account = account,
+        amount = amount,
+        cost = null,
+        assertion = null,
+        assertionCost = null,
+        comment = null,
+    )
 
 /** Create a Transaction with sensible defaults */
 fun transaction(
@@ -39,16 +40,17 @@ fun transaction(
     status: String? = null,
     code: String? = null,
     note: String? = null,
-): Transaction = Transaction(
-    firstLine = firstLine,
-    lastLine = lastLine,
-    date = date,
-    status = status,
-    code = code,
-    payee = payee,
-    note = note,
-    postings = postings,
-)
+): Transaction =
+    Transaction(
+        firstLine = firstLine,
+        lastLine = lastLine,
+        date = date,
+        status = status,
+        code = code,
+        payee = payee,
+        note = note,
+        postings = postings,
+    )
 
 /** Common account names used across tests */
 object Accounts {
@@ -80,10 +82,11 @@ fun openingTransaction(
         payee = payee,
         firstLine = firstLine,
         lastLine = firstLine + 2,
-        postings = listOf(
-            posting(account, amt),
-            posting(Accounts.OPENING, amount("-$amount", currency)),
-        ),
+        postings =
+            listOf(
+                posting(account, amt),
+                posting(Accounts.OPENING, amount("-$amount", currency)),
+            ),
     )
 }
 
@@ -105,10 +108,11 @@ fun incomeTransaction(
         payee = payee,
         firstLine = firstLine,
         lastLine = firstLine + 2,
-        postings = listOf(
-            posting(toAccount, amt),
-            posting(fromIncome, amount("-$amount", currency)),
-        ),
+        postings =
+            listOf(
+                posting(toAccount, amt),
+                posting(fromIncome, amount("-$amount", currency)),
+            ),
     )
 }
 
@@ -130,10 +134,11 @@ fun expenseTransaction(
         payee = payee,
         firstLine = firstLine,
         lastLine = firstLine + 2,
-        postings = listOf(
-            posting(expenseAccount, amt),
-            posting(fromAsset, amount("-$amount", currency)),
-        ),
+        postings =
+            listOf(
+                posting(expenseAccount, amt),
+                posting(fromAsset, amount("-$amount", currency)),
+            ),
     )
 }
 
@@ -155,10 +160,11 @@ fun liabilityTransaction(
         payee = payee,
         firstLine = firstLine,
         lastLine = firstLine + 2,
-        postings = listOf(
-            posting(expenseAccount, amt),
-            posting(liabilityAccount, amount("-$amount", currency)),
-        ),
+        postings =
+            listOf(
+                posting(expenseAccount, amt),
+                posting(liabilityAccount, amount("-$amount", currency)),
+            ),
     )
 }
 
@@ -171,17 +177,19 @@ fun multiPostingTransaction(
     firstLine: Int = 1,
     vararg postingConfigs: Pair<String, String>,
 ): Transaction {
-    val postings = postingConfigs.mapIndexed { index, (account, amountStr) ->
-        val isNegative = amountStr.startsWith("-")
-        val cleanAmount = amountStr.removePrefix("-")
-        val currency = if (cleanAmount.contains(" ")) {
-            cleanAmount.substringAfter(" ")
-        } else {
-            "$"
+    val postings =
+        postingConfigs.mapIndexed { index, (account, amountStr) ->
+            val isNegative = amountStr.startsWith("-")
+            val cleanAmount = amountStr.removePrefix("-")
+            val currency =
+                if (cleanAmount.contains(" ")) {
+                    cleanAmount.substringAfter(" ")
+                } else {
+                    "$"
+                }
+            val qty = cleanAmount.substringBefore(" ")
+            posting(account, amount(if (isNegative) "-$qty" else qty, currency))
         }
-        val qty = cleanAmount.substringBefore(" ")
-        posting(account, amount(if (isNegative) "-$qty" else qty, currency))
-    }
     return transaction(
         date = date,
         payee = payee,

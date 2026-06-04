@@ -34,19 +34,21 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun multipleAssetAccountsShouldReturnSeparateBalances() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Opening Balances",
-                firstLine = 1,
-                lastLine = 4,
-                postings = listOf(
-                    posting("Assets:Checking", amount("1000.00")),
-                    posting("Assets:Savings", amount("5000.00")),
-                    posting("Equity:Opening Balances", amount("-6000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Opening Balances",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("1000.00")),
+                            posting("Assets:Savings", amount("5000.00")),
+                            posting("Equity:Opening Balances", amount("-6000.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -59,55 +61,67 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun hierarchicalAccountsShouldBeTrackedSeparately() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Setup",
-                firstLine = 1,
-                lastLine = 5,
-                postings = listOf(
-                    posting("Assets:Bank:Checking", amount("1000.00")),
-                    posting("Assets:Bank:Savings", amount("5000.00")),
-                    posting("Assets:Cash", amount("200.00")),
-                    posting("Equity:Opening", amount("-6200.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Setup",
+                    firstLine = 1,
+                    lastLine = 5,
+                    postings =
+                        listOf(
+                            posting("Assets:Bank:Checking", amount("1000.00")),
+                            posting("Assets:Bank:Savings", amount("5000.00")),
+                            posting("Assets:Cash", amount("200.00")),
+                            posting("Equity:Opening", amount("-6200.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
         assertEquals(3, result.assets.size)
-        assertTrue(result.assets.any {
-            it.account == "Assets:Bank:Checking" && it.balance == BigDecimal(
-                "1000.00"
-            )
-        })
-        assertTrue(result.assets.any {
-            it.account == "Assets:Bank:Savings" && it.balance == BigDecimal(
-                "5000.00"
-            )
-        })
+        assertTrue(
+            result.assets.any {
+                it.account == "Assets:Bank:Checking" &&
+                    it.balance ==
+                    BigDecimal(
+                        "1000.00",
+                    )
+            },
+        )
+        assertTrue(
+            result.assets.any {
+                it.account == "Assets:Bank:Savings" &&
+                    it.balance ==
+                    BigDecimal(
+                        "5000.00",
+                    )
+            },
+        )
         assertTrue(result.assets.any { it.account == "Assets:Cash" && it.balance == BigDecimal("200.00") })
     }
 
     @Test
     fun allAccountTypesShouldBeClassifiedCorrectly() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Complete Setup",
-                firstLine = 1,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Assets:Checking", amount("1000.00")),
-                    posting("Liabilities:Credit Card", amount("-200.00")),
-                    posting("Equity:Opening Balances", amount("-800.00")),
-                    posting("Income:Salary", amount("-5000.00")),
-                    posting("Expenses:Food", amount("3000.00")),
-                    posting("Assets:Checking", amount("2000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Complete Setup",
+                    firstLine = 1,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("1000.00")),
+                            posting("Liabilities:Credit Card", amount("-200.00")),
+                            posting("Equity:Opening Balances", amount("-800.00")),
+                            posting("Income:Salary", amount("-5000.00")),
+                            posting("Expenses:Food", amount("3000.00")),
+                            posting("Assets:Checking", amount("2000.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -134,19 +148,21 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun mixedIncomeAndExpenseShouldCalculateCorrectly() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Paycheck",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Checking", amount("3000.00")),
-                    posting("Liabilities:Credit Card", amount("-500.00")),
-                    posting("Income:Salary", amount("-2500.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Paycheck",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("3000.00")),
+                            posting("Liabilities:Credit Card", amount("-500.00")),
+                            posting("Income:Salary", amount("-2500.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -165,28 +181,31 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun multiCurrencyAccountShouldShowSeparateBalances() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "USD Opening",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Checking", amount("1000.00", "USD")),
-                    posting("Equity:Opening", amount("-1000.00", "USD")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "USD Opening",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("1000.00", "USD")),
+                            posting("Equity:Opening", amount("-1000.00", "USD")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-15",
-                payee = "EUR Opening",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Assets:Checking", amount("500.00", "EUR")),
-                    posting("Equity:Opening", amount("-500.00", "EUR")),
+                transaction(
+                    date = "2024-01-15",
+                    payee = "EUR Opening",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("500.00", "EUR")),
+                            posting("Equity:Opening", amount("-500.00", "EUR")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -199,26 +218,27 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun accountBalanceShouldAggregateMultipleTransactions() {
-        val transactions = listOf(
-            openingTransaction(
-                amount = "1000.00",
-                date = "2024-01-01",
-                payee = "Opening",
-                firstLine = 1
-            ),
-            incomeTransaction(
-                amount = "2000.00",
-                date = "2024-01-15",
-                payee = "Deposit",
-                firstLine = 4
-            ),
-            expenseTransaction(
-                amount = "500.00",
-                date = "2024-01-20",
-                payee = "Withdrawal",
-                firstLine = 7
-            ),
-        )
+        val transactions =
+            listOf(
+                openingTransaction(
+                    amount = "1000.00",
+                    date = "2024-01-01",
+                    payee = "Opening",
+                    firstLine = 1,
+                ),
+                incomeTransaction(
+                    amount = "2000.00",
+                    date = "2024-01-15",
+                    payee = "Deposit",
+                    firstLine = 4,
+                ),
+                expenseTransaction(
+                    amount = "500.00",
+                    date = "2024-01-20",
+                    payee = "Withdrawal",
+                    firstLine = 7,
+                ),
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -230,36 +250,38 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun incomeAndExpenseBalancesShouldAccumulate() {
-        val transactions = listOf(
-            incomeTransaction(
-                amount = "5000.00",
-                date = "2024-01-01",
-                payee = "Salary",
-                firstLine = 1
-            ),
-            transaction(
-                date = "2024-01-15",
-                payee = "Bonus",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Assets:Checking", amount("1000.00")),
-                    posting("Income:Bonus", amount("-1000.00")),
+        val transactions =
+            listOf(
+                incomeTransaction(
+                    amount = "5000.00",
+                    date = "2024-01-01",
+                    payee = "Salary",
+                    firstLine = 1,
                 ),
-            ),
-            expenseTransaction(
-                amount = "200.00",
-                date = "2024-01-10",
-                payee = "Groceries",
-                firstLine = 7
-            ),
-            expenseTransaction(
-                amount = "150.00",
-                date = "2024-01-20",
-                payee = "Restaurant",
-                firstLine = 10
-            ),
-        )
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Bonus",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("1000.00")),
+                            posting("Income:Bonus", amount("-1000.00")),
+                        ),
+                ),
+                expenseTransaction(
+                    amount = "200.00",
+                    date = "2024-01-10",
+                    payee = "Groceries",
+                    firstLine = 7,
+                ),
+                expenseTransaction(
+                    amount = "150.00",
+                    date = "2024-01-20",
+                    payee = "Restaurant",
+                    firstLine = 10,
+                ),
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -267,11 +289,11 @@ class AccountBalanceCalculatorTest {
         assertEquals(2, result.income.size)
         assertEquals(
             BigDecimal("5000.00"),
-            result.income.find { it.account == "Income:Salary" }?.balance
+            result.income.find { it.account == "Income:Salary" }?.balance,
         )
         assertEquals(
             BigDecimal("1000.00"),
-            result.income.find { it.account == "Income:Bonus" }?.balance
+            result.income.find { it.account == "Income:Bonus" }?.balance,
         )
 
         // Expenses: Food = 200 + 150 = 350
@@ -281,25 +303,27 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun postingsWithoutAmountShouldNotAffectBalances() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Store",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Expenses:Food", amount("50.00")),
-                    be.chvp.nanoledger.data.Posting(
-                        account = "Assets:Checking",
-                        amount = null,
-                        cost = null,
-                        assertion = null,
-                        assertionCost = null,
-                        comment = null,
-                    ),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Store",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Expenses:Food", amount("50.00")),
+                            be.chvp.nanoledger.data.Posting(
+                                account = "Assets:Checking",
+                                amount = null,
+                                cost = null,
+                                assertion = null,
+                                assertionCost = null,
+                                comment = null,
+                            ),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -312,49 +336,53 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun accountsWithZeroBalanceShouldBeIncluded() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-01",
-                payee = "Transfer",
-                firstLine = 1,
-                lastLine = 4,
-                postings = listOf(
-                    posting("Assets:Checking", amount("1000.00")),
-                    posting("Assets:Savings", amount("-1000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-01",
+                    payee = "Transfer",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("1000.00")),
+                            posting("Assets:Savings", amount("-1000.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
         assertEquals(2, result.assets.size)
         assertEquals(
             BigDecimal("1000.00"),
-            result.assets.find { it.account == "Assets:Checking" }?.balance
+            result.assets.find { it.account == "Assets:Checking" }?.balance,
         )
         assertEquals(
             BigDecimal("-1000.00"),
-            result.assets.find { it.account == "Assets:Savings" }?.balance
+            result.assets.find { it.account == "Assets:Savings" }?.balance,
         )
     }
 
     @Test
     fun lowercaseAccountTypesShouldBeClassifiedCorrectly() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Lowercase Setup",
-                firstLine = 1,
-                lastLine = 6,
-                postings = listOf(
-                    posting("assets:checking", amount("1000.00")),
-                    posting("liabilities:credit card", amount("-200.00")),
-                    posting("equity:opening balances", amount("-500.00")),
-                    posting("income:salary", amount("-800.00")),
-                    posting("expenses:food", amount("500.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Lowercase Setup",
+                    firstLine = 1,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("assets:checking", amount("1000.00")),
+                            posting("liabilities:credit card", amount("-200.00")),
+                            posting("equity:opening balances", amount("-500.00")),
+                            posting("income:salary", amount("-800.00")),
+                            posting("expenses:food", amount("500.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -367,18 +395,20 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun lowercaseAssetAccountShouldTrackBalance() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Opening Balance",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("assets:bank:checking", amount("2500.00")),
-                    posting("equity:opening", amount("-2500.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Opening Balance",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("assets:bank:checking", amount("2500.00")),
+                            posting("equity:opening", amount("-2500.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -394,20 +424,22 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun malformedQuantityStringShouldTreatAsZero() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Bad Amount",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Checking", amount("not-a-number")),
-                    posting("Equity:Opening Balances", amount("-1000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Bad Amount",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("not-a-number")),
+                            posting("Equity:Opening Balances", amount("-1000.00")),
+                        ),
                 ),
-            ),
-            // A valid posting alongside the malformed one to confirm valid ones still work
-            openingTransaction(amount = "500.00", date = "2024-01-16", firstLine = 4),
-        )
+                // A valid posting alongside the malformed one to confirm valid ones still work
+                openingTransaction(amount = "500.00", date = "2024-01-16", firstLine = 4),
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -422,18 +454,20 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun singleLevelAccountNameShouldBeClassifiedCorrectly() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Single Level Accounts",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets", amount("1000.00")),
-                    posting("Equity", amount("-1000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Single Level Accounts",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets", amount("1000.00")),
+                            posting("Equity", amount("-1000.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -450,21 +484,23 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun mixedCaseAccountTypesShouldBeClassifiedCorrectly() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Mixed Case Setup",
-                firstLine = 1,
-                lastLine = 6,
-                postings = listOf(
-                    posting("ASSETS:Cash", amount("1000.00")),
-                    posting("Liabilities:LOAN", amount("-200.00")),
-                    posting("EqUiTy:Opening", amount("-300.00")),
-                    posting("INCOME:Salary", amount("-400.00")),
-                    posting("Expenses:FOOD", amount("-100.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Mixed Case Setup",
+                    firstLine = 1,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("ASSETS:Cash", amount("1000.00")),
+                            posting("Liabilities:LOAN", amount("-200.00")),
+                            posting("EqUiTy:Opening", amount("-300.00")),
+                            posting("INCOME:Salary", amount("-400.00")),
+                            posting("Expenses:FOOD", amount("-100.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 
@@ -481,18 +517,20 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun accountWithOnlyZeroAmountPostingShouldAppearWithZeroBalance() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Zero Posting",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Checking", amount("0.00")),
-                    posting("Equity:Opening", amount("0.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Zero Posting",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("0.00")),
+                            posting("Equity:Opening", amount("0.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculate(transactions, ".")
 

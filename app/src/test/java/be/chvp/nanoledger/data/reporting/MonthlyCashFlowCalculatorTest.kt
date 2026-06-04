@@ -19,9 +19,10 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun singleIncomeTransactionShouldShowPositiveFlow() {
-        val transactions = listOf(
-            incomeTransaction(amount = "5000.00", date = "2024-01-15"),
-        )
+        val transactions =
+            listOf(
+                incomeTransaction(amount = "5000.00", date = "2024-01-15"),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -34,13 +35,14 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun singleExpenseTransactionShouldShowNegativeFlow() {
-        val transactions = listOf(
-            expenseTransaction(
-                amount = "150.00",
-                date = "2024-01-10",
-                payee = "Grocery Store",
-            ),
-        )
+        val transactions =
+            listOf(
+                expenseTransaction(
+                    amount = "150.00",
+                    date = "2024-01-10",
+                    payee = "Grocery Store",
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -53,19 +55,21 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun incomeAndExpenseTransactionShouldCalculateNetFlow() {
-        val transactions = listOf(
-            incomeTransaction(amount = "5000.00", date = "2024-02-01"),
-            transaction(
-                date = "2024-02-15",
-                payee = "Landlord",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Expenses:Housing:Rent", amount("1200.00")),
-                    posting("Assets:Checking", amount("-1200.00")),
+        val transactions =
+            listOf(
+                incomeTransaction(amount = "5000.00", date = "2024-02-01"),
+                transaction(
+                    date = "2024-02-15",
+                    payee = "Landlord",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Expenses:Housing:Rent", amount("1200.00")),
+                            posting("Assets:Checking", amount("-1200.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 2, ".")
 
@@ -77,20 +81,21 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun transactionsOutsideMonthShouldBeExcluded() {
-        val transactions = listOf(
-            expenseTransaction(
-                amount = "50.00",
-                date = "2024-01-31",
-                payee = "January Expense",
-                firstLine = 1,
-            ),
-            expenseTransaction(
-                amount = "75.00",
-                date = "2024-03-01",
-                payee = "March Expense",
-                firstLine = 4,
-            ),
-        )
+        val transactions =
+            listOf(
+                expenseTransaction(
+                    amount = "50.00",
+                    date = "2024-01-31",
+                    payee = "January Expense",
+                    firstLine = 1,
+                ),
+                expenseTransaction(
+                    amount = "75.00",
+                    date = "2024-03-01",
+                    payee = "March Expense",
+                    firstLine = 4,
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 2, ".")
 
@@ -103,26 +108,27 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun transactionsInsideMonthShouldBeIncluded() {
-        val transactions = listOf(
-            expenseTransaction(
-                amount = "50.00",
-                date = "2024-02-05",
-                payee = "February Expense 1",
-                firstLine = 1,
-            ),
-            incomeTransaction(
-                amount = "3000.00",
-                date = "2024-02-15",
-                payee = "February Income",
-                firstLine = 4,
-            ),
-            expenseTransaction(
-                amount = "75.00",
-                date = "2024-02-28",
-                payee = "February Expense 2",
-                firstLine = 7,
-            ),
-        )
+        val transactions =
+            listOf(
+                expenseTransaction(
+                    amount = "50.00",
+                    date = "2024-02-05",
+                    payee = "February Expense 1",
+                    firstLine = 1,
+                ),
+                incomeTransaction(
+                    amount = "3000.00",
+                    date = "2024-02-15",
+                    payee = "February Income",
+                    firstLine = 4,
+                ),
+                expenseTransaction(
+                    amount = "75.00",
+                    date = "2024-02-28",
+                    payee = "February Expense 2",
+                    firstLine = 7,
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 2, ".")
 
@@ -134,22 +140,23 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun transactionsOnMonthBoundaryShouldBeIncluded() {
-        val transactions = listOf(
-            // First day of month
-            incomeTransaction(
-                amount = "1000.00",
-                date = "2024-03-01",
-                payee = "First Day",
-                firstLine = 1,
-            ),
-            // Last day of month
-            expenseTransaction(
-                amount = "200.00",
-                date = "2024-03-31",
-                payee = "Last Day",
-                firstLine = 4,
-            ),
-        )
+        val transactions =
+            listOf(
+                // First day of month
+                incomeTransaction(
+                    amount = "1000.00",
+                    date = "2024-03-01",
+                    payee = "First Day",
+                    firstLine = 1,
+                ),
+                // Last day of month
+                expenseTransaction(
+                    amount = "200.00",
+                    date = "2024-03-31",
+                    payee = "Last Day",
+                    firstLine = 4,
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 3, ".")
 
@@ -161,38 +168,42 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun multipleIncomeTransactionsShouldSumCorrectly() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-05",
-                payee = "Primary Salary",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Checking", amount("3000.00")),
-                    posting("Income:Salary", amount("-3000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-05",
+                    payee = "Primary Salary",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("3000.00")),
+                            posting("Income:Salary", amount("-3000.00")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-10",
-                payee = "Side Gig",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Assets:Checking", amount("500.00")),
-                    posting("Income:Freelance", amount("-500.00")),
+                transaction(
+                    date = "2024-01-10",
+                    payee = "Side Gig",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("500.00")),
+                            posting("Income:Freelance", amount("-500.00")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-20",
-                payee = "Bonus",
-                firstLine = 7,
-                lastLine = 9,
-                postings = listOf(
-                    posting("Assets:Checking", amount("200.00")),
-                    posting("Income:Bonus", amount("-200.00")),
+                transaction(
+                    date = "2024-01-20",
+                    payee = "Bonus",
+                    firstLine = 7,
+                    lastLine = 9,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("200.00")),
+                            posting("Income:Bonus", amount("-200.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -205,38 +216,42 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun multipleExpenseTransactionsShouldSumCorrectly() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-02",
-                payee = "Grocery Store",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Expenses:Food:Groceries", amount("85.50")),
-                    posting("Assets:Checking", amount("-85.50")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-02",
+                    payee = "Grocery Store",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Expenses:Food:Groceries", amount("85.50")),
+                            posting("Assets:Checking", amount("-85.50")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-05",
-                payee = "Electric Bill",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Expenses:Utilities:Electric", amount("120.00")),
-                    posting("Assets:Checking", amount("-120.00")),
+                transaction(
+                    date = "2024-01-05",
+                    payee = "Electric Bill",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Expenses:Utilities:Electric", amount("120.00")),
+                            posting("Assets:Checking", amount("-120.00")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-15",
-                payee = "Restaurant",
-                firstLine = 7,
-                lastLine = 9,
-                postings = listOf(
-                    posting("Expenses:Food:Dining", amount("45.00")),
-                    posting("Assets:Checking", amount("-45.00")),
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Restaurant",
+                    firstLine = 7,
+                    lastLine = 9,
+                    postings =
+                        listOf(
+                            posting("Expenses:Food:Dining", amount("45.00")),
+                            posting("Assets:Checking", amount("-45.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -249,48 +264,53 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun mixedIncomeAndExpensesShouldCalculateNet() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-05",
-                payee = "Salary",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Checking", amount("4000.00")),
-                    posting("Income:Salary", amount("-4000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-05",
+                    payee = "Salary",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("4000.00")),
+                            posting("Income:Salary", amount("-4000.00")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-10",
-                payee = "Rent",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Expenses:Housing:Rent", amount("1200.00")),
-                    posting("Assets:Checking", amount("-1200.00")),
+                transaction(
+                    date = "2024-01-10",
+                    payee = "Rent",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Expenses:Housing:Rent", amount("1200.00")),
+                            posting("Assets:Checking", amount("-1200.00")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-15",
-                payee = "Utilities",
-                firstLine = 7,
-                lastLine = 9,
-                postings = listOf(
-                    posting("Expenses:Utilities", amount("150.00")),
-                    posting("Assets:Checking", amount("-150.00")),
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Utilities",
+                    firstLine = 7,
+                    lastLine = 9,
+                    postings =
+                        listOf(
+                            posting("Expenses:Utilities", amount("150.00")),
+                            posting("Assets:Checking", amount("-150.00")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-20",
-                payee = "Freelance Work",
-                firstLine = 10,
-                lastLine = 12,
-                postings = listOf(
-                    posting("Assets:Checking", amount("800.00")),
-                    posting("Income:Freelance", amount("-800.00")),
+                transaction(
+                    date = "2024-01-20",
+                    payee = "Freelance Work",
+                    firstLine = 10,
+                    lastLine = 12,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("800.00")),
+                            posting("Income:Freelance", amount("-800.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -305,29 +325,30 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun yearBoundaryTransactionsShouldBeHandled() {
-        val transactions = listOf(
-            // December of previous year
-            expenseTransaction(
-                amount = "100.00",
-                date = "2023-12-31",
-                payee = "December Expense",
-                firstLine = 1,
-            ),
-            // January of target year
-            incomeTransaction(
-                amount = "3000.00",
-                date = "2024-01-15",
-                payee = "January Income",
-                firstLine = 4,
-            ),
-            // December of target year
-            expenseTransaction(
-                amount = "200.00",
-                date = "2024-12-31",
-                payee = "December Expense",
-                firstLine = 7,
-            ),
-        )
+        val transactions =
+            listOf(
+                // December of previous year
+                expenseTransaction(
+                    amount = "100.00",
+                    date = "2023-12-31",
+                    payee = "December Expense",
+                    firstLine = 1,
+                ),
+                // January of target year
+                incomeTransaction(
+                    amount = "3000.00",
+                    date = "2024-01-15",
+                    payee = "January Income",
+                    firstLine = 4,
+                ),
+                // December of target year
+                expenseTransaction(
+                    amount = "200.00",
+                    date = "2024-12-31",
+                    payee = "December Expense",
+                    firstLine = 7,
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -340,26 +361,27 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun transactionsShouldNotAffectOtherMonths() {
-        val transactions = listOf(
-            // January transaction
-            expenseTransaction(
-                amount = "500.00",
-                date = "2024-01-15",
-                firstLine = 1,
-            ),
-            // February transaction
-            incomeTransaction(
-                amount = "3000.00",
-                date = "2024-02-20",
-                firstLine = 4,
-            ),
-            // March transaction
-            expenseTransaction(
-                amount = "200.00",
-                date = "2024-03-10",
-                firstLine = 7,
-            ),
-        )
+        val transactions =
+            listOf(
+                // January transaction
+                expenseTransaction(
+                    amount = "500.00",
+                    date = "2024-01-15",
+                    firstLine = 1,
+                ),
+                // February transaction
+                incomeTransaction(
+                    amount = "3000.00",
+                    date = "2024-02-20",
+                    firstLine = 4,
+                ),
+                // March transaction
+                expenseTransaction(
+                    amount = "200.00",
+                    date = "2024-03-10",
+                    firstLine = 7,
+                ),
+            )
 
         // Test January
         val janResult = calculator.calculateForMonth(transactions, 2024, 1, ".")
@@ -382,15 +404,16 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun leapYearFebruaryShouldHandle29th() {
-        val transactions = listOf(
-            // 2024 is a leap year, February has 29 days
-            incomeTransaction(
-                amount = "1000.00",
-                date = "2024-02-29",
-                payee = "Leap Day Income",
-                firstLine = 1,
-            ),
-        )
+        val transactions =
+            listOf(
+                // 2024 is a leap year, February has 29 days
+                incomeTransaction(
+                    amount = "1000.00",
+                    date = "2024-02-29",
+                    payee = "Leap Day Income",
+                    firstLine = 1,
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 2, ".")
 
@@ -400,21 +423,22 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun nonLeapYearFebruaryShouldExclude29th() {
-        val transactions = listOf(
-            // 2023 is not a leap year
-            incomeTransaction(
-                amount = "1000.00",
-                date = "2023-02-28",
-                payee = "Feb 28 Income",
-                firstLine = 1,
-            ),
-            expenseTransaction(
-                amount = "500.00",
-                date = "2023-03-01",
-                payee = "March 1 Expense",
-                firstLine = 4,
-            ),
-        )
+        val transactions =
+            listOf(
+                // 2023 is not a leap year
+                incomeTransaction(
+                    amount = "1000.00",
+                    date = "2023-02-28",
+                    payee = "Feb 28 Income",
+                    firstLine = 1,
+                ),
+                expenseTransaction(
+                    amount = "500.00",
+                    date = "2023-03-01",
+                    payee = "March 1 Expense",
+                    firstLine = 4,
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2023, 2, ".")
 
@@ -426,24 +450,26 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun shouldIgnoreNonIncomeAndNonExpensePostings() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Transfer",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    // Asset to asset transfer - should not affect cash flow
-                    posting("Assets:Savings", amount("1000.00")),
-                    posting("Assets:Checking", amount("-1000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Transfer",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            // Asset to asset transfer - should not affect cash flow
+                            posting("Assets:Savings", amount("1000.00")),
+                            posting("Assets:Checking", amount("-1000.00")),
+                        ),
                 ),
-            ),
-            incomeTransaction(
-                amount = "2000.00",
-                date = "2024-01-20",
-                firstLine = 4,
-            ),
-        )
+                incomeTransaction(
+                    amount = "2000.00",
+                    date = "2024-01-20",
+                    firstLine = 4,
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -455,90 +481,96 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun complexRealWorldScenario() {
-        val transactions = listOf(
-            // Opening balance
-            openingTransaction(date = "2024-01-01", payee = "Opening Balance", firstLine = 1),
-            // Regular salary
-            incomeTransaction(
-                amount = "4500.00",
-                date = "2024-01-05",
-                payee = "Monthly Salary",
-                firstLine = 4,
-            ),
-            // Rent payment
-            transaction(
-                date = "2024-01-01",
-                payee = "Landlord",
-                firstLine = 7,
-                lastLine = 9,
-                postings = listOf(
-                    posting("Expenses:Housing:Rent", amount("1200.00")),
-                    posting("Assets:Checking", amount("-1200.00")),
+        val transactions =
+            listOf(
+                // Opening balance
+                openingTransaction(date = "2024-01-01", payee = "Opening Balance", firstLine = 1),
+                // Regular salary
+                incomeTransaction(
+                    amount = "4500.00",
+                    date = "2024-01-05",
+                    payee = "Monthly Salary",
+                    firstLine = 4,
                 ),
-            ),
-            // Multiple grocery trips
-            expenseTransaction(
-                amount = "75.50",
-                date = "2024-01-08",
-                payee = "Supermarket",
-                firstLine = 10,
-            ),
-            expenseTransaction(
-                amount = "42.30",
-                date = "2024-01-15",
-                payee = "Corner Store",
-                firstLine = 13,
-            ),
-            expenseTransaction(
-                amount = "128.90",
-                date = "2024-01-22",
-                payee = "Grocery Store",
-                firstLine = 16,
-            ),
-            // Utility bills
-            transaction(
-                date = "2024-01-10",
-                payee = "Electric Company",
-                firstLine = 19,
-                lastLine = 21,
-                postings = listOf(
-                    posting("Expenses:Utilities:Electric", amount("95.00")),
-                    posting("Assets:Checking", amount("-95.00")),
+                // Rent payment
+                transaction(
+                    date = "2024-01-01",
+                    payee = "Landlord",
+                    firstLine = 7,
+                    lastLine = 9,
+                    postings =
+                        listOf(
+                            posting("Expenses:Housing:Rent", amount("1200.00")),
+                            posting("Assets:Checking", amount("-1200.00")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024-01-12",
-                payee = "Internet Provider",
-                firstLine = 22,
-                lastLine = 24,
-                postings = listOf(
-                    posting("Expenses:Utilities:Internet", amount("60.00")),
-                    posting("Assets:Checking", amount("-60.00")),
+                // Multiple grocery trips
+                expenseTransaction(
+                    amount = "75.50",
+                    date = "2024-01-08",
+                    payee = "Supermarket",
+                    firstLine = 10,
                 ),
-            ),
-            // Dining out
-            transaction(
-                date = "2024-01-18",
-                payee = "Pizza Place",
-                firstLine = 25,
-                lastLine = 27,
-                postings = listOf(
-                    posting("Expenses:Food:Dining", amount("35.00")),
-                    posting("Assets:Checking", amount("-35.00")),
+                expenseTransaction(
+                    amount = "42.30",
+                    date = "2024-01-15",
+                    payee = "Corner Store",
+                    firstLine = 13,
                 ),
-            ),
-            // Freelance income
-            transaction(
-                date = "2024-01-25",
-                payee = "Client Payment",
-                firstLine = 28,
-                lastLine = 30,
-                postings = listOf(
-                    posting("Assets:Checking", amount("650.00")),
-                    posting("Income:Freelance", amount("-650.00")),
+                expenseTransaction(
+                    amount = "128.90",
+                    date = "2024-01-22",
+                    payee = "Grocery Store",
+                    firstLine = 16,
                 ),
-            ),
-        )
+                // Utility bills
+                transaction(
+                    date = "2024-01-10",
+                    payee = "Electric Company",
+                    firstLine = 19,
+                    lastLine = 21,
+                    postings =
+                        listOf(
+                            posting("Expenses:Utilities:Electric", amount("95.00")),
+                            posting("Assets:Checking", amount("-95.00")),
+                        ),
+                ),
+                transaction(
+                    date = "2024-01-12",
+                    payee = "Internet Provider",
+                    firstLine = 22,
+                    lastLine = 24,
+                    postings =
+                        listOf(
+                            posting("Expenses:Utilities:Internet", amount("60.00")),
+                            posting("Assets:Checking", amount("-60.00")),
+                        ),
+                ),
+                // Dining out
+                transaction(
+                    date = "2024-01-18",
+                    payee = "Pizza Place",
+                    firstLine = 25,
+                    lastLine = 27,
+                    postings =
+                        listOf(
+                            posting("Expenses:Food:Dining", amount("35.00")),
+                            posting("Assets:Checking", amount("-35.00")),
+                        ),
+                ),
+                // Freelance income
+                transaction(
+                    date = "2024-01-25",
+                    payee = "Client Payment",
+                    firstLine = 28,
+                    lastLine = 30,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("650.00")),
+                            posting("Income:Freelance", amount("-650.00")),
+                        ),
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -582,9 +614,10 @@ class MonthlyCashFlowCalculatorTest {
         val result = calculator.calculateForYear(emptyList(), 2024, ".")
 
         assertEquals(12, result.size)
-        val expectedPeriods = (1..12).map { month ->
-            "2024-%02d".format(month)
-        }
+        val expectedPeriods =
+            (1..12).map { month ->
+                "2024-%02d".format(month)
+            }
         result.forEachIndexed { index, cashFlowResult ->
             assertEquals(expectedPeriods[index], cashFlowResult.period)
         }
@@ -601,11 +634,12 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun calculateForYearShouldMatchCalculateForMonthForEachMonth() {
-        val transactions = listOf(
-            incomeTransaction(amount = "3000.00", date = "2024-03-10", firstLine = 1),
-            expenseTransaction(amount = "150.00", date = "2024-07-22", firstLine = 4),
-            incomeTransaction(amount = "500.00", date = "2024-11-05", firstLine = 7),
-        )
+        val transactions =
+            listOf(
+                incomeTransaction(amount = "3000.00", date = "2024-03-10", firstLine = 1),
+                expenseTransaction(amount = "150.00", date = "2024-07-22", firstLine = 4),
+                incomeTransaction(amount = "500.00", date = "2024-11-05", firstLine = 7),
+            )
 
         val yearResult = calculator.calculateForYear(transactions, 2024, ".")
 
@@ -637,11 +671,12 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun calculateForYearShouldOnlyIncludeTransactionsFromThatYear() {
-        val transactions = listOf(
-            incomeTransaction(amount = "1000.00", date = "2023-06-15", firstLine = 1),
-            incomeTransaction(amount = "2000.00", date = "2024-06-15", firstLine = 4),
-            incomeTransaction(amount = "3000.00", date = "2025-06-15", firstLine = 7),
-        )
+        val transactions =
+            listOf(
+                incomeTransaction(amount = "1000.00", date = "2023-06-15", firstLine = 1),
+                incomeTransaction(amount = "2000.00", date = "2024-06-15", firstLine = 4),
+                incomeTransaction(amount = "3000.00", date = "2025-06-15", firstLine = 7),
+            )
 
         val result = calculator.calculateForYear(transactions, 2024, ".")
 
@@ -652,10 +687,11 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun calculateForYearWithTransactionsSpanningMultipleMonthsShouldDistributeCorrectly() {
-        val transactions = listOf(
-            incomeTransaction(amount = "5000.00", date = "2024-01-15", firstLine = 1),
-            expenseTransaction(amount = "300.00", date = "2024-03-20", firstLine = 4),
-        )
+        val transactions =
+            listOf(
+                incomeTransaction(amount = "5000.00", date = "2024-01-15", firstLine = 1),
+                expenseTransaction(amount = "300.00", date = "2024-03-20", firstLine = 4),
+            )
 
         val result = calculator.calculateForYear(transactions, 2024, ".")
 
@@ -676,12 +712,12 @@ class MonthlyCashFlowCalculatorTest {
             assertEquals(
                 BigDecimal.ZERO,
                 result[idx].totalIncome,
-                "month ${idx + 1} should have no income"
+                "month ${idx + 1} should have no income",
             )
             assertEquals(
                 BigDecimal.ZERO,
                 result[idx].totalExpenses,
-                "month ${idx + 1} should have no expenses"
+                "month ${idx + 1} should have no expenses",
             )
         }
     }
@@ -692,30 +728,33 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun malformedDateStringShouldBeIgnoredGracefully() {
-        val transactions = listOf(
-            transaction(
-                date = "not-a-date",
-                payee = "Bad Date",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Income:Salary", amount("-1000.00")),
-                    posting("Assets:Checking", amount("1000.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "not-a-date",
+                    payee = "Bad Date",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Income:Salary", amount("-1000.00")),
+                            posting("Assets:Checking", amount("1000.00")),
+                        ),
                 ),
-            ),
-            transaction(
-                date = "2024/01/15",
-                payee = "Wrong Separator",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Expenses:Food", amount("50.00")),
-                    posting("Assets:Checking", amount("-50.00")),
+                transaction(
+                    date = "2024/01/15",
+                    payee = "Wrong Separator",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Expenses:Food", amount("50.00")),
+                            posting("Assets:Checking", amount("-50.00")),
+                        ),
                 ),
-            ),
-            // A valid transaction in January to confirm the filter works
-            incomeTransaction(amount = "2000.00", date = "2024-01-10", firstLine = 7),
-        )
+                // A valid transaction in January to confirm the filter works
+                incomeTransaction(amount = "2000.00", date = "2024-01-10", firstLine = 7),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -731,23 +770,25 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun assetAndEquityPostingsShouldNotContributeToCashFlow() {
-        val transactions = listOf(
-            // Asset-to-asset transfer
-            transaction(
-                date = "2024-01-10",
-                payee = "Transfer to Savings",
-                firstLine = 1,
-                lastLine = 3,
-                postings = listOf(
-                    posting("Assets:Savings", amount("500.00")),
-                    posting("Assets:Checking", amount("-500.00")),
+        val transactions =
+            listOf(
+                // Asset-to-asset transfer
+                transaction(
+                    date = "2024-01-10",
+                    payee = "Transfer to Savings",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Savings", amount("500.00")),
+                            posting("Assets:Checking", amount("-500.00")),
+                        ),
                 ),
-            ),
-            // Equity opening balance
-            openingTransaction(date = "2024-01-01", firstLine = 4),
-            // A real income to confirm non-zero output is possible
-            incomeTransaction(amount = "1000.00", date = "2024-01-15", firstLine = 7),
-        )
+                // Equity opening balance
+                openingTransaction(date = "2024-01-01", firstLine = 4),
+                // A real income to confirm non-zero output is possible
+                incomeTransaction(amount = "1000.00", date = "2024-01-15", firstLine = 7),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -758,26 +799,28 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun liabilityPostingsShouldNotContributeToCashFlow() {
-        val transactions = listOf(
-            // Credit card charge: expense + liability, no asset
-            liabilityTransaction(
-                expenseAccount = "Expenses:Food",
-                amount = "120.00",
-                date = "2024-01-12",
-                firstLine = 1,
-            ),
-            // Liability repayment: asset decreases, liability decreases
-            transaction(
-                date = "2024-01-20",
-                payee = "Credit Card Payment",
-                firstLine = 4,
-                lastLine = 6,
-                postings = listOf(
-                    posting("Liabilities:Credit Card", amount("120.00")),
-                    posting("Assets:Checking", amount("-120.00")),
+        val transactions =
+            listOf(
+                // Credit card charge: expense + liability, no asset
+                liabilityTransaction(
+                    expenseAccount = "Expenses:Food",
+                    amount = "120.00",
+                    date = "2024-01-12",
+                    firstLine = 1,
                 ),
-            ),
-        )
+                // Liability repayment: asset decreases, liability decreases
+                transaction(
+                    date = "2024-01-20",
+                    payee = "Credit Card Payment",
+                    firstLine = 4,
+                    lastLine = 6,
+                    postings =
+                        listOf(
+                            posting("Liabilities:Credit Card", amount("120.00")),
+                            posting("Assets:Checking", amount("-120.00")),
+                        ),
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -794,32 +837,33 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun multiCurrencyIncomeAndExpensesShouldSumAcrossCurrencies() {
-        val transactions = listOf(
-            incomeTransaction(
-                amount = "1000.00",
-                currency = "USD",
-                date = "2024-01-10",
-                firstLine = 1
-            ),
-            incomeTransaction(
-                amount = "500.00",
-                currency = "EUR",
-                date = "2024-01-12",
-                firstLine = 4
-            ),
-            expenseTransaction(
-                amount = "200.00",
-                currency = "USD",
-                date = "2024-01-15",
-                firstLine = 7
-            ),
-            expenseTransaction(
-                amount = "100.00",
-                currency = "EUR",
-                date = "2024-01-18",
-                firstLine = 10
-            ),
-        )
+        val transactions =
+            listOf(
+                incomeTransaction(
+                    amount = "1000.00",
+                    currency = "USD",
+                    date = "2024-01-10",
+                    firstLine = 1,
+                ),
+                incomeTransaction(
+                    amount = "500.00",
+                    currency = "EUR",
+                    date = "2024-01-12",
+                    firstLine = 4,
+                ),
+                expenseTransaction(
+                    amount = "200.00",
+                    currency = "USD",
+                    date = "2024-01-15",
+                    firstLine = 7,
+                ),
+                expenseTransaction(
+                    amount = "100.00",
+                    currency = "EUR",
+                    date = "2024-01-18",
+                    firstLine = 10,
+                ),
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
@@ -836,22 +880,24 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun incomeAndExpensePostingsInSameTransactionShouldBothBeCounted() {
-        val transactions = listOf(
-            transaction(
-                date = "2024-01-15",
-                payee = "Refund With Fee",
-                firstLine = 1,
-                lastLine = 4,
-                postings = listOf(
-                    // Income side (credit, stored negative)
-                    posting("Income:Refund", amount("-100.00")),
-                    // Expense side (debit, stored positive)
-                    posting("Expenses:Fee", amount("30.00")),
-                    // Asset settles the difference
-                    posting("Assets:Checking", amount("70.00")),
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Refund With Fee",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            // Income side (credit, stored negative)
+                            posting("Income:Refund", amount("-100.00")),
+                            // Expense side (debit, stored positive)
+                            posting("Expenses:Fee", amount("30.00")),
+                            // Asset settles the difference
+                            posting("Assets:Checking", amount("70.00")),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
 
