@@ -17,6 +17,7 @@ class AccountBalanceCalculator {
         val account: String,
         val balance: BigDecimal,
         val currency: String,
+        val transactions: List<Transaction>,
     )
 
     /**
@@ -68,7 +69,8 @@ class AccountBalanceCalculator {
         val expenses = mutableListOf<AccountBalance>()
 
         for ((account, currencyMap) in accountBalances) {
-            for ((currency, rawBalance) in currencyMap) {
+            for ((currency, pair) in currencyMap) {
+                val (rawBalance, transactionSet) = pair
                 // For display purposes, negate Liability, Equity, and Income balances so they show as positive
                 // (these are credit accounts stored as negative amounts in ledger postings)
                 val displayBalance =
@@ -84,6 +86,7 @@ class AccountBalanceCalculator {
                         account = account,
                         balance = displayBalance,
                         currency = currency,
+                        transactions = transactionSet.sortedBy { it.firstLine },
                     )
 
                 when {

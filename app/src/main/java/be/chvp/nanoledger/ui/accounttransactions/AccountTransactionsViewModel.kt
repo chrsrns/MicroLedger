@@ -41,24 +41,33 @@ constructor(
 
     val accountTransactions: LiveData<List<Transaction>> =
         MediatorLiveData<List<Transaction>>().apply {
-            fun filterTransactions() {
+            fun computeTransactions() {
                 val account = _selectedAccount.value
                 val currency = _selectedCurrency.value
-                val transactions = ledgerRepository.transactions.value
-                value = if (account != null && transactions != null) {
-                    transactions.filter { transaction ->
-                        transaction.postings.any { posting ->
-                            posting.account == account &&
-                                    (currency == null || posting.amount?.currency == currency)
+                val balances = accountBalances.value
+                value =
+                    if (account != null && balances != null) {
+                        val allBalances =
+                            balances.assets + balances.liabilities + balances.equity +
+                                    balances.income + balances.expenses
+                        if (currency != null) {
+                            allBalances
+                                .find { it.account == account && it.currency == currency }
+                                ?.transactions ?: emptyList()
+                        } else {
+                            allBalances
+                                .filter { it.account == account }
+                                .flatMap { it.transactions }
+                                .distinct()
+                                .sortedBy { it.firstLine }
                         }
+                    } else {
+                        emptyList()
                     }
-                } else {
-                    emptyList()
-                }
             }
-            addSource(ledgerRepository.transactions) { filterTransactions() }
-            addSource(_selectedAccount) { filterTransactions() }
-            addSource(_selectedCurrency) { filterTransactions() }
+            addSource(accountBalances) { computeTransactions() }
+            addSource(_selectedAccount) { computeTransactions() }
+            addSource(_selectedCurrency) { computeTransactions() }
         }
 
     fun selectAccount(account: String, currency: String? = null) {

@@ -373,19 +373,22 @@ fun AccountTransactionsScreenPreview() {
                     AccountBalanceCalculator.AccountBalance(
                         "Assets:Checking",
                         BigDecimal("3000.00"),
-                        "$"
+                        "$",
+                        emptyList(),
                     ),
                     AccountBalanceCalculator.AccountBalance(
                         "Assets:Savings",
                         BigDecimal("7000.00"),
-                        "$"
+                        "$",
+                        emptyList(),
                     ),
                 ),
                 liabilities = listOf(
                     AccountBalanceCalculator.AccountBalance(
                         "Liabilities:Credit Card",
                         BigDecimal("1550.00"),
-                        "$"
+                        "$",
+                        emptyList(),
                     ),
                 ),
                 equity = emptyList(),
@@ -413,12 +416,14 @@ fun AccountAccordionGroupPreview() {
                 AccountBalanceCalculator.AccountBalance(
                     "Assets:Checking",
                     BigDecimal("3000.00"),
-                    "$"
+                    "$",
+                    emptyList(),
                 ),
                 AccountBalanceCalculator.AccountBalance(
                     "Assets:Savings",
                     BigDecimal("7000.00"),
-                    "$"
+                    "$",
+                    emptyList(),
                 ),
             ),
             onAccountClick = { _, _ -> },

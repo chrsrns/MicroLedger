@@ -380,19 +380,22 @@ fun DashboardScreenPreview() {
                     AccountBalanceCalculator.AccountBalance(
                         "Assets:Checking",
                         BigDecimal("3000.00"),
-                        "PHP"
+                        "PHP",
+                        emptyList(),
                     ),
                     AccountBalanceCalculator.AccountBalance(
                         "Assets:Savings",
                         BigDecimal("7000.00"),
-                        "$"
+                        "$",
+                        emptyList(),
                     ),
                 ),
                 liabilities = listOf(
                     AccountBalanceCalculator.AccountBalance(
                         "Liabilities:Credit Card",
                         BigDecimal("1550.00"),
-                        "EUR"
+                        "EUR",
+                        emptyList(),
                     ),
                 ),
                 equity = emptyList(),
