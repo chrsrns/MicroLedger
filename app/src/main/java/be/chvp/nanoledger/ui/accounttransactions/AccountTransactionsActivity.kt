@@ -37,7 +37,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -71,11 +70,9 @@ class AccountTransactionsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val initialAccount = intent.getStringExtra("account")
         setContent {
             NanoLedgerTheme {
                 AccountTransactionsScreen(
-                    initialAccount = initialAccount,
                     onBackClick = { finish() },
                 )
             }
@@ -85,7 +82,6 @@ class AccountTransactionsActivity : ComponentActivity() {
 
 @Composable
 fun AccountTransactionsScreen(
-    initialAccount: String? = null,
     accountTransactionsViewModel: AccountTransactionsViewModel = viewModel(),
     onBackClick: () -> Unit,
     expandedGroups: Set<String> = emptySet(),
@@ -94,20 +90,6 @@ fun AccountTransactionsScreen(
     val accountTransactions by accountTransactionsViewModel.accountTransactions.observeAsState()
     val selectedAccount by accountTransactionsViewModel.selectedAccount.observeAsState()
     val decimalSeparator by accountTransactionsViewModel.decimalSeparator.observeAsState(".")
-
-    // Set initial account if provided and it exists in the ledger
-    LaunchedEffect(initialAccount, accountBalances) {
-        initialAccount?.let { account ->
-            val allAccounts = accountBalances?.assets?.map { it.account }.orEmpty() +
-                    accountBalances?.liabilities?.map { it.account }.orEmpty() +
-                    accountBalances?.equity?.map { it.account }.orEmpty() +
-                    accountBalances?.income?.map { it.account }.orEmpty() +
-                    accountBalances?.expenses?.map { it.account }.orEmpty()
-            if (account in allAccounts) {
-                accountTransactionsViewModel.selectAccount(account)
-            }
-        }
-    }
 
     AccountTransactionsScreenContent(
         accountBalances = accountBalances,
