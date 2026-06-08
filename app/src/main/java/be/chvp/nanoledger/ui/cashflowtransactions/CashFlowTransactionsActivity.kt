@@ -177,7 +177,7 @@ fun CashFlowTransactionsScreenContent(
                 onSelectMonth = onSelectMonth,
             )
             CashFlowSummaryCard(cashFlow, decimalSeparator)
-            CashFlowGraphCard(monthlyHistory, selectedMonth)
+            CashFlowGraphCard(monthlyHistory)
             RankingCard(
                 title = stringResource(R.string.top_income),
                 transactions = cashFlow?.incomeTransactions ?: emptyList(),
@@ -351,12 +351,9 @@ fun AmountSummaryRow(
 @Composable
 fun CashFlowGraphCard(
     monthlyHistory: List<MonthlyCashFlowCalculator.CashFlowResult>?,
-    selectedMonth: Int,
 ) {
     val incomeColor = MaterialTheme.colorScheme.primary
     val expenseColor = MaterialTheme.colorScheme.error
-    val selectedBarAlpha = 1f
-    val unselectedBarAlpha = 0.4f
     val textColor = LocalContentColor.current
     val textMeasurer = rememberTextMeasurer()
 
@@ -394,11 +391,8 @@ fun CashFlowGraphCard(
                 ) {
                     drawBarChart(
                         monthlyHistory = monthlyHistory,
-                        selectedMonth = selectedMonth,
                         incomeColor = incomeColor,
                         expenseColor = expenseColor,
-                        selectedBarAlpha = selectedBarAlpha,
-                        unselectedBarAlpha = unselectedBarAlpha,
                         textColor = textColor,
                         textMeasurer = textMeasurer,
                     )
@@ -410,20 +404,19 @@ fun CashFlowGraphCard(
 
 private fun DrawScope.drawBarChart(
     monthlyHistory: List<MonthlyCashFlowCalculator.CashFlowResult>,
-    selectedMonth: Int,
     incomeColor: Color,
     expenseColor: Color,
-    selectedBarAlpha: Float,
-    unselectedBarAlpha: Float,
     textColor: Color,
     textMeasurer: TextMeasurer,
 ) {
+    // Single-letter month labels indexed by month number (1-based).
     val monthLabels = listOf("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D")
     val labelHeight = 20.dp.toPx()
     val chartHeight = size.height - labelHeight
     val barGroupWidth = size.width / 12f
     val barWidth = barGroupWidth * 0.35f
     val gap = barGroupWidth * 0.05f
+    val lastIndex = monthlyHistory.size - 1
 
     val maxValue =
         monthlyHistory.maxOfOrNull {
@@ -432,8 +425,9 @@ private fun DrawScope.drawBarChart(
     val maxFloat = maxValue.toFloat().coerceAtLeast(1f)
 
     monthlyHistory.forEachIndexed { index, result ->
-        val isSelected = index + 1 == selectedMonth
-        val alpha = if (isSelected) selectedBarAlpha else unselectedBarAlpha
+        // The selected (current) month is always the last bar in the rolling window.
+        val isSelected = index == lastIndex
+        val alpha = if (isSelected) 1f else 0.4f
 
         val incomeHeight = (result.totalIncome.toFloat() / maxFloat) * chartHeight
         val expenseHeight = (result.totalExpenses.toFloat() / maxFloat) * chartHeight
@@ -454,14 +448,16 @@ private fun DrawScope.drawBarChart(
             size = Size(barWidth, expenseHeight),
         )
 
-        // Month label
+        // Derive month index from the period string ("YYYY-MM").
+        val monthIndex = result.period.substringAfter("-").toIntOrNull()?.minus(1) ?: index
+        val label = monthLabels.getOrElse(monthIndex) { "?" }
         val labelStyle =
             TextStyle(
                 fontSize = 10.sp,
                 color = if (isSelected) textColor else textColor.copy(alpha = 0.5f),
                 textAlign = TextAlign.Center,
             )
-        val labelResult = textMeasurer.measure(monthLabels[index], labelStyle)
+        val labelResult = textMeasurer.measure(label, labelStyle)
         drawText(
             textLayoutResult = labelResult,
             topLeft =

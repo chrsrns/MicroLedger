@@ -54,15 +54,26 @@ constructor(
             fun compute() {
                 val transactions = ledgerRepository.transactions.value ?: return
                 val year = _selectedYear.value ?: return
+                val month = _selectedMonth.value ?: return
+                val decimalSeparator = preferencesDataSource.getDecimalSeparator()
+                // Build the rolling 12-month window ending at (year, month) inclusive.
                 value =
-                    cashFlowCalculator.calculateForYear(
-                        transactions,
-                        year,
-                        preferencesDataSource.getDecimalSeparator(),
-                    )
+                    (11 downTo 0).map { offset ->
+                        // Subtract offset months from the selected month.
+                        val totalMonths = (year * 12 + month - 1) - offset
+                        val windowYear = totalMonths / 12
+                        val windowMonth = totalMonths % 12 + 1
+                        cashFlowCalculator.calculateForMonth(
+                            transactions,
+                            windowYear,
+                            windowMonth,
+                            decimalSeparator,
+                        )
+                    }
             }
             addSource(ledgerRepository.transactions) { compute() }
             addSource(_selectedYear) { compute() }
+            addSource(_selectedMonth) { compute() }
         }
 
     fun selectMonth(
