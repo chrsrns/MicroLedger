@@ -407,6 +407,8 @@ fun DashboardScreenPreview() {
                 totalExpenses = BigDecimal("1635.00"),
                 netFlow = BigDecimal("3365.00"),
                 period = "2026-06",
+                incomeTransactions = emptyList(),
+                expenseTransactions = emptyList(),
             ),
             decimalSeparator = ".",
             onBackClick = {},

@@ -905,4 +905,158 @@ class MonthlyCashFlowCalculatorTest {
         assertEquals(BigDecimal("30.00"), result.totalExpenses)
         assertEquals(BigDecimal("70.00"), result.netFlow)
     }
+
+    // -------------------------------------------------------------------------
+    // Transaction list fields: incomeTransactions / expenseTransactions
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun emptyTransactionListShouldReturnEmptyTransactionLists() {
+        val result = calculator.calculateForMonth(emptyList(), 2024, 1, ".")
+
+        assertEquals(emptyList<Any>(), result.incomeTransactions)
+        assertEquals(emptyList<Any>(), result.expenseTransactions)
+    }
+
+    @Test
+    fun incomeTransactionShouldAppearInIncomeTransactions() {
+        val tx = incomeTransaction(amount = "1000.00", date = "2024-01-10", firstLine = 1)
+        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+
+        assertEquals(listOf(tx), result.incomeTransactions)
+        assertEquals(emptyList<Any>(), result.expenseTransactions)
+    }
+
+    @Test
+    fun expenseTransactionShouldAppearInExpenseTransactions() {
+        val tx = expenseTransaction(amount = "200.00", date = "2024-01-10", firstLine = 1)
+        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+
+        assertEquals(emptyList<Any>(), result.incomeTransactions)
+        assertEquals(listOf(tx), result.expenseTransactions)
+    }
+
+    @Test
+    fun mixedTransactionsShouldPopulateBothLists() {
+        val income = incomeTransaction(amount = "3000.00", date = "2024-02-01", firstLine = 1)
+        val expense = expenseTransaction(amount = "500.00", date = "2024-02-15", firstLine = 4)
+        val result = calculator.calculateForMonth(listOf(income, expense), 2024, 2, ".")
+
+        assertEquals(listOf(income), result.incomeTransactions)
+        assertEquals(listOf(expense), result.expenseTransactions)
+    }
+
+    @Test
+    fun outOfMonthTransactionsShouldNotAppearInTransactionLists() {
+        val inMonth = incomeTransaction(amount = "1000.00", date = "2024-03-15", firstLine = 1)
+        val outOfMonth = expenseTransaction(amount = "200.00", date = "2024-04-01", firstLine = 4)
+        val result = calculator.calculateForMonth(listOf(inMonth, outOfMonth), 2024, 3, ".")
+
+        assertEquals(listOf(inMonth), result.incomeTransactions)
+        assertEquals(emptyList<Any>(), result.expenseTransactions)
+    }
+
+    @Test
+    fun transactionTouchingBothIncomeAndExpenseShouldAppearInBothLists() {
+        val tx =
+            transaction(
+                date = "2024-01-15",
+                payee = "Refund With Fee",
+                firstLine = 1,
+                lastLine = 4,
+                postings =
+                    listOf(
+                        posting("Income:Refund", amount("-100.00")),
+                        posting("Expenses:Fee", amount("30.00")),
+                        posting("Assets:Checking", amount("70.00")),
+                    ),
+            )
+        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+
+        assertEquals(listOf(tx), result.incomeTransactions)
+        assertEquals(listOf(tx), result.expenseTransactions)
+    }
+
+    @Test
+    fun transactionWithMultipleIncomePostingsShouldAppearOnceInIncomeList() {
+        val tx =
+            transaction(
+                date = "2024-01-15",
+                payee = "Split Income",
+                firstLine = 1,
+                lastLine = 4,
+                postings =
+                    listOf(
+                        posting("Assets:Checking", amount("700.00")),
+                        posting("Income:Salary", amount("-500.00")),
+                        posting("Income:Bonus", amount("-200.00")),
+                    ),
+            )
+        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+
+        assertEquals(listOf(tx), result.incomeTransactions)
+        assertEquals(emptyList<Any>(), result.expenseTransactions)
+    }
+
+    @Test
+    fun transactionWithMultipleExpensePostingsShouldAppearOnceInExpenseList() {
+        val tx =
+            transaction(
+                date = "2024-01-15",
+                payee = "Shared Grocery Run",
+                firstLine = 1,
+                lastLine = 4,
+                postings =
+                    listOf(
+                        posting("Expenses:Food:Groceries", amount("60.00")),
+                        posting("Expenses:Food:Snacks", amount("15.00")),
+                        posting("Assets:Checking", amount("-75.00")),
+                    ),
+            )
+        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+
+        assertEquals(emptyList<Any>(), result.incomeTransactions)
+        assertEquals(listOf(tx), result.expenseTransactions)
+    }
+
+    @Test
+    fun incomeTransactionListShouldBeSortedByFirstLine() {
+        val tx1 = incomeTransaction(amount = "1000.00", date = "2024-01-20", firstLine = 7)
+        val tx2 = incomeTransaction(amount = "2000.00", date = "2024-01-05", firstLine = 1)
+        val tx3 = incomeTransaction(amount = "500.00", date = "2024-01-12", firstLine = 4)
+        // Pass in deliberately unsorted order
+        val result = calculator.calculateForMonth(listOf(tx1, tx2, tx3), 2024, 1, ".")
+
+        assertEquals(listOf(tx2, tx3, tx1), result.incomeTransactions)
+    }
+
+    @Test
+    fun expenseTransactionListShouldBeSortedByFirstLine() {
+        val tx1 = expenseTransaction(amount = "100.00", date = "2024-01-20", firstLine = 7)
+        val tx2 = expenseTransaction(amount = "50.00", date = "2024-01-02", firstLine = 1)
+        val tx3 = expenseTransaction(amount = "75.00", date = "2024-01-10", firstLine = 4)
+        val result = calculator.calculateForMonth(listOf(tx1, tx2, tx3), 2024, 1, ".")
+
+        assertEquals(listOf(tx2, tx3, tx1), result.expenseTransactions)
+    }
+
+    @Test
+    fun assetOnlyTransactionShouldNotAppearInEitherList() {
+        val tx =
+            transaction(
+                date = "2024-01-10",
+                payee = "Transfer",
+                firstLine = 1,
+                lastLine = 3,
+                postings =
+                    listOf(
+                        posting("Assets:Savings", amount("500.00")),
+                        posting("Assets:Checking", amount("-500.00")),
+                    ),
+            )
+        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+
+        assertEquals(emptyList<Any>(), result.incomeTransactions)
+        assertEquals(emptyList<Any>(), result.expenseTransactions)
+    }
 }

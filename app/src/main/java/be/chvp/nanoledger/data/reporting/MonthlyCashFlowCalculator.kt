@@ -18,6 +18,8 @@ class MonthlyCashFlowCalculator {
         val totalExpenses: BigDecimal,
         val netFlow: BigDecimal,
         val period: String,
+        val incomeTransactions: List<Transaction>,
+        val expenseTransactions: List<Transaction>,
     )
 
     /**
@@ -38,6 +40,8 @@ class MonthlyCashFlowCalculator {
         val period = String.format(Locale.US, "%04d-%02d", year, month)
         var totalIncome = BigDecimal.ZERO
         var totalExpenses = BigDecimal.ZERO
+        val incomeTransactionSet = mutableSetOf<Transaction>()
+        val expenseTransactionSet = mutableSetOf<Transaction>()
 
         for (transaction in transactions) {
             if (!isTransactionInMonth(transaction.date, year, month)) {
@@ -54,12 +58,14 @@ class MonthlyCashFlowCalculator {
                         // Income postings are credits (negative amounts in ledger)
                         // Display as positive for cash flow
                         totalIncome += quantity.negate()
+                        incomeTransactionSet.add(transaction)
                     }
 
                     account.startsWith("Expenses", ignoreCase = true) -> {
                         // Expense postings are debits (positive amounts in ledger)
                         // Keep as positive for cash flow
                         totalExpenses += quantity
+                        expenseTransactionSet.add(transaction)
                     }
                 }
             }
@@ -72,6 +78,8 @@ class MonthlyCashFlowCalculator {
             totalExpenses = totalExpenses,
             netFlow = netFlow,
             period = period,
+            incomeTransactions = incomeTransactionSet.sortedBy { it.firstLine },
+            expenseTransactions = expenseTransactionSet.sortedBy { it.firstLine },
         )
     }
 
