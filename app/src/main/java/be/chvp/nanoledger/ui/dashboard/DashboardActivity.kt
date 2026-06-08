@@ -9,6 +9,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -78,6 +79,7 @@ fun DashboardScreen(
     context: ComponentActivity,
     dashboardViewModel: DashboardViewModel = viewModel(),
     onBackClick: () -> Unit,
+    showTopBar: Boolean = true,
 ) {
     val netWorth by dashboardViewModel.netWorth.observeAsState()
     val accountBalances by dashboardViewModel.accountBalances.observeAsState()
@@ -96,6 +98,7 @@ fun DashboardScreen(
         onCashFlowClick = {
             context.startActivity(Intent(context, CashFlowTransactionsActivity::class.java))
         },
+        showTopBar = showTopBar,
     )
 }
 
@@ -108,31 +111,9 @@ fun DashboardScreenContent(
     onBackClick: () -> Unit,
     onAccountClick: () -> Unit,
     onCashFlowClick: () -> Unit = {},
+    showTopBar: Boolean = true,
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.padding(start = 8.dp),
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
-                },
-                title = { Text(stringResource(R.string.dashboard)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-            )
-        },
-        modifier = Modifier.imePadding(),
-    ) { contentPadding ->
+    val content: @Composable (PaddingValues) -> Unit = { contentPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -145,6 +126,37 @@ fun DashboardScreenContent(
             CashFlowCard(cashFlow, decimalSeparator, onCashFlowClick)
             AccountBalancesCard(accountBalances, decimalSeparator, onAccountClick)
         }
+    }
+
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBackClick,
+                            modifier = Modifier.padding(start = 8.dp),
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back),
+                            )
+                        }
+                    },
+                    title = { Text(stringResource(R.string.dashboard)) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                )
+            },
+            modifier = Modifier.imePadding(),
+        ) { contentPadding ->
+            content(contentPadding)
+        }
+    } else {
+        content(PaddingValues())
     }
 }
 

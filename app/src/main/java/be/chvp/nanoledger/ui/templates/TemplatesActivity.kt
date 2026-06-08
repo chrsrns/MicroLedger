@@ -134,6 +134,8 @@ fun TemplatesScreen(
     onEditClick: (TransactionTemplate) -> Unit,
     onDeleteClick: (String) -> Unit,
     templatesViewModel: TemplatesViewModel = viewModel(),
+    showTopBar: Boolean = true,
+    showFab: Boolean = true,
 ) {
     val templates by templatesViewModel.templates.observeAsState(emptyList())
     val saving by templatesViewModel.saving.observeAsState(false)
@@ -146,6 +148,8 @@ fun TemplatesScreen(
         onTemplateClick = onTemplateClick,
         onEditClick = onEditClick,
         onDeleteClick = onDeleteClick,
+        showTopBar = showTopBar,
+        showFab = showFab,
     )
 }
 
@@ -158,28 +162,12 @@ fun TemplatesScreenContent(
     onTemplateClick: (TransactionTemplate) -> Unit,
     onEditClick: (TransactionTemplate) -> Unit,
     onDeleteClick: (String) -> Unit,
+    showTopBar: Boolean = true,
+    showFab: Boolean = true,
 ) {
     var templateToDelete by remember { mutableStateOf<TransactionTemplate?>(null) }
 
-    var fabHeight by remember { mutableIntStateOf(0) }
-    val fabOffsetDp = with(LocalDensity.current) { fabHeight.toDp() + 16.dp }
-    val onFabPositioned =
-        rememberUpdatedState { size: Int ->
-            fabHeight = size
-        }
-
-    Scaffold(
-        topBar = { TemplatesBar(onBackClick) },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddClick,
-                modifier = Modifier.onGloballyPositioned { onFabPositioned.value(it.size.height) },
-            ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
-            }
-        },
-        modifier = Modifier.imePadding(),
-    ) { contentPadding ->
+    val content: @Composable (PaddingValues) -> Unit = { contentPadding ->
         if (saving) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -216,6 +204,33 @@ fun TemplatesScreenContent(
                 },
             )
         }
+    }
+
+    if (showTopBar || showFab) {
+        var fabHeight by remember { mutableIntStateOf(0) }
+        val onFabPositioned =
+            rememberUpdatedState { size: Int ->
+                fabHeight = size
+            }
+
+        Scaffold(
+            topBar = { if (showTopBar) TemplatesBar(onBackClick) else {} },
+            floatingActionButton = {
+                if (showFab) {
+                    FloatingActionButton(
+                        onClick = onAddClick,
+                        modifier = Modifier.onGloballyPositioned { onFabPositioned.value(it.size.height) },
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
+                    }
+                }
+            },
+            modifier = Modifier.imePadding(),
+        ) { contentPadding ->
+            content(contentPadding)
+        }
+    } else {
+        content(PaddingValues())
     }
 }
 

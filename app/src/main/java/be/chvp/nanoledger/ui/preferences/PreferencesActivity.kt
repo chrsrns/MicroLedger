@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
 import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -84,6 +85,7 @@ class PreferencesActivity : ComponentActivity() {
 fun PreferencesScreen(
     preferencesViewModel: PreferencesViewModel,
     onOpenFile: () -> Unit,
+    showTopBar: Boolean = true,
 ) {
     val fileUri by preferencesViewModel.fileUri.observeAsState()
     val transactionDefaultElements by preferencesViewModel.transactionDefaultElements.observeAsState(
@@ -188,6 +190,7 @@ fun PreferencesScreen(
         onCurrencyBeforeAmountChange = { preferencesViewModel.storeCurrencyBeforeAmount(it) },
         currencyAmountSpacing = currencyAmountSpacing,
         onCurrencyAmountSpacingChange = { preferencesViewModel.storeCurrencyAmountSpacing(it) },
+        showTopBar = showTopBar,
     )
 }
 
@@ -229,6 +232,7 @@ fun PreferencesScreen(
     onCurrencyBeforeAmountChange: (Boolean) -> Unit,
     currencyAmountSpacing: Boolean,
     onCurrencyAmountSpacingChange: (Boolean) -> Unit,
+    showTopBar: Boolean = true,
 ) {
     val statusMap =
         mapOf(
@@ -251,7 +255,7 @@ fun PreferencesScreen(
             "." to stringResource(R.string.separator_point),
             "," to stringResource(R.string.separator_comma),
         )
-    Scaffold(topBar = { Bar() }, modifier = Modifier.imePadding()) { contentPadding ->
+    val content: @Composable (PaddingValues) -> Unit = { contentPadding ->
         Column(
             modifier =
                 Modifier
@@ -653,6 +657,13 @@ fun PreferencesScreen(
                 }
             }
         }
+    }
+    if (showTopBar) {
+        Scaffold(topBar = { Bar() }, modifier = Modifier.imePadding()) { contentPadding ->
+            content(contentPadding)
+        }
+    } else {
+        content(PaddingValues())
     }
 }
 
