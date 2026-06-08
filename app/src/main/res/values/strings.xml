@@ -111,4 +111,12 @@
     <string name="net_flow">Net Flow</string>
     <string name="no_data">No data yet</string>
     <string name="no_transactions_for_account">No transactions found for this account</string>
+
+    <string name="cash_flow_details">Cash Flow Details</string>
+    <string name="top_income">Top Income</string>
+    <string name="top_expenses">Top Expenses</string>
+    <string name="income_vs_expenses">Income vs Expenses</string>
+    <string name="no_income_transactions">No income transactions</string>
+    <string name="no_expense_transactions">No expense transactions</string>
+    <string name="month_year_format">%1$s %2$d</string>
 </resources>

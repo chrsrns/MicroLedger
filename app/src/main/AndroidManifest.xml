@@ -48,6 +48,10 @@
             android:exported="false"
             android:name=".ui.accounttransactions.AccountTransactionsActivity"
             />
+        <activity
+            android:exported="false"
+            android:name=".ui.cashflowtransactions.CashFlowTransactionsActivity"
+            />
     </application>
 
 </manifest>

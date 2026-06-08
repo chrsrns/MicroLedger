@@ -48,6 +48,7 @@ import be.chvp.nanoledger.data.reporting.AccountBalanceCalculator
 import be.chvp.nanoledger.data.reporting.MonthlyCashFlowCalculator
 import be.chvp.nanoledger.data.reporting.NetWorthCalculator
 import be.chvp.nanoledger.ui.accounttransactions.AccountTransactionsActivity
+import be.chvp.nanoledger.ui.cashflowtransactions.CashFlowTransactionsActivity
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
 import be.chvp.nanoledger.ui.util.amountColor
 import be.chvp.nanoledger.ui.util.formatAmount
@@ -92,6 +93,9 @@ fun DashboardScreen(
         onAccountClick = {
             context.startActivity(Intent(context, AccountTransactionsActivity::class.java))
         },
+        onCashFlowClick = {
+            context.startActivity(Intent(context, CashFlowTransactionsActivity::class.java))
+        },
     )
 }
 
@@ -103,6 +107,7 @@ fun DashboardScreenContent(
     decimalSeparator: String,
     onBackClick: () -> Unit,
     onAccountClick: () -> Unit,
+    onCashFlowClick: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -137,7 +142,7 @@ fun DashboardScreenContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             NetWorthCard(netWorth, decimalSeparator)
-            CashFlowCard(cashFlow, decimalSeparator)
+            CashFlowCard(cashFlow, decimalSeparator, onCashFlowClick)
             AccountBalancesCard(accountBalances, decimalSeparator, onAccountClick)
         }
     }
@@ -182,10 +187,12 @@ fun NetWorthCard(
 fun CashFlowCard(
     cashFlow: MonthlyCashFlowCalculator.CashFlowResult?,
     decimalSeparator: String,
+    onClick: () -> Unit = {},
 ) {
     DashboardCard(
         title = stringResource(R.string.cash_flow_this_month),
         subtitle = cashFlow?.period,
+        onClick = onClick,
     ) {
         if (cashFlow == null) {
             NoDataText()
