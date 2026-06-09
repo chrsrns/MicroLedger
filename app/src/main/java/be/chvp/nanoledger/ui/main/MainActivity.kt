@@ -52,7 +52,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -100,6 +102,9 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
+    private val dashboardViewModel: DashboardViewModel by viewModels()
+    private val templatesViewModel: TemplatesViewModel by viewModels()
+    private val preferencesViewModel: PreferencesViewModel by viewModels()
 
     private val openFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) {
@@ -162,8 +167,23 @@ class MainActivity : ComponentActivity() {
             }
 
             val fileUri by mainViewModel.fileUri.observeAsState()
+            val isRefreshing by mainViewModel.isRefreshing.observeAsState(false)
+            var hasRefreshed by remember { mutableStateOf(false) }
             LaunchedEffect(fileUri) {
                 mainViewModel.refresh()
+            }
+
+            // Pre-load tab ViewModels after main ViewModel finishes loading
+            LaunchedEffect(isRefreshing) {
+                if (!isRefreshing && fileUri != null) {
+                    hasRefreshed = true
+                }
+                if (!isRefreshing && hasRefreshed) {
+                    // Access ViewModels to trigger their initialization
+                    dashboardViewModel.netWorth
+                    templatesViewModel.templates
+                    preferencesViewModel.fileUri
+                }
             }
 
             NanoLedgerTheme {
@@ -185,6 +205,9 @@ class MainActivity : ComponentActivity() {
                     },
                     onOpenFile = { openFileLauncher.launch(arrayOf("*/*")) },
                     mainViewModel = mainViewModel,
+                    dashboardViewModel = dashboardViewModel,
+                    templatesViewModel = templatesViewModel,
+                    preferencesViewModel = preferencesViewModel,
                 )
             }
         }
@@ -194,6 +217,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(
     mainViewModel: MainViewModel = viewModel(),
+    dashboardViewModel: DashboardViewModel,
+    templatesViewModel: TemplatesViewModel,
+    preferencesViewModel: PreferencesViewModel,
     onAddClick: () -> Unit,
     onCopyClick: (Int) -> Unit,
     onEditClick: (Int) -> Unit,
@@ -237,6 +263,9 @@ fun MainScreen(
             context.startActivity(Intent(context, CashFlowTransactionsActivity::class.java))
         },
         onOpenFile = onOpenFile,
+        dashboardViewModel = dashboardViewModel,
+        templatesViewModel = templatesViewModel,
+        preferencesViewModel = preferencesViewModel,
     )
 }
 
@@ -263,6 +292,9 @@ fun MainScreen(
     onDashboardAccountClick: () -> Unit,
     onCashFlowClick: () -> Unit,
     onOpenFile: () -> Unit,
+    dashboardViewModel: DashboardViewModel = viewModel(),
+    templatesViewModel: TemplatesViewModel = viewModel(),
+    preferencesViewModel: PreferencesViewModel = viewModel(),
     tabContent: (@Composable (MainTab, PaddingValues) -> Unit)? = null,
 ) {
     val context = LocalContext.current
@@ -396,6 +428,9 @@ fun MainScreen(
                                 context.startActivity(intent)
                             },
                             onOpenFile = onOpenFile,
+                            dashboardViewModel = dashboardViewModel,
+                            templatesViewModel = templatesViewModel,
+                            preferencesViewModel = preferencesViewModel,
                         )
                     }
                 }
@@ -414,9 +449,9 @@ fun MainTabContent(
     onTemplateClick: (TransactionTemplate) -> Unit,
     onTemplateEditClick: (TransactionTemplate) -> Unit,
     onOpenFile: () -> Unit,
-    dashboardViewModel: DashboardViewModel = viewModel(),
-    templatesViewModel: TemplatesViewModel = viewModel(),
-    preferencesViewModel: PreferencesViewModel = viewModel(),
+    dashboardViewModel: DashboardViewModel,
+    templatesViewModel: TemplatesViewModel,
+    preferencesViewModel: PreferencesViewModel,
 ) {
     val context = LocalContext.current
 
