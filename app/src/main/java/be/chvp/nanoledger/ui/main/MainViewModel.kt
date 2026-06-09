@@ -77,8 +77,15 @@ class MainViewModel
         val selectedTab: LiveData<MainTab> = _selectedTab
 
         fun selectTab(tab: MainTab) {
+            val previousTab = _selectedTab.value
             _selectedTab.value = tab
             _selectedIndex.value = null
+
+            // Reset search when leaving Home tab
+            if (previousTab == MainTab.Home && tab != MainTab.Home) {
+                _searching.value = false
+                _query.value = ""
+            }
         }
 
         fun setFileUri(uri: Uri) {
