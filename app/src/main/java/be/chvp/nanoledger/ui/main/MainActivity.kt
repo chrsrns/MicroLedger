@@ -292,6 +292,12 @@ fun MainScreen(
     val selected by mainViewModel.selectedIndex.observeAsState()
     val selectedTab by mainViewModel.selectedTab.observeAsState()
 
+    // Handle back button when in search mode
+    BackHandler(enabled = (searching ?: false) && selectedTab == MainTab.Home) {
+        mainViewModel.setSearching(false)
+        mainViewModel.setQuery("")
+    }
+
     MainScreen(
         fileUri = fileUri,
         transactions = transactions,
