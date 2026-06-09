@@ -164,6 +164,7 @@ fun TemplatesScreenContent(
     onDeleteClick: (String) -> Unit,
     showTopBar: Boolean = true,
     showFab: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     var templateToDelete by remember { mutableStateOf<TransactionTemplate?>(null) }
 
@@ -230,7 +231,7 @@ fun TemplatesScreenContent(
             content(contentPadding)
         }
     } else {
-        content(PaddingValues())
+        content(contentPadding)
     }
 }
 

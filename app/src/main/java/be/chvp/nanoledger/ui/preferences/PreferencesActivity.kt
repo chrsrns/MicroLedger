@@ -86,6 +86,7 @@ fun PreferencesScreen(
     preferencesViewModel: PreferencesViewModel,
     onOpenFile: () -> Unit,
     showTopBar: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val fileUri by preferencesViewModel.fileUri.observeAsState()
     val transactionDefaultElements by preferencesViewModel.transactionDefaultElements.observeAsState(
@@ -191,6 +192,7 @@ fun PreferencesScreen(
         currencyAmountSpacing = currencyAmountSpacing,
         onCurrencyAmountSpacingChange = { preferencesViewModel.storeCurrencyAmountSpacing(it) },
         showTopBar = showTopBar,
+        contentPadding = contentPadding,
     )
 }
 
@@ -233,6 +235,7 @@ fun PreferencesScreen(
     currencyAmountSpacing: Boolean,
     onCurrencyAmountSpacingChange: (Boolean) -> Unit,
     showTopBar: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val statusMap =
         mapOf(
@@ -659,11 +662,11 @@ fun PreferencesScreen(
         }
     }
     if (showTopBar) {
-        Scaffold(topBar = { Bar() }, modifier = Modifier.imePadding()) { contentPadding ->
-            content(contentPadding)
+        Scaffold(topBar = { Bar() }, modifier = Modifier.imePadding()) { scaffoldPadding ->
+            content(scaffoldPadding)
         }
     } else {
-        content(PaddingValues())
+        content(contentPadding)
     }
 }
 

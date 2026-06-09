@@ -112,6 +112,7 @@ fun DashboardScreenContent(
     onAccountClick: () -> Unit,
     onCashFlowClick: () -> Unit = {},
     showTopBar: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val content: @Composable (PaddingValues) -> Unit = { contentPadding ->
         Column(
@@ -156,7 +157,7 @@ fun DashboardScreenContent(
             content(contentPadding)
         }
     } else {
-        content(PaddingValues())
+        content(contentPadding)
     }
 }
 
