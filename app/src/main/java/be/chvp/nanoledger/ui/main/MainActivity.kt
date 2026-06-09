@@ -350,9 +350,9 @@ fun MainScreen(
     onDashboardAccountClick: () -> Unit,
     onCashFlowClick: () -> Unit,
     onOpenFile: () -> Unit,
-    dashboardViewModel: DashboardViewModel = viewModel(),
-    templatesViewModel: TemplatesViewModel = viewModel(),
-    preferencesViewModel: PreferencesViewModel = viewModel(),
+    dashboardViewModel: DashboardViewModel? = null,
+    templatesViewModel: TemplatesViewModel? = null,
+    preferencesViewModel: PreferencesViewModel? = null,
     tabContent: (@Composable (MainTab, PaddingValues) -> Unit)? = null,
 ) {
     val context = LocalContext.current
@@ -464,7 +464,10 @@ fun MainScreen(
                 else -> {
                     if (tabContent != null) {
                         tabContent(tab, contentPadding)
-                    } else {
+                    } else if (dashboardViewModel != null &&
+                        templatesViewModel != null &&
+                        preferencesViewModel != null
+                    ) {
                         MainTabContent(
                             tab = tab,
                             contentPadding = contentPadding,
