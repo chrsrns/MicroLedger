@@ -97,6 +97,7 @@
     <string name="template_not_found">Template not found</string>
     <string name="template_accounts_more">+%d more</string>
 
+    <string name="home">Home</string>
     <string name="dashboard">Dashboard</string>
     <string name="net_worth">Net Worth</string>
     <string name="total_assets">Total Assets</string>

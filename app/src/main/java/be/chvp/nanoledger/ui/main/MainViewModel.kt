@@ -1,6 +1,7 @@
 package be.chvp.nanoledger.ui.main
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -15,6 +16,19 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import java.io.IOException
 import javax.inject.Inject
+
+sealed class MainTab {
+    object Home : MainTab()
+    object Dashboard : MainTab()
+    object Templates : MainTab()
+    object Settings : MainTab()
+
+    companion object {
+        val entries = listOf(Home, Dashboard, Templates, Settings)
+    }
+
+    val ordinal: Int get() = entries.indexOf(this)
+}
 
 @HiltViewModel
 class MainViewModel
@@ -58,6 +72,18 @@ class MainViewModel
 
         private val _latestMismatch = MutableLiveData<Event<Int>?>(null)
         val latestMismatch: LiveData<Event<Int>?> = _latestMismatch
+
+        private val _selectedTab = MutableLiveData<MainTab>(MainTab.Home)
+        val selectedTab: LiveData<MainTab> = _selectedTab
+
+        fun selectTab(tab: MainTab) {
+            _selectedTab.value = tab
+            _selectedIndex.value = null
+        }
+
+        fun setFileUri(uri: Uri) {
+            preferencesDataSource.setFileUri(uri)
+        }
 
         fun refresh() {
             val uri = preferencesDataSource.getFileUri()

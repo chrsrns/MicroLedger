@@ -3,6 +3,7 @@ package be.chvp.nanoledger.ui.main
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -10,14 +11,17 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,13 +32,15 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -46,17 +52,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -65,7 +67,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -73,18 +74,42 @@ import be.chvp.nanoledger.R
 import be.chvp.nanoledger.data.Amount
 import be.chvp.nanoledger.data.Posting
 import be.chvp.nanoledger.data.Transaction
+import be.chvp.nanoledger.data.TransactionTemplate
+import be.chvp.nanoledger.data.reporting.AccountBalanceCalculator
+import be.chvp.nanoledger.data.reporting.MonthlyCashFlowCalculator
+import be.chvp.nanoledger.data.reporting.NetWorthCalculator
 import be.chvp.nanoledger.ui.add.AddActivity
+import be.chvp.nanoledger.ui.accounttransactions.AccountTransactionsActivity
+import be.chvp.nanoledger.ui.cashflowtransactions.CashFlowTransactionsActivity
 import be.chvp.nanoledger.ui.common.TRANSACTION_INDEX_KEY
-import be.chvp.nanoledger.ui.dashboard.DashboardActivity
+import be.chvp.nanoledger.ui.dashboard.DashboardScreenContent
+import be.chvp.nanoledger.ui.dashboard.DashboardViewModel
+
 import be.chvp.nanoledger.ui.edit.EditActivity
-import be.chvp.nanoledger.ui.preferences.PreferencesActivity
-import be.chvp.nanoledger.ui.templates.TemplatesActivity
+import be.chvp.nanoledger.ui.preferences.PreferencesScreen
+import be.chvp.nanoledger.ui.preferences.PreferencesViewModel
+import be.chvp.nanoledger.ui.templates.EDIT_TEMPLATE_ID_KEY
+import be.chvp.nanoledger.ui.templates.TEMPLATE_ID_KEY
+import be.chvp.nanoledger.ui.templates.TemplateFormActivity
+import be.chvp.nanoledger.ui.templates.TemplatesScreenContent
+import be.chvp.nanoledger.ui.templates.TemplatesViewModel
 import be.chvp.nanoledger.ui.theme.NanoLedgerTheme
+import java.math.BigDecimal
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
+
+    private val openFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) {
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+            mainViewModel.setFileUri(uri)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,15 +171,6 @@ class MainActivity : ComponentActivity() {
                     onAddClick = {
                         startActivity(Intent(this, AddActivity::class.java))
                     },
-                    onDashboardClick = {
-                        startActivity(Intent(this, DashboardActivity::class.java))
-                    },
-                    onSettingsClick = {
-                        startActivity(Intent(this, PreferencesActivity::class.java))
-                    },
-                    onTemplatesClick = {
-                        startActivity(Intent(this, TemplatesActivity::class.java))
-                    },
                     onCopyClick = { index ->
                         val intent = Intent(this, AddActivity::class.java)
                         intent.putExtra(TRANSACTION_INDEX_KEY, index)
@@ -167,6 +183,8 @@ class MainActivity : ComponentActivity() {
                         mainViewModel.toggleSelect(index)
                         startActivity(intent)
                     },
+                    onOpenFile = { openFileLauncher.launch(arrayOf("*/*")) },
+                    mainViewModel = mainViewModel,
                 )
             }
         }
@@ -177,18 +195,18 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     mainViewModel: MainViewModel = viewModel(),
     onAddClick: () -> Unit,
-    onDashboardClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onTemplatesClick: () -> Unit,
     onCopyClick: (Int) -> Unit,
     onEditClick: (Int) -> Unit,
+    onOpenFile: () -> Unit,
 ) {
+    val context = LocalContext.current
     val fileUri by mainViewModel.fileUri.observeAsState()
     val transactions by mainViewModel.filteredTransactions.observeAsState()
     val searching by mainViewModel.searching.observeAsState()
     val query by mainViewModel.query.observeAsState()
     val isRefreshing by mainViewModel.isRefreshing.observeAsState()
     val selected by mainViewModel.selectedIndex.observeAsState()
+    val selectedTab by mainViewModel.selectedTab.observeAsState()
 
     MainScreen(
         fileUri = fileUri,
@@ -197,12 +215,11 @@ fun MainScreen(
         query = query ?: "",
         isRefreshing = isRefreshing ?: false,
         selected = selected,
+        selectedTab = selectedTab ?: MainTab.Home,
         onRefresh = { mainViewModel.refresh() },
         onToggleSelect = { mainViewModel.toggleSelect(it) },
         onSearchClick = { mainViewModel.setSearching(true) },
-        onDashboardClick = onDashboardClick,
-        onSettingsClick = onSettingsClick,
-        onTemplatesClick = onTemplatesClick,
+        onSelectTab = { mainViewModel.selectTab(it) },
         onStopSearching = {
             mainViewModel.setSearching(false)
             mainViewModel.setQuery("")
@@ -213,6 +230,13 @@ fun MainScreen(
         onEditClick = { selected?.let { onEditClick(it) } },
         onDeleteClick = { mainViewModel.deleteSelected() },
         onAddClick = onAddClick,
+        onDashboardAccountClick = {
+            context.startActivity(Intent(context, AccountTransactionsActivity::class.java))
+        },
+        onCashFlowClick = {
+            context.startActivity(Intent(context, CashFlowTransactionsActivity::class.java))
+        },
+        onOpenFile = onOpenFile,
     )
 }
 
@@ -224,12 +248,11 @@ fun MainScreen(
     query: String,
     isRefreshing: Boolean,
     selected: Int?,
+    selectedTab: MainTab,
     onRefresh: () -> Unit,
     onToggleSelect: (Int) -> Unit,
     onSearchClick: () -> Unit,
-    onDashboardClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onTemplatesClick: () -> Unit,
+    onSelectTab: (MainTab) -> Unit,
     onStopSearching: () -> Unit,
     onQueryChange: (String) -> Unit,
     onStopSelection: () -> Unit,
@@ -237,83 +260,426 @@ fun MainScreen(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onAddClick: () -> Unit,
+    onDashboardAccountClick: () -> Unit,
+    onCashFlowClick: () -> Unit,
+    onOpenFile: () -> Unit,
+    tabContent: (@Composable (MainTab, PaddingValues) -> Unit)? = null,
 ) {
-    var fabHeight by remember { mutableIntStateOf(0) }
-    val fabOffsetDp = with(LocalDensity.current) { fabHeight.toDp() + 16.dp }
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
-            if (selected != null) {
+            if (selected != null && selectedTab == MainTab.Home) {
                 SelectionBar(onStopSelection, onCopyClick, onEditClick, onDeleteClick)
-            } else if (searching) {
+            } else if (searching && selectedTab == MainTab.Home) {
                 SearchBar(query, onQueryChange, onStopSearching)
             } else {
-                MainBar(onSearchClick, onDashboardClick, onSettingsClick, onTemplatesClick)
+                MainBar(selectedTab, onSearchClick)
             }
         },
-        floatingActionButton = {
-            if (fileUri != null) {
-                FloatingActionButton(
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = selectedTab == MainTab.Home,
+                    onClick = { onSelectTab(MainTab.Home) },
+                    icon = {
+                        Icon(
+                            Icons.Filled.Home,
+                            contentDescription = stringResource(R.string.home),
+                        )
+                    },
+                    label = { Text(stringResource(R.string.home)) },
+                )
+                NavigationBarItem(
+                    selected = selectedTab == MainTab.Dashboard,
+                    onClick = { onSelectTab(MainTab.Dashboard) },
+                    icon = {
+                        Icon(
+                            Icons.Filled.Dashboard,
+                            contentDescription = stringResource(R.string.dashboard),
+                        )
+                    },
+                    label = { Text(stringResource(R.string.dashboard)) },
+                )
+                NavigationBarItem(
+                    selected = false,
                     onClick = onAddClick,
-                    modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add),
-                    )
-                }
+                    enabled = fileUri != null,
+                    icon = {
+                        Icon(
+                            Icons.Filled.Add,
+                            contentDescription = stringResource(R.string.add),
+                        )
+                    },
+                    label = { Text(stringResource(R.string.add)) },
+                )
+                NavigationBarItem(
+                    selected = selectedTab == MainTab.Templates,
+                    onClick = { onSelectTab(MainTab.Templates) },
+                    icon = {
+                        Icon(
+                            painterResource(R.drawable.baseline_bookmark_24),
+                            contentDescription = stringResource(R.string.templates),
+                        )
+                    },
+                    label = { Text(stringResource(R.string.templates)) },
+                )
+                NavigationBarItem(
+                    selected = selectedTab == MainTab.Settings,
+                    onClick = { onSelectTab(MainTab.Settings) },
+                    icon = {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings),
+                        )
+                    },
+                    label = { Text(stringResource(R.string.settings)) },
+                )
             }
         },
         modifier = Modifier.imePadding(),
     ) { contentPadding ->
-        if (fileUri != null) {
-            MainContent(
-                transactions = transactions,
-                query = query,
-                isRefreshing = isRefreshing,
-                selected = selected,
-                onRefresh = onRefresh,
-                onToggleSelect = onToggleSelect,
-                contentPadding = contentPadding,
-                bottomOffset = fabOffsetDp,
-            )
-        } else {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    stringResource(R.string.no_file_yet),
-                    style = MaterialTheme.typography.headlineLarge,
-                    textAlign = TextAlign.Center,
-                    modifier =
-                        Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(
-                                horizontal = 16.dp,
-                            ),
+        AnimatedContent(
+            targetState = selectedTab,
+            transitionSpec = {
+                slideInHorizontally(
+                    animationSpec = tween(300),
+                    initialOffsetX = { if (targetState.ordinal > initialState.ordinal) it else -it },
+                ) togetherWith slideOutHorizontally(
+                    animationSpec = tween(300),
+                    targetOffsetX = { if (targetState.ordinal > initialState.ordinal) -it else it },
                 )
-                Text(
-                    stringResource(R.string.go_to_settings),
-                    style =
-                        MaterialTheme.typography.headlineLarge.copy(
-                            textDecoration = TextDecoration.Underline,
-                            color = MaterialTheme.colorScheme.primary,
-                        ),
-                    textAlign = TextAlign.Center,
-                    modifier =
-                        Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(
-                                horizontal = 16.dp,
-                            )
-                            .clickable { onSettingsClick() },
-                )
+            },
+            label = "tab_switch",
+        ) { tab ->
+            when (tab) {
+                MainTab.Home -> {
+                    if (fileUri != null) {
+                        MainContent(
+                            transactions = transactions,
+                            query = query,
+                            isRefreshing = isRefreshing,
+                            selected = selected,
+                            onRefresh = onRefresh,
+                            onToggleSelect = onToggleSelect,
+                            contentPadding = contentPadding,
+                        )
+                    } else {
+                        NoFileState(
+                            contentPadding = contentPadding,
+                            onGoToSettings = { onSelectTab(MainTab.Settings) },
+                        )
+                    }
+                }
+                else -> {
+                    if (tabContent != null) {
+                        tabContent(tab, contentPadding)
+                    } else {
+                        MainTabContent(
+                            tab = tab,
+                            contentPadding = contentPadding,
+                            onDashboardAccountClick = onDashboardAccountClick,
+                            onCashFlowClick = onCashFlowClick,
+                            onTemplateAddClick = {
+                                context.startActivity(
+                                    Intent(context, TemplateFormActivity::class.java)
+                                )
+                            },
+                            onTemplateClick = { template ->
+                                val intent = Intent(context, AddActivity::class.java)
+                                intent.putExtra(TEMPLATE_ID_KEY, template.id)
+                                context.startActivity(intent)
+                            },
+                            onTemplateEditClick = { template ->
+                                val intent = Intent(context, TemplateFormActivity::class.java)
+                                intent.putExtra(EDIT_TEMPLATE_ID_KEY, template.id)
+                                context.startActivity(intent)
+                            },
+                            onOpenFile = onOpenFile,
+                        )
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+fun MainTabContent(
+    tab: MainTab,
+    contentPadding: PaddingValues,
+    onDashboardAccountClick: () -> Unit,
+    onCashFlowClick: () -> Unit,
+    onTemplateAddClick: () -> Unit,
+    onTemplateClick: (TransactionTemplate) -> Unit,
+    onTemplateEditClick: (TransactionTemplate) -> Unit,
+    onOpenFile: () -> Unit,
+    dashboardViewModel: DashboardViewModel = viewModel(),
+    templatesViewModel: TemplatesViewModel = viewModel(),
+    preferencesViewModel: PreferencesViewModel = viewModel(),
+) {
+    val context = LocalContext.current
+
+    val latestTemplateError by templatesViewModel.latestError.observeAsState()
+    val errorWritingFile = stringResource(R.string.error_writing_file)
+    LaunchedEffect(latestTemplateError) {
+        if (latestTemplateError?.get() != null) {
+            Toast.makeText(context, errorWritingFile, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val latestTemplateReadError by templatesViewModel.latestReadError.observeAsState()
+    val errorReadingFile = stringResource(R.string.error_reading_file)
+    LaunchedEffect(latestTemplateReadError) {
+        if (latestTemplateReadError?.get() != null) {
+            Toast.makeText(context, errorReadingFile, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val latestTemplateMismatch by templatesViewModel.latestMismatch.observeAsState()
+    val mismatchMessage = stringResource(R.string.mismatch_no_delete)
+    LaunchedEffect(latestTemplateMismatch) {
+        if (latestTemplateMismatch?.get() != null) {
+            Toast.makeText(context, mismatchMessage, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val netWorth by dashboardViewModel.netWorth.observeAsState()
+    val accountBalances by dashboardViewModel.accountBalances.observeAsState()
+    val cashFlow by dashboardViewModel.currentMonthCashFlow.observeAsState()
+    val decimalSeparator by dashboardViewModel.decimalSeparator.observeAsState(".")
+    val templates by templatesViewModel.templates.observeAsState(emptyList())
+    val saving by templatesViewModel.saving.observeAsState(false)
+    val fileUri by preferencesViewModel.fileUri.observeAsState()
+    val transactionDefaultElements by preferencesViewModel.transactionDefaultElements.observeAsState(emptyList())
+    val transactionStatusPresentByDefault by preferencesViewModel.transactionStatusPresentByDefault.observeAsState(true)
+    val transactionCodePresentByDefault by preferencesViewModel.transactionCodePresentByDefault.observeAsState(false)
+    val transactionPayeePresentByDefault by preferencesViewModel.transactionPayeePresentByDefault.observeAsState(true)
+    val transactionNotePresentByDefault by preferencesViewModel.transactionNotePresentByDefault.observeAsState(true)
+    val transactionCurrenciesPresentByDefault by preferencesViewModel.transactionCurrenciesPresentByDefault.observeAsState(true)
+    val postingDefaultElements by preferencesViewModel.postingDefaultElements.observeAsState(emptyList())
+    val postingAmountPresentByDefault by preferencesViewModel.postingAmountPresentByDefault.observeAsState(true)
+    val postingCostPresentByDefault by preferencesViewModel.postingCostPresentByDefault.observeAsState(false)
+    val postingAssertionPresentByDefault by preferencesViewModel.postingAssertionPresentByDefault.observeAsState(false)
+    val postingAssertionCostPresentByDefault by preferencesViewModel.postingAssertionCostPresentByDefault.observeAsState(false)
+    val postingCommentPresentByDefault by preferencesViewModel.postingCommentPresentByDefault.observeAsState(false)
+    val defaultCurrency by preferencesViewModel.defaultCurrency.observeAsState("€")
+    val postingWidth by preferencesViewModel.postingWidth.observeAsState(72)
+    val defaultStatus by preferencesViewModel.defaultStatus.observeAsState(" ")
+    val prefDecimalSeparator by preferencesViewModel.decimalSeparator.observeAsState(".")
+    val currencyBeforeAmount by preferencesViewModel.currencyBeforeAmount.observeAsState(true)
+    val currencyAmountSpacing by preferencesViewModel.spacingBetweenCurrencyAndAmount.observeAsState(true)
+
+    MainTabContent(
+        tab = tab,
+        contentPadding = contentPadding,
+        netWorth = netWorth,
+        accountBalances = accountBalances,
+        cashFlow = cashFlow,
+        decimalSeparator = decimalSeparator,
+        onDashboardAccountClick = onDashboardAccountClick,
+        onCashFlowClick = onCashFlowClick,
+        templates = templates,
+        saving = saving,
+        onTemplateAddClick = onTemplateAddClick,
+        onTemplateClick = onTemplateClick,
+        onTemplateEditClick = onTemplateEditClick,
+        onTemplateDeleteClick = { templatesViewModel.deleteTemplate(it, {}) },
+        onOpenFile = onOpenFile,
+        fileUri = fileUri,
+        transactionDefaultElements = transactionDefaultElements,
+        transactionStatusPresentByDefault = transactionStatusPresentByDefault,
+        onTransactionStatusPresentByDefaultChange = { preferencesViewModel.storeTransactionStatusPresentByDefault(it) },
+        transactionCodePresentByDefault = transactionCodePresentByDefault,
+        onTransactionCodePresentByDefaultChange = { preferencesViewModel.storeTransactionCodePresentByDefault(it) },
+        transactionPayeePresentByDefault = transactionPayeePresentByDefault,
+        onTransactionPayeePresentByDefaultChange = { preferencesViewModel.storeTransactionPayeePresentByDefault(it) },
+        transactionNotePresentByDefault = transactionNotePresentByDefault,
+        onTransactionNotePresentByDefaultChange = { preferencesViewModel.storeTransactionNotePresentByDefault(it) },
+        transactionCurrenciesPresentByDefault = transactionCurrenciesPresentByDefault,
+        onTransactionCurrenciesPresentByDefaultChange = { preferencesViewModel.storeTransactionCurrenciesPresentByDefault(it) },
+        postingDefaultElements = postingDefaultElements,
+        postingAmountPresentByDefault = postingAmountPresentByDefault,
+        onPostingAmountPresentByDefaultChange = { preferencesViewModel.storePostingAmountPresentByDefault(it) },
+        postingCostPresentByDefault = postingCostPresentByDefault,
+        onPostingCostPresentByDefaultChange = { preferencesViewModel.storePostingCostPresentByDefault(it) },
+        postingAssertionPresentByDefault = postingAssertionPresentByDefault,
+        onPostingAssertionPresentByDefaultChange = { preferencesViewModel.storePostingAssertionPresentByDefault(it) },
+        postingAssertionCostPresentByDefault = postingAssertionCostPresentByDefault,
+        onPostingAssertionCostPresentByDefaultChange = { preferencesViewModel.storePostingAssertionCostPresentByDefault(it) },
+        postingCommentPresentByDefault = postingCommentPresentByDefault,
+        onPostingCommentPresentByDefaultChange = { preferencesViewModel.storePostingCommentPresentByDefault(it) },
+        defaultCurrency = defaultCurrency,
+        onDefaultCurrencyChange = { preferencesViewModel.storeDefaultCurrency(it) },
+        postingWidth = postingWidth,
+        onPostingWidthChange = { preferencesViewModel.storePostingWidth(it) },
+        defaultStatus = defaultStatus,
+        onDefaultStatusChange = { preferencesViewModel.storeDefaultStatus(it) },
+        prefDecimalSeparator = prefDecimalSeparator,
+        onDecimalSeparatorChange = { preferencesViewModel.storeDecimalSeparator(it) },
+        currencyBeforeAmount = currencyBeforeAmount,
+        onCurrencyBeforeAmountChange = { preferencesViewModel.storeCurrencyBeforeAmount(it) },
+        currencyAmountSpacing = currencyAmountSpacing,
+        onCurrencyAmountSpacingChange = { preferencesViewModel.storeCurrencyAmountSpacing(it) },
+    )
+}
+
+@Composable
+fun MainTabContent(
+    tab: MainTab,
+    contentPadding: PaddingValues,
+    netWorth: NetWorthCalculator.NetWorthResult?,
+    accountBalances: AccountBalanceCalculator.AccountBalancesResult?,
+    cashFlow: MonthlyCashFlowCalculator.CashFlowResult?,
+    decimalSeparator: String,
+    onDashboardAccountClick: () -> Unit,
+    onCashFlowClick: () -> Unit,
+    templates: List<TransactionTemplate>,
+    saving: Boolean,
+    onTemplateAddClick: () -> Unit,
+    onTemplateClick: (TransactionTemplate) -> Unit,
+    onTemplateEditClick: (TransactionTemplate) -> Unit,
+    onTemplateDeleteClick: (String) -> Unit,
+    onOpenFile: () -> Unit,
+    fileUri: Uri?,
+    transactionDefaultElements: List<Int>,
+    transactionStatusPresentByDefault: Boolean,
+    onTransactionStatusPresentByDefaultChange: (Boolean) -> Unit,
+    transactionCodePresentByDefault: Boolean,
+    onTransactionCodePresentByDefaultChange: (Boolean) -> Unit,
+    transactionPayeePresentByDefault: Boolean,
+    onTransactionPayeePresentByDefaultChange: (Boolean) -> Unit,
+    transactionNotePresentByDefault: Boolean,
+    onTransactionNotePresentByDefaultChange: (Boolean) -> Unit,
+    transactionCurrenciesPresentByDefault: Boolean,
+    onTransactionCurrenciesPresentByDefaultChange: (Boolean) -> Unit,
+    postingDefaultElements: List<Int>,
+    postingAmountPresentByDefault: Boolean,
+    onPostingAmountPresentByDefaultChange: (Boolean) -> Unit,
+    postingCostPresentByDefault: Boolean,
+    onPostingCostPresentByDefaultChange: (Boolean) -> Unit,
+    postingAssertionPresentByDefault: Boolean,
+    onPostingAssertionPresentByDefaultChange: (Boolean) -> Unit,
+    postingAssertionCostPresentByDefault: Boolean,
+    onPostingAssertionCostPresentByDefaultChange: (Boolean) -> Unit,
+    postingCommentPresentByDefault: Boolean,
+    onPostingCommentPresentByDefaultChange: (Boolean) -> Unit,
+    defaultCurrency: String,
+    onDefaultCurrencyChange: (String) -> Unit,
+    postingWidth: Int,
+    onPostingWidthChange: (Int) -> Unit,
+    defaultStatus: String,
+    onDefaultStatusChange: (String) -> Unit,
+    prefDecimalSeparator: String,
+    onDecimalSeparatorChange: (String) -> Unit,
+    currencyBeforeAmount: Boolean,
+    onCurrencyBeforeAmountChange: (Boolean) -> Unit,
+    currencyAmountSpacing: Boolean,
+    onCurrencyAmountSpacingChange: (Boolean) -> Unit,
+) {
+    when (tab) {
+        MainTab.Dashboard -> DashboardScreenContent(
+            netWorth = netWorth,
+            accountBalances = accountBalances,
+            cashFlow = cashFlow,
+            decimalSeparator = decimalSeparator,
+            onBackClick = {},
+            onAccountClick = onDashboardAccountClick,
+            onCashFlowClick = onCashFlowClick,
+            showTopBar = false,
+            contentPadding = contentPadding,
+        )
+        MainTab.Templates -> TemplatesScreenContent(
+            templates = templates,
+            saving = saving,
+            onBackClick = {},
+            onAddClick = onTemplateAddClick,
+            onTemplateClick = onTemplateClick,
+            onEditClick = onTemplateEditClick,
+            onDeleteClick = onTemplateDeleteClick,
+            showTopBar = false,
+            showFab = false,
+            contentPadding = contentPadding,
+        )
+        MainTab.Settings -> PreferencesScreen(
+            fileUri = fileUri,
+            onOpenFile = onOpenFile,
+            transactionDefaultElements = transactionDefaultElements,
+            transactionStatusPresentByDefault = transactionStatusPresentByDefault,
+            onTransactionStatusPresentByDefaultChange = onTransactionStatusPresentByDefaultChange,
+            transactionCodePresentByDefault = transactionCodePresentByDefault,
+            onTransactionCodePresentByDefaultChange = onTransactionCodePresentByDefaultChange,
+            transactionPayeePresentByDefault = transactionPayeePresentByDefault,
+            onTransactionPayeePresentByDefaultChange = onTransactionPayeePresentByDefaultChange,
+            transactionNotePresentByDefault = transactionNotePresentByDefault,
+            onTransactionNotePresentByDefaultChange = onTransactionNotePresentByDefaultChange,
+            transactionCurrenciesPresentByDefault = transactionCurrenciesPresentByDefault,
+            onTransactionCurrenciesPresentByDefaultChange = onTransactionCurrenciesPresentByDefaultChange,
+            postingDefaultElements = postingDefaultElements,
+            postingAmountPresentByDefault = postingAmountPresentByDefault,
+            onPostingAmountPresentByDefaultChange = onPostingAmountPresentByDefaultChange,
+            postingCostPresentByDefault = postingCostPresentByDefault,
+            onPostingCostPresentByDefaultChange = onPostingCostPresentByDefaultChange,
+            postingAssertionPresentByDefault = postingAssertionPresentByDefault,
+            onPostingAssertionPresentByDefaultChange = onPostingAssertionPresentByDefaultChange,
+            postingAssertionCostPresentByDefault = postingAssertionCostPresentByDefault,
+            onPostingAssertionCostPresentByDefaultChange = onPostingAssertionCostPresentByDefaultChange,
+            postingCommentPresentByDefault = postingCommentPresentByDefault,
+            onPostingCommentPresentByDefaultChange = onPostingCommentPresentByDefaultChange,
+            defaultCurrency = defaultCurrency,
+            onDefaultCurrencyChange = onDefaultCurrencyChange,
+            postingWidth = postingWidth,
+            onPostingWidthChange = onPostingWidthChange,
+            defaultStatus = defaultStatus,
+            onDefaultStatusChange = onDefaultStatusChange,
+            decimalSeparator = prefDecimalSeparator,
+            onDecimalSeparatorChange = onDecimalSeparatorChange,
+            currencyBeforeAmount = currencyBeforeAmount,
+            onCurrencyBeforeAmountChange = onCurrencyBeforeAmountChange,
+            currencyAmountSpacing = currencyAmountSpacing,
+            onCurrencyAmountSpacingChange = onCurrencyAmountSpacingChange,
+            showTopBar = false,
+            contentPadding = contentPadding,
+        )
+        else -> {}
+    }
+}
+
+@Composable
+fun NoFileState(
+    contentPadding: PaddingValues,
+    onGoToSettings: () -> Unit,
+) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(contentPadding),
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            stringResource(R.string.no_file_yet),
+            style = MaterialTheme.typography.headlineLarge,
+            textAlign = TextAlign.Center,
+            modifier =
+                Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(horizontal = 16.dp),
+        )
+        Text(
+            stringResource(R.string.go_to_settings),
+            style =
+                MaterialTheme.typography.headlineLarge.copy(
+                    textDecoration = TextDecoration.Underline,
+                    color = MaterialTheme.colorScheme.primary,
+                ),
+            textAlign = TextAlign.Center,
+            modifier =
+                Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(horizontal = 16.dp)
+                    .clickable { onGoToSettings() },
+        )
     }
 }
 
@@ -326,7 +692,6 @@ fun MainContent(
     onRefresh: () -> Unit,
     onToggleSelect: (Int) -> Unit,
     contentPadding: PaddingValues,
-    bottomOffset: Dp,
 ) {
     val context = LocalContext.current
     PullToRefreshBox(
@@ -354,13 +719,7 @@ fun MainContent(
                             ),
                     )
                 }
-                item {
-                    Box(
-                        Modifier
-                            .height(bottomOffset)
-                            .fillMaxWidth(),
-                    )
-                }
+
             }
         } else {
             LazyColumn(
@@ -408,35 +767,20 @@ fun MainContent(
 }
 
 @Composable
-fun MainBar(
-    onSearchClick: () -> Unit,
-    onDashboardClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onTemplatesClick: () -> Unit,
-) {
+fun MainBar(selectedTab: MainTab, onSearchClick: () -> Unit) {
+    val title = when (selectedTab) {
+        MainTab.Home -> stringResource(R.string.app_name)
+        MainTab.Dashboard -> stringResource(R.string.dashboard)
+        MainTab.Templates -> stringResource(R.string.templates)
+        MainTab.Settings -> stringResource(R.string.settings)
+    }
     TopAppBar(
-        title = { Text(stringResource(R.string.app_name)) },
+        title = { Text(title) },
         actions = {
-            IconButton(onClick = onSearchClick) {
-                Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.search))
-            }
-            IconButton(onClick = onDashboardClick) {
-                Icon(
-                    Icons.Filled.Dashboard,
-                    contentDescription = stringResource(R.string.dashboard),
-                )
-            }
-            IconButton(onClick = onTemplatesClick) {
-                Icon(
-                    painterResource(R.drawable.baseline_bookmark_24),
-                    contentDescription = stringResource(R.string.templates),
-                )
-            }
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    Icons.Default.Settings,
-                    contentDescription = stringResource(R.string.settings),
-                )
+            if (selectedTab == MainTab.Home) {
+                IconButton(onClick = onSearchClick) {
+                    Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.search))
+                }
             }
         },
         colors =
@@ -640,12 +984,11 @@ fun MainScreenPreview() {
             query = "",
             isRefreshing = false,
             selected = null,
+            selectedTab = MainTab.Home,
             onRefresh = {},
             onToggleSelect = {},
             onSearchClick = {},
-            onDashboardClick = {},
-            onSettingsClick = {},
-            onTemplatesClick = {},
+            onSelectTab = {},
             onStopSearching = {},
             onQueryChange = {},
             onStopSelection = {},
@@ -653,6 +996,9 @@ fun MainScreenPreview() {
             onEditClick = {},
             onDeleteClick = {},
             onAddClick = {},
+            onDashboardAccountClick = {},
+            onCashFlowClick = {},
+            onOpenFile = {},
         )
     }
 }
@@ -729,7 +1075,363 @@ fun MainContentPreview() {
             onRefresh = {},
             onToggleSelect = {},
             contentPadding = PaddingValues(0.dp),
-            bottomOffset = 0.dp,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenNoFilePreview() {
+    NanoLedgerTheme {
+        MainScreen(
+            fileUri = null,
+            transactions = null,
+            searching = false,
+            query = "",
+            isRefreshing = false,
+            selected = null,
+            selectedTab = MainTab.Home,
+            onRefresh = {},
+            onToggleSelect = {},
+            onSearchClick = {},
+            onSelectTab = {},
+            onStopSearching = {},
+            onQueryChange = {},
+            onStopSelection = {},
+            onCopyClick = {},
+            onEditClick = {},
+            onDeleteClick = {},
+            onAddClick = {},
+            onDashboardAccountClick = {},
+            onCashFlowClick = {},
+            onOpenFile = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenDashboardTabPreview() {
+    NanoLedgerTheme {
+        MainScreen(
+            fileUri = "content://test".toUri(),
+            transactions = null,
+            searching = false,
+            query = "",
+            isRefreshing = false,
+            selected = null,
+            selectedTab = MainTab.Dashboard,
+            onRefresh = {},
+            onToggleSelect = {},
+            onSearchClick = {},
+            onSelectTab = {},
+            onStopSearching = {},
+            onQueryChange = {},
+            onStopSelection = {},
+            onCopyClick = {},
+            onEditClick = {},
+            onDeleteClick = {},
+            onAddClick = {},
+            onDashboardAccountClick = {},
+            onCashFlowClick = {},
+            onOpenFile = {},
+            tabContent = { tab, contentPadding ->
+                MainTabContent(
+                    tab = tab,
+                    contentPadding = contentPadding,
+                    netWorth =
+                        NetWorthCalculator.NetWorthResult(
+                            netWorth = BigDecimal("8450.00"),
+                            totalAssets = BigDecimal("10000.00"),
+                            totalLiabilities = BigDecimal("1550.00"),
+                        ),
+                    accountBalances =
+                        AccountBalanceCalculator.AccountBalancesResult(
+                            assets =
+                                listOf(
+                                    AccountBalanceCalculator.AccountBalance(
+                                        "Assets:Checking",
+                                        BigDecimal("3000.00"),
+                                        "$",
+                                        emptyList(),
+                                    ),
+                                    AccountBalanceCalculator.AccountBalance(
+                                        "Assets:Savings",
+                                        BigDecimal("7000.00"),
+                                        "$",
+                                        emptyList(),
+                                    ),
+                                ),
+                            liabilities =
+                                listOf(
+                                    AccountBalanceCalculator.AccountBalance(
+                                        "Liabilities:Credit Card",
+                                        BigDecimal("1550.00"),
+                                        "$",
+                                        emptyList(),
+                                    ),
+                                ),
+                            equity = emptyList(),
+                            income = emptyList(),
+                            expenses = emptyList(),
+                        ),
+                    cashFlow =
+                        MonthlyCashFlowCalculator.CashFlowResult(
+                            totalIncome = BigDecimal("5000.00"),
+                            totalExpenses = BigDecimal("1635.00"),
+                            netFlow = BigDecimal("3365.00"),
+                            period = "2023-09",
+                            incomeTransactions = emptyList(),
+                            expenseTransactions = emptyList(),
+                        ),
+                    decimalSeparator = ".",
+                    onDashboardAccountClick = {},
+                    onCashFlowClick = {},
+                    templates = emptyList(),
+                    saving = false,
+                    onTemplateAddClick = {},
+                    onTemplateClick = {},
+                    onTemplateEditClick = {},
+                    onTemplateDeleteClick = {},
+                    onOpenFile = {},
+                    fileUri = null,
+                    transactionDefaultElements = listOf(R.string.status, R.string.payee),
+                    transactionStatusPresentByDefault = true,
+                    onTransactionStatusPresentByDefaultChange = {},
+                    transactionCodePresentByDefault = false,
+                    onTransactionCodePresentByDefaultChange = {},
+                    transactionPayeePresentByDefault = true,
+                    onTransactionPayeePresentByDefaultChange = {},
+                    transactionNotePresentByDefault = true,
+                    onTransactionNotePresentByDefaultChange = {},
+                    transactionCurrenciesPresentByDefault = true,
+                    onTransactionCurrenciesPresentByDefaultChange = {},
+                    postingDefaultElements = listOf(R.string.amount),
+                    postingAmountPresentByDefault = true,
+                    onPostingAmountPresentByDefaultChange = {},
+                    postingCostPresentByDefault = false,
+                    onPostingCostPresentByDefaultChange = {},
+                    postingAssertionPresentByDefault = false,
+                    onPostingAssertionPresentByDefaultChange = {},
+                    postingAssertionCostPresentByDefault = false,
+                    onPostingAssertionCostPresentByDefaultChange = {},
+                    postingCommentPresentByDefault = false,
+                    onPostingCommentPresentByDefaultChange = {},
+                    defaultCurrency = "€",
+                    onDefaultCurrencyChange = {},
+                    postingWidth = 72,
+                    onPostingWidthChange = {},
+                    defaultStatus = " ",
+                    onDefaultStatusChange = {},
+                    prefDecimalSeparator = ".",
+                    onDecimalSeparatorChange = {},
+                    currencyBeforeAmount = true,
+                    onCurrencyBeforeAmountChange = {},
+                    currencyAmountSpacing = true,
+                    onCurrencyAmountSpacingChange = {},
+                )
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenTemplatesTabPreview() {
+    NanoLedgerTheme {
+        MainScreen(
+            fileUri = "content://test".toUri(),
+            transactions = null,
+            searching = false,
+            query = "",
+            isRefreshing = false,
+            selected = null,
+            selectedTab = MainTab.Templates,
+            onRefresh = {},
+            onToggleSelect = {},
+            onSearchClick = {},
+            onSelectTab = {},
+            onStopSearching = {},
+            onQueryChange = {},
+            onStopSelection = {},
+            onCopyClick = {},
+            onEditClick = {},
+            onDeleteClick = {},
+            onAddClick = {},
+            onDashboardAccountClick = {},
+            onCashFlowClick = {},
+            onOpenFile = {},
+            tabContent = { tab, contentPadding ->
+                MainTabContent(
+                    tab = tab,
+                    contentPadding = contentPadding,
+                    netWorth = null,
+                    accountBalances = null,
+                    cashFlow = null,
+                    decimalSeparator = ".",
+                    onDashboardAccountClick = {},
+                    onCashFlowClick = {},
+                    templates =
+                        listOf(
+                            TransactionTemplate(
+                                firstLine = 0,
+                                lastLine = 0,
+                                id = "1",
+                                name = "Simple Template",
+                                payee = "Some Payee",
+                                note = null,
+                                status = null,
+                                code = null,
+                                postings =
+                                    listOf(
+                                        Posting("Assets:Checking", null, null, null, null, null),
+                                        Posting("Expenses:Groceries", null, null, null, null, null),
+                                    ),
+                            ),
+                            TransactionTemplate(
+                                firstLine = 0,
+                                lastLine = 0,
+                                id = "2",
+                                name = "Complex Template",
+                                payee = "Another Payee",
+                                note = "A note",
+                                status = "*",
+                                code = "123",
+                                postings =
+                                    listOf(
+                                        Posting("Assets:Checking", null, null, null, null, null),
+                                        Posting("Expenses:Food", null, null, null, null, null),
+                                        Posting("Expenses:Drink", null, null, null, null, null),
+                                    ),
+                            ),
+                        ),
+                    saving = false,
+                    onTemplateAddClick = {},
+                    onTemplateClick = {},
+                    onTemplateEditClick = {},
+                    onTemplateDeleteClick = {},
+                    onOpenFile = {},
+                    fileUri = null,
+                    transactionDefaultElements = listOf(R.string.status, R.string.payee),
+                    transactionStatusPresentByDefault = true,
+                    onTransactionStatusPresentByDefaultChange = {},
+                    transactionCodePresentByDefault = false,
+                    onTransactionCodePresentByDefaultChange = {},
+                    transactionPayeePresentByDefault = true,
+                    onTransactionPayeePresentByDefaultChange = {},
+                    transactionNotePresentByDefault = true,
+                    onTransactionNotePresentByDefaultChange = {},
+                    transactionCurrenciesPresentByDefault = true,
+                    onTransactionCurrenciesPresentByDefaultChange = {},
+                    postingDefaultElements = listOf(R.string.amount),
+                    postingAmountPresentByDefault = true,
+                    onPostingAmountPresentByDefaultChange = {},
+                    postingCostPresentByDefault = false,
+                    onPostingCostPresentByDefaultChange = {},
+                    postingAssertionPresentByDefault = false,
+                    onPostingAssertionPresentByDefaultChange = {},
+                    postingAssertionCostPresentByDefault = false,
+                    onPostingAssertionCostPresentByDefaultChange = {},
+                    postingCommentPresentByDefault = false,
+                    onPostingCommentPresentByDefaultChange = {},
+                    defaultCurrency = "€",
+                    onDefaultCurrencyChange = {},
+                    postingWidth = 72,
+                    onPostingWidthChange = {},
+                    defaultStatus = " ",
+                    onDefaultStatusChange = {},
+                    prefDecimalSeparator = ".",
+                    onDecimalSeparatorChange = {},
+                    currencyBeforeAmount = true,
+                    onCurrencyBeforeAmountChange = {},
+                    currencyAmountSpacing = true,
+                    onCurrencyAmountSpacingChange = {},
+                )
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenSettingsTabPreview() {
+    NanoLedgerTheme {
+        MainScreen(
+            fileUri = "content://test".toUri(),
+            transactions = null,
+            searching = false,
+            query = "",
+            isRefreshing = false,
+            selected = null,
+            selectedTab = MainTab.Settings,
+            onRefresh = {},
+            onToggleSelect = {},
+            onSearchClick = {},
+            onSelectTab = {},
+            onStopSearching = {},
+            onQueryChange = {},
+            onStopSelection = {},
+            onCopyClick = {},
+            onEditClick = {},
+            onDeleteClick = {},
+            onAddClick = {},
+            onDashboardAccountClick = {},
+            onCashFlowClick = {},
+            onOpenFile = {},
+            tabContent = { tab, contentPadding ->
+                MainTabContent(
+                    tab = tab,
+                    contentPadding = contentPadding,
+                    netWorth = null,
+                    accountBalances = null,
+                    cashFlow = null,
+                    decimalSeparator = ".",
+                    onDashboardAccountClick = {},
+                    onCashFlowClick = {},
+                    templates = emptyList(),
+                    saving = false,
+                    onTemplateAddClick = {},
+                    onTemplateClick = {},
+                    onTemplateEditClick = {},
+                    onTemplateDeleteClick = {},
+                    onOpenFile = {},
+                    fileUri = null,
+                    transactionDefaultElements = listOf(R.string.status, R.string.payee),
+                    transactionStatusPresentByDefault = true,
+                    onTransactionStatusPresentByDefaultChange = {},
+                    transactionCodePresentByDefault = false,
+                    onTransactionCodePresentByDefaultChange = {},
+                    transactionPayeePresentByDefault = true,
+                    onTransactionPayeePresentByDefaultChange = {},
+                    transactionNotePresentByDefault = true,
+                    onTransactionNotePresentByDefaultChange = {},
+                    transactionCurrenciesPresentByDefault = true,
+                    onTransactionCurrenciesPresentByDefaultChange = {},
+                    postingDefaultElements = listOf(R.string.amount),
+                    postingAmountPresentByDefault = true,
+                    onPostingAmountPresentByDefaultChange = {},
+                    postingCostPresentByDefault = false,
+                    onPostingCostPresentByDefaultChange = {},
+                    postingAssertionPresentByDefault = false,
+                    onPostingAssertionPresentByDefaultChange = {},
+                    postingAssertionCostPresentByDefault = false,
+                    onPostingAssertionCostPresentByDefaultChange = {},
+                    postingCommentPresentByDefault = false,
+                    onPostingCommentPresentByDefaultChange = {},
+                    defaultCurrency = "€",
+                    onDefaultCurrencyChange = {},
+                    postingWidth = 72,
+                    onPostingWidthChange = {},
+                    defaultStatus = " ",
+                    onDefaultStatusChange = {},
+                    prefDecimalSeparator = ".",
+                    onDecimalSeparatorChange = {},
+                    currencyBeforeAmount = true,
+                    onCurrencyBeforeAmountChange = {},
+                    currencyAmountSpacing = true,
+                    onCurrencyAmountSpacingChange = {},
+                )
+            },
         )
     }
 }
