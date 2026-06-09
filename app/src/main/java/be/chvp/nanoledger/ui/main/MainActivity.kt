@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -231,7 +232,7 @@ class MainActivity : ComponentActivity() {
                 mainViewModel.refresh()
             }
 
-            // Pre-load tab ViewModels after main ViewModel finishes loading
+            // Preload tab ViewModels after main ViewModel finishes loading
             LaunchedEffect(isRefreshing) {
                 if (!isRefreshing && fileUri != null) {
                     hasRefreshed = true
@@ -398,18 +399,6 @@ fun MainScreen(
                     label = { Text(stringResource(R.string.dashboard)) },
                 )
                 NavigationBarItem(
-                    selected = false,
-                    onClick = onAddClick,
-                    enabled = fileUri != null,
-                    icon = {
-                        Icon(
-                            Icons.Filled.Add,
-                            contentDescription = stringResource(R.string.add),
-                        )
-                    },
-                    label = { Text(stringResource(R.string.add)) },
-                )
-                NavigationBarItem(
                     selected = selectedTab == MainTab.Templates,
                     onClick = { onSelectTab(MainTab.Templates) },
                     icon = {
@@ -431,6 +420,17 @@ fun MainScreen(
                     },
                     label = { Text(stringResource(R.string.settings)) },
                 )
+            }
+        },
+        floatingActionButton = {
+            if (fileUri != null) {
+                FloatingActionButton(
+                    onClick = onAddClick,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add))
+                }
             }
         },
         modifier = Modifier.imePadding(),
