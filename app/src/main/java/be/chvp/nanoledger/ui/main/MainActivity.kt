@@ -12,9 +12,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,14 +38,15 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -62,6 +66,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -328,6 +333,9 @@ fun MainScreen(
             context.startActivity(Intent(context, CashFlowTransactionsActivity::class.java))
         },
         onOpenFile = onOpenFile,
+        onTemplateAddClick = {
+            context.startActivity(Intent(context, TemplateFormActivity::class.java))
+        },
         dashboardViewModel = dashboardViewModel,
         templatesViewModel = templatesViewModel,
         preferencesViewModel = preferencesViewModel,
@@ -357,6 +365,7 @@ fun MainScreen(
     onDashboardAccountClick: () -> Unit,
     onCashFlowClick: () -> Unit,
     onOpenFile: () -> Unit,
+    onTemplateAddClick: (() -> Unit)? = null,
     dashboardViewModel: DashboardViewModel? = null,
     templatesViewModel: TemplatesViewModel? = null,
     preferencesViewModel: PreferencesViewModel? = null,
@@ -424,12 +433,59 @@ fun MainScreen(
         },
         floatingActionButton = {
             if (fileUri != null) {
-                FloatingActionButton(
-                    onClick = onAddClick,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                AnimatedVisibility(
+                    visible = selectedTab != MainTab.Settings,
+                    enter = slideInHorizontally(
+                        animationSpec = tween(durationMillis = 300),
+                        initialOffsetX = { it },
+                    ),
+                    exit = slideOutHorizontally(
+                        animationSpec = tween(durationMillis = 300),
+                        targetOffsetX = { it },
+                    ),
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add))
+                    val density = LocalDensity.current
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        // Template FAB (secondary) - slides in/out from behind main FAB
+                        AnimatedVisibility(
+                            visible = selectedTab == MainTab.Templates && onTemplateAddClick != null,
+                            enter = slideInVertically(
+                                animationSpec = tween(durationMillis = 300),
+                                initialOffsetY = { with(density) { 56.dp.roundToPx() } },
+                            ),
+                            exit = slideOutVertically(
+                                animationSpec = tween(durationMillis = 300),
+                                targetOffsetY = { with(density) { 56.dp.roundToPx() } },
+                            ),
+                        ) {
+                            onTemplateAddClick?.let { onClick ->
+                                SmallFloatingActionButton(
+                                    onClick = onClick,
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                ) {
+                                    Icon(
+                                        painterResource(R.drawable.baseline_bookmark_24),
+                                        contentDescription = stringResource(R.string.add_template),
+                                    )
+                                }
+                            }
+                        }
+                        // Main FAB - always static
+                        FloatingActionButton(
+                            onClick = onAddClick,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ) {
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = stringResource(R.string.add)
+                            )
+                        }
+                    }
                 }
             }
         },
@@ -1383,6 +1439,7 @@ fun MainScreenTemplatesTabPreview() {
             onDashboardAccountClick = {},
             onCashFlowClick = {},
             onOpenFile = {},
+            onTemplateAddClick = {},
             tabContent = { tab, contentPadding ->
                 val configuration = when (tab) {
                     MainTab.Dashboard -> TabConfiguration.Dashboard(
@@ -1581,6 +1638,37 @@ fun MainScreenSettingsTabPreview() {
                     )
                 }
             },
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenTemplatesTabWithFabPreview() {
+    NanoLedgerTheme {
+        MainScreen(
+            fileUri = "content://test".toUri(),
+            transactions = null,
+            searching = false,
+            query = "",
+            isRefreshing = false,
+            selected = null,
+            selectedTab = MainTab.Templates,
+            onRefresh = {},
+            onToggleSelect = {},
+            onSearchClick = {},
+            onSelectTab = {},
+            onStopSearching = {},
+            onQueryChange = {},
+            onStopSelection = {},
+            onCopyClick = {},
+            onEditClick = {},
+            onDeleteClick = {},
+            onAddClick = {},
+            onDashboardAccountClick = {},
+            onCashFlowClick = {},
+            onOpenFile = {},
+            onTemplateAddClick = {},
         )
     }
 }
