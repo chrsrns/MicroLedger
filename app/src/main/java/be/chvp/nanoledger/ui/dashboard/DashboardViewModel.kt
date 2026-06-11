@@ -3,7 +3,7 @@ package be.chvp.nanoledger.ui.dashboard
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
+import androidx.lifecycle.MediatorLiveData
 import be.chvp.nanoledger.data.LedgerRepository
 import be.chvp.nanoledger.data.PreferencesDataSource
 import be.chvp.nanoledger.data.reporting.AccountBalanceCalculator
@@ -28,26 +28,62 @@ constructor(
     val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
 
     val netWorth: LiveData<NetWorthCalculator.NetWorthResult> =
-        ledgerRepository.transactions.map { transactions ->
-            netWorthCalculator.calculate(transactions, preferencesDataSource.getDecimalSeparator())
+        MediatorLiveData<NetWorthCalculator.NetWorthResult>().apply {
+            fun compute() {
+                val transactions = ledgerRepository.transactions.value ?: return
+                value =
+                    netWorthCalculator.calculate(
+                        transactions,
+                        preferencesDataSource.getDecimalSeparator(),
+                        preferencesDataSource.getAssetsPrefixes(),
+                        preferencesDataSource.getLiabilitiesPrefixes(),
+                    )
+            }
+            addSource(ledgerRepository.transactions) { compute() }
+            addSource(preferencesDataSource.assetsPrefixes) { compute() }
+            addSource(preferencesDataSource.liabilitiesPrefixes) { compute() }
         }
 
     val accountBalances: LiveData<AccountBalanceCalculator.AccountBalancesResult> =
-        ledgerRepository.transactions.map { transactions ->
-            accountBalanceCalculator.calculate(
-                transactions,
-                preferencesDataSource.getDecimalSeparator(),
-            )
+        MediatorLiveData<AccountBalanceCalculator.AccountBalancesResult>().apply {
+            fun compute() {
+                val transactions = ledgerRepository.transactions.value ?: return
+                value =
+                    accountBalanceCalculator.calculate(
+                        transactions,
+                        preferencesDataSource.getDecimalSeparator(),
+                        preferencesDataSource.getAssetsPrefixes(),
+                        preferencesDataSource.getLiabilitiesPrefixes(),
+                        preferencesDataSource.getEquityPrefixes(),
+                        preferencesDataSource.getIncomePrefixes(),
+                        preferencesDataSource.getExpensesPrefixes(),
+                    )
+            }
+            addSource(ledgerRepository.transactions) { compute() }
+            addSource(preferencesDataSource.assetsPrefixes) { compute() }
+            addSource(preferencesDataSource.liabilitiesPrefixes) { compute() }
+            addSource(preferencesDataSource.equityPrefixes) { compute() }
+            addSource(preferencesDataSource.incomePrefixes) { compute() }
+            addSource(preferencesDataSource.expensesPrefixes) { compute() }
         }
 
     val currentMonthCashFlow: LiveData<MonthlyCashFlowCalculator.CashFlowResult> =
-        ledgerRepository.transactions.map { transactions ->
-            val today = Calendar.getInstance()
-            cashFlowCalculator.calculateForMonth(
-                transactions,
-                today.get(Calendar.YEAR),
-                today.get(Calendar.MONTH) + 1,
-                preferencesDataSource.getDecimalSeparator(),
-            )
+        MediatorLiveData<MonthlyCashFlowCalculator.CashFlowResult>().apply {
+            fun compute() {
+                val transactions = ledgerRepository.transactions.value ?: return
+                val today = Calendar.getInstance()
+                value =
+                    cashFlowCalculator.calculateForMonth(
+                        transactions,
+                        today.get(Calendar.YEAR),
+                        today.get(Calendar.MONTH) + 1,
+                        preferencesDataSource.getDecimalSeparator(),
+                        preferencesDataSource.getIncomePrefixes(),
+                        preferencesDataSource.getExpensesPrefixes(),
+                    )
+            }
+            addSource(ledgerRepository.transactions) { compute() }
+            addSource(preferencesDataSource.incomePrefixes) { compute() }
+            addSource(preferencesDataSource.expensesPrefixes) { compute() }
         }
 }

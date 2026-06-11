@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.map
 import be.chvp.nanoledger.data.LedgerRepository
 import be.chvp.nanoledger.data.PreferencesDataSource
 import be.chvp.nanoledger.data.Transaction
@@ -32,11 +31,26 @@ constructor(
     val selectedCurrency: LiveData<String?> = _selectedCurrency
 
     val accountBalances: LiveData<AccountBalanceCalculator.AccountBalancesResult> =
-        ledgerRepository.transactions.map { transactions ->
-            accountBalanceCalculator.calculate(
-                transactions,
-                preferencesDataSource.getDecimalSeparator()
-            )
+        MediatorLiveData<AccountBalanceCalculator.AccountBalancesResult>().apply {
+            fun compute() {
+                val transactions = ledgerRepository.transactions.value ?: return
+                value =
+                    accountBalanceCalculator.calculate(
+                        transactions,
+                        preferencesDataSource.getDecimalSeparator(),
+                        preferencesDataSource.getAssetsPrefixes(),
+                        preferencesDataSource.getLiabilitiesPrefixes(),
+                        preferencesDataSource.getEquityPrefixes(),
+                        preferencesDataSource.getIncomePrefixes(),
+                        preferencesDataSource.getExpensesPrefixes(),
+                    )
+            }
+            addSource(ledgerRepository.transactions) { compute() }
+            addSource(preferencesDataSource.assetsPrefixes) { compute() }
+            addSource(preferencesDataSource.liabilitiesPrefixes) { compute() }
+            addSource(preferencesDataSource.equityPrefixes) { compute() }
+            addSource(preferencesDataSource.incomePrefixes) { compute() }
+            addSource(preferencesDataSource.expensesPrefixes) { compute() }
         }
 
     val accountTransactions: LiveData<List<Transaction>> =

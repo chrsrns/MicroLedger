@@ -160,6 +160,16 @@ sealed class TabConfiguration {
         val onCurrencyBeforeAmountChange: (Boolean) -> Unit,
         val currencyAmountSpacing: Boolean,
         val onCurrencyAmountSpacingChange: (Boolean) -> Unit,
+        val assetsPrefixes: List<String>,
+        val onAssetsPrefixesChange: (List<String>) -> Unit,
+        val liabilitiesPrefixes: List<String>,
+        val onLiabilitiesPrefixesChange: (List<String>) -> Unit,
+        val equityPrefixes: List<String>,
+        val onEquityPrefixesChange: (List<String>) -> Unit,
+        val incomePrefixes: List<String>,
+        val onIncomePrefixesChange: (List<String>) -> Unit,
+        val expensesPrefixes: List<String>,
+        val onExpensesPrefixesChange: (List<String>) -> Unit,
     ) : TabConfiguration()
 }
 
@@ -627,6 +637,11 @@ fun MainTabContent(
     val prefDecimalSeparator by preferencesViewModel.decimalSeparator.observeAsState(".")
     val currencyBeforeAmount by preferencesViewModel.currencyBeforeAmount.observeAsState(true)
     val currencyAmountSpacing by preferencesViewModel.spacingBetweenCurrencyAndAmount.observeAsState(true)
+    val assetsPrefixes by preferencesViewModel.assetsPrefixes.observeAsState(listOf("Assets"))
+    val liabilitiesPrefixes by preferencesViewModel.liabilitiesPrefixes.observeAsState(listOf("Liabilities"))
+    val equityPrefixes by preferencesViewModel.equityPrefixes.observeAsState(listOf("Equity"))
+    val incomePrefixes by preferencesViewModel.incomePrefixes.observeAsState(listOf("Income"))
+    val expensesPrefixes by preferencesViewModel.expensesPrefixes.observeAsState(listOf("Expenses"))
 
     val configuration = when (tab) {
         MainTab.Dashboard -> TabConfiguration.Dashboard(
@@ -724,6 +739,16 @@ fun MainTabContent(
             onCurrencyBeforeAmountChange = { preferencesViewModel.storeCurrencyBeforeAmount(it) },
             currencyAmountSpacing = currencyAmountSpacing,
             onCurrencyAmountSpacingChange = { preferencesViewModel.storeCurrencyAmountSpacing(it) },
+            assetsPrefixes = assetsPrefixes,
+            onAssetsPrefixesChange = { preferencesViewModel.storeAssetsPrefixes(it) },
+            liabilitiesPrefixes = liabilitiesPrefixes,
+            onLiabilitiesPrefixesChange = { preferencesViewModel.storeLiabilitiesPrefixes(it) },
+            equityPrefixes = equityPrefixes,
+            onEquityPrefixesChange = { preferencesViewModel.storeEquityPrefixes(it) },
+            incomePrefixes = incomePrefixes,
+            onIncomePrefixesChange = { preferencesViewModel.storeIncomePrefixes(it) },
+            expensesPrefixes = expensesPrefixes,
+            onExpensesPrefixesChange = { preferencesViewModel.storeExpensesPrefixes(it) },
         )
 
         MainTab.Home -> null
@@ -807,6 +832,16 @@ fun MainTabContent(
             onCurrencyBeforeAmountChange = configuration.onCurrencyBeforeAmountChange,
             currencyAmountSpacing = configuration.currencyAmountSpacing,
             onCurrencyAmountSpacingChange = configuration.onCurrencyAmountSpacingChange,
+            assetsPrefixes = configuration.assetsPrefixes,
+            onAssetsPrefixesChange = configuration.onAssetsPrefixesChange,
+            liabilitiesPrefixes = configuration.liabilitiesPrefixes,
+            onLiabilitiesPrefixesChange = configuration.onLiabilitiesPrefixesChange,
+            equityPrefixes = configuration.equityPrefixes,
+            onEquityPrefixesChange = configuration.onEquityPrefixesChange,
+            incomePrefixes = configuration.incomePrefixes,
+            onIncomePrefixesChange = configuration.onIncomePrefixesChange,
+            expensesPrefixes = configuration.expensesPrefixes,
+            onExpensesPrefixesChange = configuration.onExpensesPrefixesChange,
             showTopBar = false,
             contentPadding = contentPadding,
         )
@@ -1397,6 +1432,16 @@ fun MainScreenDashboardTabPreview() {
                         onCurrencyBeforeAmountChange = {},
                         currencyAmountSpacing = true,
                         onCurrencyAmountSpacingChange = {},
+                        assetsPrefixes = listOf("Assets"),
+                        onAssetsPrefixesChange = {},
+                        liabilitiesPrefixes = listOf("Liabilities"),
+                        onLiabilitiesPrefixesChange = {},
+                        equityPrefixes = listOf("Equity"),
+                        onEquityPrefixesChange = {},
+                        incomePrefixes = listOf("Income"),
+                        onIncomePrefixesChange = {},
+                        expensesPrefixes = listOf("Expenses"),
+                        onExpensesPrefixesChange = {},
                     )
 
                     MainTab.Home -> null
@@ -1527,6 +1572,16 @@ fun MainScreenTemplatesTabPreview() {
                         onCurrencyBeforeAmountChange = {},
                         currencyAmountSpacing = true,
                         onCurrencyAmountSpacingChange = {},
+                        assetsPrefixes = listOf("Assets"),
+                        onAssetsPrefixesChange = {},
+                        liabilitiesPrefixes = listOf("Liabilities"),
+                        onLiabilitiesPrefixesChange = {},
+                        equityPrefixes = listOf("Equity"),
+                        onEquityPrefixesChange = {},
+                        incomePrefixes = listOf("Income"),
+                        onIncomePrefixesChange = {},
+                        expensesPrefixes = listOf("Expenses"),
+                        onExpensesPrefixesChange = {},
                     )
 
                     MainTab.Home -> null
@@ -1626,6 +1681,16 @@ fun MainScreenSettingsTabPreview() {
                         onCurrencyBeforeAmountChange = {},
                         currencyAmountSpacing = true,
                         onCurrencyAmountSpacingChange = {},
+                        assetsPrefixes = listOf("Assets"),
+                        onAssetsPrefixesChange = {},
+                        liabilitiesPrefixes = listOf("Liabilities"),
+                        onLiabilitiesPrefixesChange = {},
+                        equityPrefixes = listOf("Equity"),
+                        onEquityPrefixesChange = {},
+                        incomePrefixes = listOf("Income"),
+                        onIncomePrefixesChange = {},
+                        expensesPrefixes = listOf("Expenses"),
+                        onExpensesPrefixesChange = {},
                     )
 
                     MainTab.Home -> null

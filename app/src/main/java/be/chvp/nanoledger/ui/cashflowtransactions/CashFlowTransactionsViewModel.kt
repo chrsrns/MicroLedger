@@ -42,11 +42,15 @@ constructor(
                         year,
                         month,
                         preferencesDataSource.getDecimalSeparator(),
+                        preferencesDataSource.getIncomePrefixes(),
+                        preferencesDataSource.getExpensesPrefixes(),
                     )
             }
             addSource(ledgerRepository.transactions) { compute() }
             addSource(_selectedYear) { compute() }
             addSource(_selectedMonth) { compute() }
+            addSource(preferencesDataSource.incomePrefixes) { compute() }
+            addSource(preferencesDataSource.expensesPrefixes) { compute() }
         }
 
     val monthlyHistory: LiveData<List<MonthlyCashFlowCalculator.CashFlowResult>> =
@@ -56,6 +60,8 @@ constructor(
                 val year = _selectedYear.value ?: return
                 val month = _selectedMonth.value ?: return
                 val decimalSeparator = preferencesDataSource.getDecimalSeparator()
+                val incomePrefixes = preferencesDataSource.getIncomePrefixes()
+                val expensesPrefixes = preferencesDataSource.getExpensesPrefixes()
                 // Build the rolling 12-month window ending at (year, month) inclusive.
                 value =
                     (11 downTo 0).map { offset ->
@@ -68,12 +74,16 @@ constructor(
                             windowYear,
                             windowMonth,
                             decimalSeparator,
+                            incomePrefixes,
+                            expensesPrefixes,
                         )
                     }
             }
             addSource(ledgerRepository.transactions) { compute() }
             addSource(_selectedYear) { compute() }
             addSource(_selectedMonth) { compute() }
+            addSource(preferencesDataSource.incomePrefixes) { compute() }
+            addSource(preferencesDataSource.expensesPrefixes) { compute() }
         }
 
     fun selectMonth(
