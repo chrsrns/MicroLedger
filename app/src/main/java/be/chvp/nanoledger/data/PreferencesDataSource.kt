@@ -7,6 +7,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import dagger.hilt.android.qualifiers.ApplicationContext
+import org.json.JSONArray
 import javax.inject.Inject
 
 const val FILE_URI_KEY = "file_uri"
@@ -26,6 +27,11 @@ const val POSTING_COST_PRESENT_BY_DEFAULT_KEY = "posting_cost_present_by_default
 const val POSTING_ASSERTION_PRESENT_BY_DEFAULT_KEY = "posting_assertion_present_by_default"
 const val POSTING_ASSERTION_COST_PRESENT_BY_DEFAULT_KEY = "posting_assertion_cost_present_by_default"
 const val POSTING_COMMENT_PRESENT_BY_DEFAULT_KEY = "posting_comment_present_by_default"
+const val ASSETS_PREFIXES_KEY = "assets_prefixes"
+const val LIABILITIES_PREFIXES_KEY = "liabilities_prefixes"
+const val EQUITY_PREFIXES_KEY = "equity_prefixes"
+const val INCOME_PREFIXES_KEY = "income_prefixes"
+const val EXPENSES_PREFIXES_KEY = "expenses_prefixes"
 
 class PreferencesDataSource
     @Inject
@@ -205,4 +211,105 @@ class PreferencesDataSource
 
         fun setPostingCommentPresentByDefault(comment: Boolean) =
             sharedPreferences.edit { putBoolean(POSTING_COMMENT_PRESENT_BY_DEFAULT_KEY, comment) }
+
+        private fun parseJsonStringList(json: String): List<String> {
+            val array = JSONArray(json)
+            return (0 until array.length()).map { array.getString(it) }
+        }
+
+        private fun serializeStringList(list: List<String>): String {
+            val array = JSONArray()
+            list.forEach { array.put(it) }
+            return array.toString()
+        }
+
+        private fun defaultPrefixesJson(default: String) = serializeStringList(listOf(default))
+
+        val assetsPrefixes: LiveData<List<String>> =
+            sharedPreferences
+                .stringLiveData(
+                    ASSETS_PREFIXES_KEY,
+                    defaultPrefixesJson("Assets"),
+                ).map { parseJsonStringList(it!!) }
+
+        fun getAssetsPrefixes(): List<String> =
+            parseJsonStringList(
+                sharedPreferences.getString(ASSETS_PREFIXES_KEY, defaultPrefixesJson("Assets"))!!,
+            )
+
+        fun setAssetsPrefixes(prefixes: List<String>) =
+            sharedPreferences.edit {
+                putString(ASSETS_PREFIXES_KEY, serializeStringList(prefixes))
+            }
+
+        val liabilitiesPrefixes: LiveData<List<String>> =
+            sharedPreferences
+                .stringLiveData(
+                    LIABILITIES_PREFIXES_KEY,
+                    defaultPrefixesJson("Liabilities"),
+                ).map { parseJsonStringList(it!!) }
+
+        fun getLiabilitiesPrefixes(): List<String> =
+            parseJsonStringList(
+                sharedPreferences.getString(
+                    LIABILITIES_PREFIXES_KEY,
+                    defaultPrefixesJson("Liabilities")
+                )!!,
+            )
+
+        fun setLiabilitiesPrefixes(prefixes: List<String>) =
+            sharedPreferences.edit {
+                putString(LIABILITIES_PREFIXES_KEY, serializeStringList(prefixes))
+            }
+
+        val equityPrefixes: LiveData<List<String>> =
+            sharedPreferences
+                .stringLiveData(
+                    EQUITY_PREFIXES_KEY,
+                    defaultPrefixesJson("Equity"),
+                ).map { parseJsonStringList(it!!) }
+
+        fun getEquityPrefixes(): List<String> =
+            parseJsonStringList(
+                sharedPreferences.getString(EQUITY_PREFIXES_KEY, defaultPrefixesJson("Equity"))!!,
+            )
+
+        fun setEquityPrefixes(prefixes: List<String>) =
+            sharedPreferences.edit {
+                putString(EQUITY_PREFIXES_KEY, serializeStringList(prefixes))
+            }
+
+        val incomePrefixes: LiveData<List<String>> =
+            sharedPreferences
+                .stringLiveData(
+                    INCOME_PREFIXES_KEY,
+                    defaultPrefixesJson("Income"),
+                ).map { parseJsonStringList(it!!) }
+
+        fun getIncomePrefixes(): List<String> =
+            parseJsonStringList(
+                sharedPreferences.getString(INCOME_PREFIXES_KEY, defaultPrefixesJson("Income"))!!,
+            )
+
+        fun setIncomePrefixes(prefixes: List<String>) =
+            sharedPreferences.edit {
+                putString(INCOME_PREFIXES_KEY, serializeStringList(prefixes))
+            }
+
+        val expensesPrefixes: LiveData<List<String>> =
+            sharedPreferences
+                .stringLiveData(
+                    EXPENSES_PREFIXES_KEY,
+                    defaultPrefixesJson("Expenses"),
+                ).map { parseJsonStringList(it!!) }
+
+        fun getExpensesPrefixes(): List<String> =
+            parseJsonStringList(
+                sharedPreferences.getString(EXPENSES_PREFIXES_KEY, defaultPrefixesJson("Expenses"))!!,
+            )
+
+        fun setExpensesPrefixes(prefixes: List<String>) =
+            sharedPreferences.edit {
+                putString(EXPENSES_PREFIXES_KEY, serializeStringList(prefixes))
+            }
     }
