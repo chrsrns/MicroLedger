@@ -1059,4 +1059,72 @@ class MonthlyCashFlowCalculatorTest {
         assertEquals(emptyList<Any>(), result.incomeTransactions)
         assertEquals(emptyList<Any>(), result.expenseTransactions)
     }
+
+    // -------------------------------------------------------------------------
+    // M?: custom prefix lists should classify income/expense correctly
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun customPrefixListsShouldClassifyIncomeAndExpenses() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Custom Prefixes",
+                    firstLine = 1,
+                    lastLine = 5,
+                    postings =
+                        listOf(
+                            posting("MyIncome:Salary", amount("-3000.00")),
+                            posting("MyExpenses:Food", amount("150.00")),
+                            posting("Assets:Checking", amount("2850.00")),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculateForMonth(
+            transactions,
+            2024,
+            1,
+            ".",
+            incomePrefixes = listOf("MyIncome"),
+            expensesPrefixes = listOf("MyExpenses"),
+        )
+
+        assertEquals("2024-01", result.period)
+        assertEquals(BigDecimal("3000.00"), result.totalIncome)
+        assertEquals(BigDecimal("150.00"), result.totalExpenses)
+        assertEquals(BigDecimal("2850.00"), result.netFlow)
+    }
+
+    @Test
+    fun multiplePrefixesForSameCashFlowTypeShouldMatchAny() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Multiple Prefixes",
+                    firstLine = 1,
+                    lastLine = 5,
+                    postings =
+                        listOf(
+                            posting("Income:Salary", amount("-2000.00")),
+                            posting("Einkommen:Freelance", amount("-500.00")),
+                            posting("Assets:Checking", amount("2500.00")),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculateForMonth(
+            transactions,
+            2024,
+            1,
+            ".",
+            incomePrefixes = listOf("Income", "Einkommen"),
+        )
+
+        assertEquals(BigDecimal("2500.00"), result.totalIncome)
+        assertEquals(BigDecimal.ZERO, result.totalExpenses)
+        assertEquals(BigDecimal("2500.00"), result.netFlow)
+    }
 }

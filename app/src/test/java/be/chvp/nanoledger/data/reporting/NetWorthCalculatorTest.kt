@@ -450,4 +450,67 @@ class NetWorthCalculatorTest {
         // Invariant still holds: netWorth == assets - liabilities
         assertEquals(result.totalAssets - result.totalLiabilities, result.netWorth)
     }
+
+    // -------------------------------------------------------------------------
+    // N5: custom prefix lists should classify accounts correctly
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun customPrefixListsShouldClassifyAccountsCorrectly() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Custom Prefixes",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            posting("MyAssets:Checking", amount("3000.00")),
+                            posting("MyLiabilities:Loan", amount("-800.00")),
+                            posting("Equity:Opening", amount("-2200.00")),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculate(
+            transactions,
+            ".",
+            assetsPrefixes = listOf("MyAssets"),
+            liabilitiesPrefixes = listOf("MyLiabilities"),
+        )
+
+        assertEquals(BigDecimal("3000.00"), result.totalAssets)
+        assertEquals(BigDecimal("800.00"), result.totalLiabilities)
+        assertEquals(BigDecimal("2200.00"), result.netWorth)
+    }
+
+    @Test
+    fun multiplePrefixesForSameTypeShouldMatchAny() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Multiple Prefixes",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("1000.00")),
+                            posting("Aktiva:Savings", amount("2000.00")),
+                            posting("Equity:Opening", amount("-3000.00")),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculate(
+            transactions,
+            ".",
+            assetsPrefixes = listOf("Assets", "Aktiva"),
+        )
+
+        assertEquals(BigDecimal("3000.00"), result.totalAssets)
+        assertEquals(BigDecimal.ZERO, result.totalLiabilities)
+        assertEquals(BigDecimal("3000.00"), result.netWorth)
+    }
 }

@@ -31,6 +31,8 @@ class NetWorthCalculator {
     fun calculate(
         transactions: List<Transaction>,
         decimalSeparator: String,
+        assetsPrefixes: List<String> = listOf("Assets"),
+        liabilitiesPrefixes: List<String> = listOf("Liabilities"),
     ): NetWorthResult {
         var totalAssets = BigDecimal.ZERO
         var totalLiabilities = BigDecimal.ZERO
@@ -42,11 +44,11 @@ class NetWorthCalculator {
                 val quantity = parseQuantity(amount.quantity, decimalSeparator)
 
                 when {
-                    account.startsWith("Assets", ignoreCase = true) -> {
+                    assetsPrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
                         totalAssets += quantity
                     }
 
-                    account.startsWith("Liabilities", ignoreCase = true) -> {
+                    liabilitiesPrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
                         // Liabilities are stored as negative in postings (credits)
                         // We treat them as positive amounts for net worth calculation
                         totalLiabilities += quantity.negate()

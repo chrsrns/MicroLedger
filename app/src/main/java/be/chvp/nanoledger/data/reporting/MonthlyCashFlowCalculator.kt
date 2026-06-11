@@ -36,6 +36,8 @@ class MonthlyCashFlowCalculator {
         year: Int,
         month: Int,
         decimalSeparator: String,
+        incomePrefixes: List<String> = listOf("Income"),
+        expensesPrefixes: List<String> = listOf("Expenses"),
     ): CashFlowResult {
         val period = String.format(Locale.US, "%04d-%02d", year, month)
         var totalIncome = BigDecimal.ZERO
@@ -54,14 +56,14 @@ class MonthlyCashFlowCalculator {
                 val quantity = parseQuantity(amount.quantity, decimalSeparator)
 
                 when {
-                    account.startsWith("Income", ignoreCase = true) -> {
+                    incomePrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
                         // Income postings are credits (negative amounts in ledger)
                         // Display as positive for cash flow
                         totalIncome += quantity.negate()
                         incomeTransactionSet.add(transaction)
                     }
 
-                    account.startsWith("Expenses", ignoreCase = true) -> {
+                    expensesPrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
                         // Expense postings are debits (positive amounts in ledger)
                         // Keep as positive for cash flow
                         totalExpenses += quantity
@@ -95,9 +97,11 @@ class MonthlyCashFlowCalculator {
         transactions: List<Transaction>,
         year: Int,
         decimalSeparator: String,
+        incomePrefixes: List<String> = listOf("Income"),
+        expensesPrefixes: List<String> = listOf("Expenses"),
     ): List<CashFlowResult> =
         (1..12).map { month ->
-            calculateForMonth(transactions, year, month, decimalSeparator)
+            calculateForMonth(transactions, year, month, decimalSeparator, incomePrefixes, expensesPrefixes)
         }
 
     private fun isTransactionInMonth(

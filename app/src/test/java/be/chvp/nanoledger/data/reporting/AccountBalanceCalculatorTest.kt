@@ -538,4 +538,116 @@ class AccountBalanceCalculatorTest {
         assertEquals("Assets:Checking", result.assets[0].account)
         assertEquals(0, result.assets[0].balance.compareTo(BigDecimal.ZERO))
     }
+
+    // -------------------------------------------------------------------------
+    // A4: custom prefix lists should classify accounts correctly
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun customPrefixListsShouldClassifyAllAccountTypes() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Custom Prefixes",
+                    firstLine = 1,
+                    lastLine = 7,
+                    postings =
+                        listOf(
+                            posting("MyAssets:Checking", amount("1000.00")),
+                            posting("MyLiabilities:Loan", amount("-200.00")),
+                            posting("MyEquity:Opening", amount("-300.00")),
+                            posting("MyIncome:Salary", amount("-5000.00")),
+                            posting("MyExpenses:Food", amount("3000.00")),
+                            posting("Assets:Other", amount("1500.00")),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculate(
+            transactions,
+            ".",
+            assetsPrefixes = listOf("MyAssets"),
+            liabilitiesPrefixes = listOf("MyLiabilities"),
+            equityPrefixes = listOf("MyEquity"),
+            incomePrefixes = listOf("MyIncome"),
+            expensesPrefixes = listOf("MyExpenses"),
+        )
+
+        assertEquals(1, result.assets.size)
+        assertEquals("MyAssets:Checking", result.assets[0].account)
+        assertEquals(BigDecimal("1000.00"), result.assets[0].balance)
+
+        assertEquals(1, result.liabilities.size)
+        assertEquals("MyLiabilities:Loan", result.liabilities[0].account)
+        assertEquals(BigDecimal("200.00"), result.liabilities[0].balance)
+
+        assertEquals(1, result.equity.size)
+        assertEquals("MyEquity:Opening", result.equity[0].account)
+        assertEquals(BigDecimal("300.00"), result.equity[0].balance)
+
+        assertEquals(1, result.income.size)
+        assertEquals("MyIncome:Salary", result.income[0].account)
+        assertEquals(BigDecimal("5000.00"), result.income[0].balance)
+
+        assertEquals(1, result.expenses.size)
+        assertEquals("MyExpenses:Food", result.expenses[0].account)
+        assertEquals(BigDecimal("3000.00"), result.expenses[0].balance)
+    }
+
+    @Test
+    fun multiplePrefixesForSameTypeShouldMatchAny() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Multiple Prefixes",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("1000.00")),
+                            posting("Aktiva:Savings", amount("2000.00")),
+                            posting("Equity:Opening", amount("-3000.00")),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculate(
+            transactions,
+            ".",
+            assetsPrefixes = listOf("Assets", "Aktiva"),
+        )
+
+        assertEquals(2, result.assets.size)
+        assertEquals("Aktiva:Savings", result.assets[0].account)
+        assertEquals("Assets:Checking", result.assets[1].account)
+        assertEquals(BigDecimal("3000.00"), result.assets[0].balance + result.assets[1].balance)
+    }
+
+    @Test
+    fun unmatchedAccountShouldNotAppearInAnyGroup() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Unmatched",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Custom:Checking", amount("1000.00")),
+                            posting("Equity:Opening", amount("-1000.00")),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculate(
+            transactions,
+            ".",
+            assetsPrefixes = listOf("Assets"),
+        )
+
+        assertEquals(0, result.assets.size)
+    }
 }
