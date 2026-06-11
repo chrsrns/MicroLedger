@@ -10,16 +10,26 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
 import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -38,10 +48,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -133,6 +145,11 @@ fun PreferencesScreen(
     val currencyAmountSpacing by preferencesViewModel.spacingBetweenCurrencyAndAmount.observeAsState(
         true
     )
+    val assetsPrefixes by preferencesViewModel.assetsPrefixes.observeAsState(listOf("Assets"))
+    val liabilitiesPrefixes by preferencesViewModel.liabilitiesPrefixes.observeAsState(listOf("Liabilities"))
+    val equityPrefixes by preferencesViewModel.equityPrefixes.observeAsState(listOf("Equity"))
+    val incomePrefixes by preferencesViewModel.incomePrefixes.observeAsState(listOf("Income"))
+    val expensesPrefixes by preferencesViewModel.expensesPrefixes.observeAsState(listOf("Expenses"))
 
     PreferencesScreen(
         fileUri = fileUri,
@@ -191,6 +208,16 @@ fun PreferencesScreen(
         onCurrencyBeforeAmountChange = { preferencesViewModel.storeCurrencyBeforeAmount(it) },
         currencyAmountSpacing = currencyAmountSpacing,
         onCurrencyAmountSpacingChange = { preferencesViewModel.storeCurrencyAmountSpacing(it) },
+        assetsPrefixes = assetsPrefixes,
+        onAssetsPrefixesChange = { preferencesViewModel.storeAssetsPrefixes(it) },
+        liabilitiesPrefixes = liabilitiesPrefixes,
+        onLiabilitiesPrefixesChange = { preferencesViewModel.storeLiabilitiesPrefixes(it) },
+        equityPrefixes = equityPrefixes,
+        onEquityPrefixesChange = { preferencesViewModel.storeEquityPrefixes(it) },
+        incomePrefixes = incomePrefixes,
+        onIncomePrefixesChange = { preferencesViewModel.storeIncomePrefixes(it) },
+        expensesPrefixes = expensesPrefixes,
+        onExpensesPrefixesChange = { preferencesViewModel.storeExpensesPrefixes(it) },
         showTopBar = showTopBar,
         contentPadding = contentPadding,
     )
@@ -234,6 +261,16 @@ fun PreferencesScreen(
     onCurrencyBeforeAmountChange: (Boolean) -> Unit,
     currencyAmountSpacing: Boolean,
     onCurrencyAmountSpacingChange: (Boolean) -> Unit,
+    assetsPrefixes: List<String>,
+    onAssetsPrefixesChange: (List<String>) -> Unit,
+    liabilitiesPrefixes: List<String>,
+    onLiabilitiesPrefixesChange: (List<String>) -> Unit,
+    equityPrefixes: List<String>,
+    onEquityPrefixesChange: (List<String>) -> Unit,
+    incomePrefixes: List<String>,
+    onIncomePrefixesChange: (List<String>) -> Unit,
+    expensesPrefixes: List<String>,
+    onExpensesPrefixesChange: (List<String>) -> Unit,
     showTopBar: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
@@ -505,7 +542,7 @@ fun PreferencesScreen(
             }
             SettingDialog(
                 defaultCurrencyOpen,
-                stringResource(R.string.change_default_currency),
+                R.string.change_default_currency,
                 true,
                 { onDefaultCurrencyChange(newDefaultCurrency) },
                 { defaultCurrencyOpen = false },
@@ -518,7 +555,7 @@ fun PreferencesScreen(
             Setting(stringResource(R.string.posting_width), "$postingWidth") {
                 postingWidthOpen = true
             }
-            SettingDialog(postingWidthOpen, stringResource(R.string.change_posting_width), true, {
+            SettingDialog(postingWidthOpen, R.string.change_posting_width, true, {
                 onPostingWidthChange(Integer.parseInt(newPostingWidth))
             }, { postingWidthOpen = false }) {
                 OutlinedTextField(
@@ -659,6 +696,71 @@ fun PreferencesScreen(
                     }
                 }
             }
+            HorizontalDivider()
+            var assetsPrefixesOpen by remember { mutableStateOf(false) }
+            Setting(
+                stringResource(R.string.assets_prefixes),
+                assetsPrefixes.joinToString(", "),
+            ) { assetsPrefixesOpen = true }
+            PrefixListDialog(
+                assetsPrefixesOpen,
+                R.string.change_assets_prefixes,
+                assetsPrefixes,
+                { onAssetsPrefixesChange(it) },
+                { assetsPrefixesOpen = false },
+            )
+            HorizontalDivider()
+            var liabilitiesPrefixesOpen by remember { mutableStateOf(false) }
+            Setting(
+                stringResource(R.string.liabilities_prefixes),
+                liabilitiesPrefixes.joinToString(", "),
+            ) { liabilitiesPrefixesOpen = true }
+            PrefixListDialog(
+                liabilitiesPrefixesOpen,
+                R.string.change_liabilities_prefixes,
+                liabilitiesPrefixes,
+                { onLiabilitiesPrefixesChange(it) },
+                { liabilitiesPrefixesOpen = false },
+            )
+            HorizontalDivider()
+            var equityPrefixesOpen by remember { mutableStateOf(false) }
+            Setting(
+                stringResource(R.string.equity_prefixes),
+                equityPrefixes.joinToString(", "),
+            ) { equityPrefixesOpen = true }
+            PrefixListDialog(
+                equityPrefixesOpen,
+                R.string.change_equity_prefixes,
+                equityPrefixes,
+                { onEquityPrefixesChange(it) },
+                { equityPrefixesOpen = false },
+            )
+            HorizontalDivider()
+            var incomePrefixesOpen by remember { mutableStateOf(false) }
+            Setting(
+                stringResource(R.string.income_prefixes),
+                incomePrefixes.joinToString(", "),
+            ) { incomePrefixesOpen = true }
+            PrefixListDialog(
+                incomePrefixesOpen,
+                R.string.change_income_prefixes,
+                incomePrefixes,
+                { onIncomePrefixesChange(it) },
+                { incomePrefixesOpen = false },
+            )
+            HorizontalDivider()
+            var expensesPrefixesOpen by remember { mutableStateOf(false) }
+            Setting(
+                stringResource(R.string.expenses_prefixes),
+                expensesPrefixes.joinToString(", "),
+            ) { expensesPrefixesOpen = true }
+            PrefixListDialog(
+                expensesPrefixesOpen,
+                R.string.change_expenses_prefixes,
+                expensesPrefixes,
+                { onExpensesPrefixesChange(it) },
+                { expensesPrefixesOpen = false },
+            )
         }
     }
     if (showTopBar) {
@@ -726,7 +828,7 @@ fun Bar() {
 @Composable
 fun SettingDialog(
     opened: Boolean,
-    title: String,
+    titleRes: Int,
     canSave: Boolean,
     save: (() -> Unit),
     dismiss: (() -> Unit),
@@ -735,7 +837,7 @@ fun SettingDialog(
     if (opened) {
         AlertDialog(
             onDismissRequest = dismiss,
-            title = { Text(title, style = MaterialTheme.typography.titleLarge) },
+            title = { Text(stringResource(titleRes), style = MaterialTheme.typography.titleLarge) },
             text = content,
             dismissButton = {
                 TextButton(onClick = dismiss) { Text(stringResource(R.string.cancel)) }
@@ -749,6 +851,97 @@ fun SettingDialog(
                 }
             },
         )
+    }
+}
+
+@Composable
+fun PrefixListDialog(
+    opened: Boolean,
+    titleRes: Int,
+    prefixes: List<String>,
+    save: (List<String>) -> Unit,
+    dismiss: () -> Unit,
+) {
+    if (opened) {
+        val title = stringResource(titleRes)
+        val currentPrefixes =
+            remember(prefixes) { mutableStateListOf<String>().apply { addAll(prefixes) } }
+        var newPrefix by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = dismiss,
+            title = { Text(title, style = MaterialTheme.typography.titleLarge) },
+            text = {
+                PrefixListDialogContent(
+                    currentPrefixes = currentPrefixes,
+                    newPrefix = newPrefix,
+                    onNewPrefixChange = { newPrefix = it },
+                    onAddPrefix = {
+                        if (newPrefix.isNotBlank()) {
+                            currentPrefixes.add(newPrefix.trim())
+                            newPrefix = ""
+                        }
+                    },
+                    onRemovePrefix = { currentPrefixes.remove(it) },
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = dismiss) { Text(stringResource(R.string.cancel)) }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    save(currentPrefixes.toList())
+                    dismiss()
+                }) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+        )
+    }
+}
+
+@Composable
+fun PrefixListDialogContent(
+    currentPrefixes: List<String>,
+    newPrefix: String,
+    onNewPrefixChange: (String) -> Unit,
+    onAddPrefix: () -> Unit,
+    onRemovePrefix: (String) -> Unit,
+) {
+    Column {
+        LazyColumn(modifier = Modifier.heightIn(max = 150.dp)) {
+            items(currentPrefixes) { prefix ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(prefix, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { onRemovePrefix(prefix) }) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.remove_account),
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                newPrefix,
+                onNewPrefixChange,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            TextButton(
+                onClick = onAddPrefix,
+                enabled = newPrefix.isNotBlank(),
+            ) {
+                Text(stringResource(R.string.add_prefix))
+            }
+        }
     }
 }
 
@@ -793,6 +986,58 @@ fun PreferencesScreenPreview() {
             onCurrencyBeforeAmountChange = {},
             currencyAmountSpacing = true,
             onCurrencyAmountSpacingChange = {},
+            assetsPrefixes = listOf("Assets"),
+            onAssetsPrefixesChange = {},
+            liabilitiesPrefixes = listOf("Liabilities"),
+            onLiabilitiesPrefixesChange = {},
+            equityPrefixes = listOf("Equity"),
+            onEquityPrefixesChange = {},
+            incomePrefixes = listOf("Income"),
+            onIncomePrefixesChange = {},
+            expensesPrefixes = listOf("Expenses"),
+            onExpensesPrefixesChange = {},
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PrefixListDialogPreview() {
+    NanoLedgerTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            PrefixListDialogContent(
+                currentPrefixes = listOf("Assets", "Cash", "Bank"),
+                newPrefix = "",
+                onNewPrefixChange = {},
+                onAddPrefix = {},
+                onRemovePrefix = {},
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PrefixListDialogSingleItemPreview() {
+    NanoLedgerTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            PrefixListDialogContent(
+                currentPrefixes = listOf("Assets"),
+                newPrefix = "",
+                onNewPrefixChange = {},
+                onAddPrefix = {},
+                onRemovePrefix = {},
+            )
+        }
     }
 }

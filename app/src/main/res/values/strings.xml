@@ -120,4 +120,16 @@
     <string name="no_income_transactions">No income transactions</string>
     <string name="no_expense_transactions">No expense transactions</string>
     <string name="month_year_format">%1$s %2$d</string>
+
+    <string name="assets_prefixes">Assets prefixes</string>
+    <string name="liabilities_prefixes">Liabilities prefixes</string>
+    <string name="equity_prefixes">Equity prefixes</string>
+    <string name="income_prefixes">Income prefixes</string>
+    <string name="expenses_prefixes">Expenses prefixes</string>
+    <string name="change_assets_prefixes">Change Assets prefixes</string>
+    <string name="change_liabilities_prefixes">Change Liabilities prefixes</string>
+    <string name="change_equity_prefixes">Change Equity prefixes</string>
+    <string name="change_income_prefixes">Change Income prefixes</string>
+    <string name="change_expenses_prefixes">Change Expenses prefixes</string>
+    <string name="add_prefix">Add prefix</string>
 </resources>

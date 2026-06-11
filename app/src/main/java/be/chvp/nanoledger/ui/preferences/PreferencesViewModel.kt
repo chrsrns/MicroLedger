@@ -53,6 +53,11 @@ class PreferencesViewModel
         val postingAssertionPresentByDefault: LiveData<Boolean> = preferencesDataSource.postingAssertionPresentByDefault
         val postingAssertionCostPresentByDefault: LiveData<Boolean> = preferencesDataSource.postingAssertionCostPresentByDefault
         val postingCommentPresentByDefault: LiveData<Boolean> = preferencesDataSource.postingCommentPresentByDefault
+    val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
+    val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
+    val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
+    val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
+    val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
         val postingDefaultElements: LiveData<List<Int>> =
             postingAmountPresentByDefault.switchMap { amount ->
                 postingCostPresentByDefault.switchMap { cost ->
@@ -110,4 +115,19 @@ class PreferencesViewModel
             preferencesDataSource.setPostingAssertionCostPresentByDefault(assertionCost)
 
         fun storePostingCommentPresentByDefault(comment: Boolean) = preferencesDataSource.setPostingCommentPresentByDefault(comment)
+
+        fun storeAssetsPrefixes(prefixes: List<String>) =
+            preferencesDataSource.setAssetsPrefixes(prefixes)
+
+        fun storeLiabilitiesPrefixes(prefixes: List<String>) =
+            preferencesDataSource.setLiabilitiesPrefixes(prefixes)
+
+        fun storeEquityPrefixes(prefixes: List<String>) =
+            preferencesDataSource.setEquityPrefixes(prefixes)
+
+        fun storeIncomePrefixes(prefixes: List<String>) =
+            preferencesDataSource.setIncomePrefixes(prefixes)
+
+        fun storeExpensesPrefixes(prefixes: List<String>) =
+            preferencesDataSource.setExpensesPrefixes(prefixes)
     }
