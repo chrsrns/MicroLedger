@@ -80,9 +80,27 @@ class AccountBalanceCalculator {
                 // (these are credit accounts stored as negative amounts in ledger postings)
                 val displayBalance =
                     when {
-                        liabilitiesPrefixes.any { account.startsWith(it, ignoreCase = true) } -> rawBalance.negate()
-                        equityPrefixes.any { account.startsWith(it, ignoreCase = true) } -> rawBalance.negate()
-                        incomePrefixes.any { account.startsWith(it, ignoreCase = true) } -> rawBalance.negate()
+                        liabilitiesPrefixes.any {
+                            account.startsWith(
+                                it,
+                                ignoreCase = true
+                            )
+                        } -> rawBalance.negate()
+
+                        equityPrefixes.any {
+                            account.startsWith(
+                                it,
+                                ignoreCase = true
+                            )
+                        } -> rawBalance.negate()
+
+                        incomePrefixes.any {
+                            account.startsWith(
+                                it,
+                                ignoreCase = true
+                            )
+                        } -> rawBalance.negate()
+
                         else -> rawBalance
                     }
 
@@ -95,13 +113,23 @@ class AccountBalanceCalculator {
                     )
 
                 when {
-                    assetsPrefixes.any { account.startsWith(it, ignoreCase = true) } -> assets.add(accountBalance)
+                    assetsPrefixes.any { account.startsWith(it, ignoreCase = true) } -> assets.add(
+                        accountBalance
+                    )
+
                     liabilitiesPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
                         liabilities.add(
                             accountBalance,
                         )
-                    equityPrefixes.any { account.startsWith(it, ignoreCase = true) } -> equity.add(accountBalance)
-                    incomePrefixes.any { account.startsWith(it, ignoreCase = true) } -> income.add(accountBalance)
+
+                    equityPrefixes.any { account.startsWith(it, ignoreCase = true) } -> equity.add(
+                        accountBalance
+                    )
+
+                    incomePrefixes.any { account.startsWith(it, ignoreCase = true) } -> income.add(
+                        accountBalance
+                    )
+
                     expensesPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
                         expenses.add(
                             accountBalance,

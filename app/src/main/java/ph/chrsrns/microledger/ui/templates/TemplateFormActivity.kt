@@ -59,6 +59,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.CostType
@@ -69,9 +72,6 @@ import ph.chrsrns.microledger.ui.common.PayeeSelector
 import ph.chrsrns.microledger.ui.common.PostingRow
 import ph.chrsrns.microledger.ui.common.StatusSelector
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.launch
 
 const val EDIT_TEMPLATE_ID_KEY = "edit_template_id"
 

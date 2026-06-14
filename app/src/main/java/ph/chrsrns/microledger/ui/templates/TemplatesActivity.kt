@@ -46,19 +46,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.TransactionTemplate
 import ph.chrsrns.microledger.ui.add.AddActivity
 import ph.chrsrns.microledger.ui.common.NoFileState
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
-import dagger.hilt.android.AndroidEntryPoint
 
 const val TEMPLATE_ID_KEY = "template_id"
 
@@ -225,7 +224,10 @@ fun TemplatesScreenContent(
             }
 
         Scaffold(
-            topBar = { if (showTopBar) TemplatesBar(onBackClick) else {} },
+            topBar = {
+                if (showTopBar) TemplatesBar(onBackClick) else {
+                }
+            },
             floatingActionButton = {
                 if (showFab) {
                     FloatingActionButton(

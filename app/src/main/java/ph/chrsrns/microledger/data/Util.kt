@@ -76,7 +76,8 @@ class SharedPreferenceIntLiveData(
         value = this.getValueFromPreferences(key)
     }
 
-    override fun getValueFromPreferences(key: String): Int = if (sharedPrefs.contains(key)) sharedPrefs.getInt(key, default) else default
+    override fun getValueFromPreferences(key: String): Int =
+        if (sharedPrefs.contains(key)) sharedPrefs.getInt(key, default) else default
 }
 
 fun SharedPreferences.intLiveData(

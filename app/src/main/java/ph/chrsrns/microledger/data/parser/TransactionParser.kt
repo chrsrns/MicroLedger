@@ -103,7 +103,10 @@ fun extractAmountAndCost(string: String): Pair<Amount?, Cost?> {
             }
 
         val (amountString, costString) = string.split(COST_SPLIT_REGEX, limit = 2)
-        return Pair(extractAmount(amountString.trim()), Cost(extractAmount(costString.trim()), costType))
+        return Pair(
+            extractAmount(amountString.trim()),
+            Cost(extractAmount(costString.trim()), costType)
+        )
     } else {
         return Pair(extractAmount(string), null)
     }

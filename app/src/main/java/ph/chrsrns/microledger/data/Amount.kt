@@ -16,7 +16,8 @@ data class Amount(
             return quantity.trim()
         }
         val spacer = if (currencyAmountSpacing) " " else ""
-        val result = if (currencyBeforeAmount) "$currency$spacer$quantity" else "$quantity$spacer$currency"
+        val result =
+            if (currencyBeforeAmount) "$currency$spacer$quantity" else "$quantity$spacer$currency"
         return result.trim()
     }
 

@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
@@ -60,7 +61,6 @@ import ph.chrsrns.microledger.ui.main.TransactionCard
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
 import ph.chrsrns.microledger.ui.util.amountColor
 import ph.chrsrns.microledger.ui.util.formatAmount
-import dagger.hilt.android.AndroidEntryPoint
 import java.math.BigDecimal
 
 @AndroidEntryPoint

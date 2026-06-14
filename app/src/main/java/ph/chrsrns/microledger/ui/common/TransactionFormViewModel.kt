@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Cost
 import ph.chrsrns.microledger.data.CostType
@@ -16,7 +17,6 @@ import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.TransactionTemplate
 import ph.chrsrns.microledger.ui.util.Event
-import kotlinx.coroutines.launch
 import java.io.IOException
 import java.math.BigDecimal
 import java.text.ParsePosition
@@ -53,13 +53,16 @@ abstract class TransactionFormViewModel(
         )
     val status: LiveData<String?> = _status
 
-    private val _code = MutableLiveData(if (preferencesDataSource.getTransactionCodePresentByDefault()) "" else null)
+    private val _code =
+        MutableLiveData(if (preferencesDataSource.getTransactionCodePresentByDefault()) "" else null)
     val code: LiveData<String?> = _code
 
-    private val _payee = MutableLiveData(if (preferencesDataSource.getTransactionPayeePresentByDefault()) "" else null)
+    private val _payee =
+        MutableLiveData(if (preferencesDataSource.getTransactionPayeePresentByDefault()) "" else null)
     val payee: LiveData<String?> = _payee
 
-    private val _note = MutableLiveData(if (preferencesDataSource.getTransactionNotePresentByDefault()) "" else null)
+    private val _note =
+        MutableLiveData(if (preferencesDataSource.getTransactionNotePresentByDefault()) "" else null)
     val note: LiveData<String?> = _note
 
     val possiblePayees: LiveData<List<String>> =
@@ -67,7 +70,14 @@ abstract class TransactionFormViewModel(
             ledgerRepository.notes.switchMap { notes ->
                 note.switchMap { note ->
                     val listToSearch: Set<String> = if (note == null) payees + notes else payees
-                    payee.map { search -> listToSearch.filter { it.contains((search ?: ""), ignoreCase = true) }.sorted() }
+                    payee.map { search ->
+                        listToSearch.filter {
+                            it.contains(
+                                (search ?: ""),
+                                ignoreCase = true
+                            )
+                        }.sorted()
+                    }
                 }
             }
         }
@@ -77,12 +87,20 @@ abstract class TransactionFormViewModel(
             ledgerRepository.payees.switchMap { payees ->
                 payee.switchMap { payee ->
                     val listToSearch: Set<String> = if (payee == null) notes + payees else notes
-                    note.map { search -> listToSearch.filter { it.contains((search ?: ""), ignoreCase = true) }.sorted() }
+                    note.map { search ->
+                        listToSearch.filter {
+                            it.contains(
+                                (search ?: ""),
+                                ignoreCase = true
+                            )
+                        }.sorted()
+                    }
                 }
             }
         }
 
-    private val _currencyEnabled = MutableLiveData<Boolean>(preferencesDataSource.getTransactionCurrenciesPresentByDefault())
+    private val _currencyEnabled =
+        MutableLiveData<Boolean>(preferencesDataSource.getTransactionCurrenciesPresentByDefault())
     val currencyEnabled: LiveData<Boolean> = _currencyEnabled
 
     private val _postings = MutableLiveData(listOf(newPosting()))
@@ -153,7 +171,10 @@ abstract class TransactionFormViewModel(
                 if (postings
                         .dropLast(1)
                         .filter { !it.isComment() }
-                        .filter { (it.amount?.quantity ?: "") == "" && (it.assertion?.quantity ?: "") == "" }
+                        .filter {
+                            (it.amount?.quantity ?: "") == "" && (it.assertion?.quantity
+                                ?: "") == ""
+                        }
                         .size > 1
                 ) {
                     return@map false
@@ -194,7 +215,12 @@ abstract class TransactionFormViewModel(
                 note.value,
                 postings.value!!.dropLast(1),
             )
-        return transaction.format(postingWidth, currencyBeforeAmount, currencyAmountSpacing, currencyEnabled.value ?: true)
+        return transaction.format(
+            postingWidth,
+            currencyBeforeAmount,
+            currencyAmountSpacing,
+            currencyEnabled.value ?: true
+        )
     }
 
     abstract fun save(onFinish: suspend () -> Unit)
@@ -260,15 +286,15 @@ abstract class TransactionFormViewModel(
         setNote(transaction.note)
         if (
             (
-                preferencesDataSource.getTransactionPayeePresentByDefault() &&
-                    !preferencesDataSource.getTransactionNotePresentByDefault() &&
-                    transaction.payee == null
-            ) ||
+                    preferencesDataSource.getTransactionPayeePresentByDefault() &&
+                            !preferencesDataSource.getTransactionNotePresentByDefault() &&
+                            transaction.payee == null
+                    ) ||
             (
-                preferencesDataSource.getTransactionNotePresentByDefault() &&
-                    !preferencesDataSource.getTransactionPayeePresentByDefault() &&
-                    transaction.note == null
-            )
+                    preferencesDataSource.getTransactionNotePresentByDefault() &&
+                            !preferencesDataSource.getTransactionPayeePresentByDefault() &&
+                            transaction.note == null
+                    )
         ) {
             setPayee(transaction.note)
             setNote(transaction.payee)
@@ -278,9 +304,9 @@ abstract class TransactionFormViewModel(
             transaction.postings
                 .map {
                     (it.amount?.currency ?: "") != "" ||
-                        (it.cost?.amount?.currency ?: "") != "" ||
-                        (it.assertion?.currency ?: "") != "" ||
-                        (it.assertionCost?.amount?.currency ?: "") != ""
+                            (it.cost?.amount?.currency ?: "") != "" ||
+                            (it.assertion?.currency ?: "") != "" ||
+                            (it.assertionCost?.amount?.currency ?: "") != ""
                 }.reduce { acc, bool -> acc || bool }
     }
 
@@ -526,7 +552,8 @@ abstract class TransactionFormViewModel(
         on: Boolean,
     ) {
         val result = ArrayList(postings.value!!)
-        result[index] = result[index].withCost(if (on) Cost(defaultAmount(), CostType.UNIT) else null)
+        result[index] =
+            result[index].withCost(if (on) Cost(defaultAmount(), CostType.UNIT) else null)
         _postings.value = filterPostings(result)
     }
 
@@ -544,7 +571,8 @@ abstract class TransactionFormViewModel(
         on: Boolean,
     ) {
         val result = ArrayList(postings.value!!)
-        result[index] = result[index].withAssertionCost(if (on) Cost(defaultAmount(), CostType.UNIT) else null)
+        result[index] =
+            result[index].withAssertionCost(if (on) Cost(defaultAmount(), CostType.UNIT) else null)
         _postings.value = filterPostings(result)
     }
 
@@ -575,9 +603,15 @@ abstract class TransactionFormViewModel(
         Posting(
             "",
             if (preferencesDataSource.getPostingAmountPresentByDefault()) defaultAmount() else null,
-            if (preferencesDataSource.getPostingCostPresentByDefault()) Cost(defaultAmount(), CostType.UNIT) else null,
+            if (preferencesDataSource.getPostingCostPresentByDefault()) Cost(
+                defaultAmount(),
+                CostType.UNIT
+            ) else null,
             if (preferencesDataSource.getPostingAssertionPresentByDefault()) defaultAmount() else null,
-            if (preferencesDataSource.getPostingAssertionCostPresentByDefault()) Cost(defaultAmount(), CostType.UNIT) else null,
+            if (preferencesDataSource.getPostingAssertionCostPresentByDefault()) Cost(
+                defaultAmount(),
+                CostType.UNIT
+            ) else null,
             if (preferencesDataSource.getPostingCommentPresentByDefault()) "" else null,
         )
 }

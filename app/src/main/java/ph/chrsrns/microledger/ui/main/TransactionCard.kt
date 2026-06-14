@@ -47,7 +47,9 @@ fun TransactionCard(
         modifier = modifier,
     ) {
         Box(modifier = Modifier.clickable { onClick() }) {
-            Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)) {
                 Text(
                     transaction.header(),
                     softWrap = false,

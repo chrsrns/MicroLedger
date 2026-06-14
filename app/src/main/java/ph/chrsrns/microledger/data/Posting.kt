@@ -77,19 +77,36 @@ data class Posting(
     ): String {
         var fullAmountString = ""
         if ((amount?.quantity ?: "") != "") {
-            fullAmountString += amount!!.format(currencyBeforeAmount, currencyAmountSpacing, currencyEnabled)
+            fullAmountString += amount!!.format(
+                currencyBeforeAmount,
+                currencyAmountSpacing,
+                currencyEnabled
+            )
         }
         if ((cost?.amount?.quantity ?: "") != "") {
-            fullAmountString += ' ' + cost!!.format(currencyBeforeAmount, currencyAmountSpacing, currencyEnabled)
+            fullAmountString += ' ' + cost!!.format(
+                currencyBeforeAmount,
+                currencyAmountSpacing,
+                currencyEnabled
+            )
         }
         if ((assertion?.quantity ?: "") != "") {
-            fullAmountString += " = " + assertion!!.format(currencyBeforeAmount, currencyAmountSpacing, currencyEnabled)
+            fullAmountString += " = " + assertion!!.format(
+                currencyBeforeAmount,
+                currencyAmountSpacing,
+                currencyEnabled
+            )
         }
         if ((assertionCost?.amount?.quantity ?: "") != "") {
-            fullAmountString += ' ' + assertionCost!!.format(currencyBeforeAmount, currencyAmountSpacing, currencyEnabled)
+            fullAmountString += ' ' + assertionCost!!.format(
+                currencyBeforeAmount,
+                currencyAmountSpacing,
+                currencyEnabled
+            )
         }
         fullAmountString = fullAmountString.trim()
-        val fillWidth = (width - fullAmountString.length - (account ?: "").length - 4).coerceAtLeast(2)
+        val fillWidth =
+            (width - fullAmountString.length - (account ?: "").length - 4).coerceAtLeast(2)
         val spaces = " ".repeat(fillWidth)
         if (isComment()) {
             return "    ; $comment"
@@ -201,15 +218,20 @@ data class Posting(
 
     fun isVirtual() = account?.let { it.startsWith("(") && it.endsWith(")") } ?: false
 
-    fun withAccount(account: String?) = Posting(account, amount, cost, assertion, assertionCost, comment)
+    fun withAccount(account: String?) =
+        Posting(account, amount, cost, assertion, assertionCost, comment)
 
-    fun withAmount(amount: Amount?) = Posting(account, amount, cost, assertion, assertionCost, comment)
+    fun withAmount(amount: Amount?) =
+        Posting(account, amount, cost, assertion, assertionCost, comment)
 
     fun withCost(cost: Cost?) = Posting(account, amount, cost, assertion, assertionCost, comment)
 
-    fun withAssertion(assertion: Amount?) = Posting(account, amount, cost, assertion, assertionCost, comment)
+    fun withAssertion(assertion: Amount?) =
+        Posting(account, amount, cost, assertion, assertionCost, comment)
 
-    fun withAssertionCost(assertionCost: Cost?) = Posting(account, amount, cost, assertion, assertionCost, comment)
+    fun withAssertionCost(assertionCost: Cost?) =
+        Posting(account, amount, cost, assertion, assertionCost, comment)
 
-    fun withComment(comment: String?) = Posting(account, amount, cost, assertion, assertionCost, comment)
+    fun withComment(comment: String?) =
+        Posting(account, amount, cost, assertion, assertionCost, comment)
 }

@@ -36,7 +36,16 @@ data class Transaction(
         val result = StringBuilder()
         result.append("${header()}\n")
         for (posting in postings) {
-            result.append("${posting.format(postingWidth, currencyBeforeAmount, currencyAmountSpacing, currencyEnabled)}\n")
+            result.append(
+                "${
+                    posting.format(
+                        postingWidth,
+                        currencyBeforeAmount,
+                        currencyAmountSpacing,
+                        currencyEnabled
+                    )
+                }\n"
+            )
         }
         result.append('\n')
         return result.toString()

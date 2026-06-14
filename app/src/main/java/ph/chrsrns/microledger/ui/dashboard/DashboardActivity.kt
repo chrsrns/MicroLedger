@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
@@ -54,7 +55,6 @@ import ph.chrsrns.microledger.ui.cashflowtransactions.CashFlowTransactionsActivi
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
 import ph.chrsrns.microledger.ui.util.amountColor
 import ph.chrsrns.microledger.ui.util.formatAmount
-import dagger.hilt.android.AndroidEntryPoint
 import java.math.BigDecimal
 
 @AndroidEntryPoint
@@ -129,8 +129,16 @@ fun DashboardScreenContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             NetWorthCard(netWorth, decimalSeparator)
-            CashFlowCard(cashFlow, decimalSeparator, onClick = if (hasFile) onCashFlowClick else ({}))
-            AccountBalancesCard(accountBalances, decimalSeparator, onClick = if (hasFile) onAccountClick else ({}))
+            CashFlowCard(
+                cashFlow,
+                decimalSeparator,
+                onClick = if (hasFile) onCashFlowClick else ({})
+            )
+            AccountBalancesCard(
+                accountBalances,
+                decimalSeparator,
+                onClick = if (hasFile) onAccountClick else ({})
+            )
         }
     }
 

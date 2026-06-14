@@ -101,7 +101,14 @@ class MonthlyCashFlowCalculator {
         expensesPrefixes: List<String> = listOf("Expenses"),
     ): List<CashFlowResult> =
         (1..12).map { month ->
-            calculateForMonth(transactions, year, month, decimalSeparator, incomePrefixes, expensesPrefixes)
+            calculateForMonth(
+                transactions,
+                year,
+                month,
+                decimalSeparator,
+                incomePrefixes,
+                expensesPrefixes
+            )
         }
 
     private fun isTransactionInMonth(

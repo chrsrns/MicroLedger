@@ -5,10 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import dagger.hilt.android.lifecycle.HiltViewModel
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
-import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Calendar
 import javax.inject.Inject
 

@@ -38,6 +38,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.ui.common.FieldSelector
 import ph.chrsrns.microledger.ui.common.TRANSACTION_INDEX_KEY
@@ -46,9 +49,6 @@ import ph.chrsrns.microledger.ui.main.MainActivity
 import ph.chrsrns.microledger.ui.templates.EDIT_TEMPLATE_ID_KEY
 import ph.chrsrns.microledger.ui.templates.TemplateFormActivity
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class EditActivity : ComponentActivity() {
@@ -73,7 +73,12 @@ class EditActivity : ComponentActivity() {
 
             BackHandler(enabled = true) {
                 finish()
-                startActivity(Intent(context, MainActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+                startActivity(
+                    Intent(
+                        context,
+                        MainActivity::class.java
+                    ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                )
             }
             val saving by editViewModel.saving.observeAsState()
             val valid by editViewModel.valid.observeAsState()

@@ -78,6 +78,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
@@ -102,7 +103,6 @@ import ph.chrsrns.microledger.ui.templates.TemplateFormActivity
 import ph.chrsrns.microledger.ui.templates.TemplatesScreenContent
 import ph.chrsrns.microledger.ui.templates.TemplatesViewModel
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
-import dagger.hilt.android.AndroidEntryPoint
 import java.math.BigDecimal
 
 sealed class TabConfiguration {
@@ -184,15 +184,16 @@ class MainActivity : ComponentActivity() {
     private val templatesViewModel: TemplatesViewModel by viewModels()
     private val preferencesViewModel: PreferencesViewModel by viewModels()
 
-    private val openFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri != null) {
-            contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-            )
-            mainViewModel.setFileUri(uri)
+    private val openFileLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            if (uri != null) {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                )
+                mainViewModel.setFileUri(uri)
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -537,6 +538,7 @@ fun MainScreen(
                         )
                     }
                 }
+
                 else -> {
                     if (tabContent != null) {
                         tabContent(tab, contentPadding)
@@ -625,24 +627,50 @@ fun MainTabContent(
     val templates by templatesViewModel.templates.observeAsState(emptyList())
     val saving by templatesViewModel.saving.observeAsState(false)
     val fileUri by preferencesViewModel.fileUri.observeAsState()
-    val transactionDefaultElements by preferencesViewModel.transactionDefaultElements.observeAsState(emptyList())
-    val transactionStatusPresentByDefault by preferencesViewModel.transactionStatusPresentByDefault.observeAsState(true)
-    val transactionCodePresentByDefault by preferencesViewModel.transactionCodePresentByDefault.observeAsState(false)
-    val transactionPayeePresentByDefault by preferencesViewModel.transactionPayeePresentByDefault.observeAsState(true)
-    val transactionNotePresentByDefault by preferencesViewModel.transactionNotePresentByDefault.observeAsState(true)
-    val transactionCurrenciesPresentByDefault by preferencesViewModel.transactionCurrenciesPresentByDefault.observeAsState(true)
-    val postingDefaultElements by preferencesViewModel.postingDefaultElements.observeAsState(emptyList())
-    val postingAmountPresentByDefault by preferencesViewModel.postingAmountPresentByDefault.observeAsState(true)
-    val postingCostPresentByDefault by preferencesViewModel.postingCostPresentByDefault.observeAsState(false)
-    val postingAssertionPresentByDefault by preferencesViewModel.postingAssertionPresentByDefault.observeAsState(false)
-    val postingAssertionCostPresentByDefault by preferencesViewModel.postingAssertionCostPresentByDefault.observeAsState(false)
-    val postingCommentPresentByDefault by preferencesViewModel.postingCommentPresentByDefault.observeAsState(false)
+    val transactionDefaultElements by preferencesViewModel.transactionDefaultElements.observeAsState(
+        emptyList()
+    )
+    val transactionStatusPresentByDefault by preferencesViewModel.transactionStatusPresentByDefault.observeAsState(
+        true
+    )
+    val transactionCodePresentByDefault by preferencesViewModel.transactionCodePresentByDefault.observeAsState(
+        false
+    )
+    val transactionPayeePresentByDefault by preferencesViewModel.transactionPayeePresentByDefault.observeAsState(
+        true
+    )
+    val transactionNotePresentByDefault by preferencesViewModel.transactionNotePresentByDefault.observeAsState(
+        true
+    )
+    val transactionCurrenciesPresentByDefault by preferencesViewModel.transactionCurrenciesPresentByDefault.observeAsState(
+        true
+    )
+    val postingDefaultElements by preferencesViewModel.postingDefaultElements.observeAsState(
+        emptyList()
+    )
+    val postingAmountPresentByDefault by preferencesViewModel.postingAmountPresentByDefault.observeAsState(
+        true
+    )
+    val postingCostPresentByDefault by preferencesViewModel.postingCostPresentByDefault.observeAsState(
+        false
+    )
+    val postingAssertionPresentByDefault by preferencesViewModel.postingAssertionPresentByDefault.observeAsState(
+        false
+    )
+    val postingAssertionCostPresentByDefault by preferencesViewModel.postingAssertionCostPresentByDefault.observeAsState(
+        false
+    )
+    val postingCommentPresentByDefault by preferencesViewModel.postingCommentPresentByDefault.observeAsState(
+        false
+    )
     val defaultCurrency by preferencesViewModel.defaultCurrency.observeAsState("€")
     val postingWidth by preferencesViewModel.postingWidth.observeAsState(72)
     val defaultStatus by preferencesViewModel.defaultStatus.observeAsState(" ")
     val prefDecimalSeparator by preferencesViewModel.decimalSeparator.observeAsState(".")
     val currencyBeforeAmount by preferencesViewModel.currencyBeforeAmount.observeAsState(true)
-    val currencyAmountSpacing by preferencesViewModel.spacingBetweenCurrencyAndAmount.observeAsState(true)
+    val currencyAmountSpacing by preferencesViewModel.spacingBetweenCurrencyAndAmount.observeAsState(
+        true
+    )
     val assetsPrefixes by preferencesViewModel.assetsPrefixes.observeAsState(listOf("Assets"))
     val liabilitiesPrefixes by preferencesViewModel.liabilitiesPrefixes.observeAsState(listOf("Liabilities"))
     val equityPrefixes by preferencesViewModel.equityPrefixes.observeAsState(listOf("Equity"))

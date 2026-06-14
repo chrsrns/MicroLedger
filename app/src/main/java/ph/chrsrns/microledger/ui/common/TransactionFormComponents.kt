@@ -66,12 +66,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.CostType
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
-import kotlinx.coroutines.launch
 
 const val TRANSACTION_INDEX_KEY = "transaction_index"
 
@@ -135,15 +135,19 @@ fun TransactionForm(
                 onDismissRequest = { openErrorDialog = false },
                 confirmButton = {
                     TextButton(onClick = {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip: ClipData = ClipData.newPlainText("simple text", errorDialogMessage)
+                        val clipboard =
+                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip: ClipData =
+                            ClipData.newPlainText("simple text", errorDialogMessage)
                         clipboard.setPrimaryClip(clip)
                     }) { Text(stringResource(R.string.copy)) }
                 },
                 title = { Text(stringResource(R.string.error)) },
                 text = { Text(errorDialogMessage) },
                 dismissButton = {
-                    TextButton(onClick = { openErrorDialog = false }) { Text(stringResource(R.string.dismiss)) }
+                    TextButton(onClick = {
+                        openErrorDialog = false
+                    }) { Text(stringResource(R.string.dismiss)) }
                 },
             )
         }
@@ -403,7 +407,13 @@ fun DateSelector(
         readOnly = true,
         singleLine = true,
         onValueChange = {},
-        label = { Text(stringResource(R.string.date), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        label = {
+            Text(
+                stringResource(R.string.date),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
         colors =
             ExposedDropdownMenuDefaults.textFieldColors(
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -492,7 +502,13 @@ fun CodeField(
             code,
             onValueChange = onCodeChange,
             modifier = modifier,
-            label = { Text(stringResource(R.string.code), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            label = {
+                Text(
+                    stringResource(R.string.code),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
         )
     }
 }
@@ -569,7 +585,10 @@ fun PostingRow(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         with(LocalDensity.current) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 if (posting.isComment()) {
                     CommentField(posting.comment ?: "", onCommentChange, Modifier.weight(1.0f))
                 } else {
@@ -590,7 +609,10 @@ fun PostingRow(
                     onToggleComment,
                 )
                 IconButton(onClick = onRemovePosting) {
-                    Icon(Icons.Default.RemoveCircleOutline, contentDescription = stringResource(R.string.remove_posting))
+                    Icon(
+                        Icons.Default.RemoveCircleOutline,
+                        contentDescription = stringResource(R.string.remove_posting)
+                    )
                 }
             }
             if (posting.amount != null) {
@@ -854,7 +876,13 @@ fun CommentField(
         comment,
         onValueChange = onCommentChange,
         singleLine = true,
-        label = { Text(stringResource(R.string.comment), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        label = {
+            Text(
+                stringResource(R.string.comment),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
         modifier = modifier,
     )
 }
@@ -986,7 +1014,11 @@ fun AmountField(
                     overflow = TextOverflow.Ellipsis,
                 )
             } else {
-                Text(stringResource(R.string.amount), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    stringResource(R.string.amount),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         },
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -1034,11 +1066,14 @@ fun OutlinedLooseDropdown(
             singleLine = true,
             label = content,
             modifier =
-                Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable).fillMaxWidth().onFocusChanged {
-                    if (!it.hasFocus) {
-                        expanded = false
-                    }
-                },
+                Modifier
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
+                    .fillMaxWidth()
+                    .onFocusChanged {
+                        if (!it.hasFocus) {
+                            expanded = false
+                        }
+                    },
             colors =
                 ExposedDropdownMenuDefaults.textFieldColors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,

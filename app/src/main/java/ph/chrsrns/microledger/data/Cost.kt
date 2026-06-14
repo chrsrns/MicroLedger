@@ -10,5 +10,11 @@ data class Cost(
         currencyBeforeAmount: Boolean,
         currencyAmountSpacing: Boolean,
         currencyEnabled: Boolean,
-    ): String = "${type.repr} ${amount.format(currencyBeforeAmount, currencyAmountSpacing, currencyEnabled)}"
+    ): String = "${type.repr} ${
+        amount.format(
+            currencyBeforeAmount,
+            currencyAmountSpacing,
+            currencyEnabled
+        )
+    }"
 }
