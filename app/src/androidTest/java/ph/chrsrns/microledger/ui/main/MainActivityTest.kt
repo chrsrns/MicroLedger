@@ -10,12 +10,12 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import ph.chrsrns.microledger.R
-import ph.chrsrns.microledger.utils.FileManagerRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.utils.FileManagerRule
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {

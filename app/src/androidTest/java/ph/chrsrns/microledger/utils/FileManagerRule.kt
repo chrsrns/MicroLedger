@@ -15,11 +15,11 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
-import ph.chrsrns.microledger.R
-import ph.chrsrns.microledger.ui.main.MainActivity
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.ui.main.MainActivity
 import java.util.concurrent.TimeUnit
 
 class FileManagerRule(
