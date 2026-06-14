@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -85,12 +86,14 @@ fun DashboardScreen(
     val accountBalances by dashboardViewModel.accountBalances.observeAsState()
     val cashFlow by dashboardViewModel.currentMonthCashFlow.observeAsState()
     val decimalSeparator by dashboardViewModel.decimalSeparator.observeAsState(".")
+    val fileUri by dashboardViewModel.fileUri.observeAsState()
 
     DashboardScreenContent(
         netWorth = netWorth,
         accountBalances = accountBalances,
         cashFlow = cashFlow,
         decimalSeparator = decimalSeparator,
+        hasFile = fileUri != null,
         onBackClick = onBackClick,
         onAccountClick = {
             context.startActivity(Intent(context, AccountTransactionsActivity::class.java))
@@ -113,6 +116,7 @@ fun DashboardScreenContent(
     onCashFlowClick: () -> Unit = {},
     showTopBar: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(),
+    hasFile: Boolean = true,
 ) {
     val content: @Composable (PaddingValues) -> Unit = { contentPadding ->
         Column(
@@ -120,12 +124,13 @@ fun DashboardScreenContent(
                 .fillMaxSize()
                 .padding(contentPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .alpha(if (hasFile) 1f else 0.38f),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             NetWorthCard(netWorth, decimalSeparator)
-            CashFlowCard(cashFlow, decimalSeparator, onCashFlowClick)
-            AccountBalancesCard(accountBalances, decimalSeparator, onAccountClick)
+            CashFlowCard(cashFlow, decimalSeparator, onClick = if (hasFile) onCashFlowClick else ({}))
+            AccountBalancesCard(accountBalances, decimalSeparator, onClick = if (hasFile) onAccountClick else ({}))
         }
     }
 
@@ -431,6 +436,22 @@ fun DashboardScreenPreview() {
                 expenseTransactions = emptyList(),
             ),
             decimalSeparator = ".",
+            onBackClick = {},
+            onAccountClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardScreenNoFilePreview() {
+    MicroLedgerTheme {
+        DashboardScreenContent(
+            netWorth = null,
+            accountBalances = null,
+            cashFlow = null,
+            decimalSeparator = ".",
+            hasFile = false,
             onBackClick = {},
             onAccountClick = {},
         )

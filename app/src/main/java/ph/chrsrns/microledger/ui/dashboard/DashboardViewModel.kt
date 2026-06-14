@@ -1,6 +1,7 @@
 package ph.chrsrns.microledger.ui.dashboard
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -24,6 +25,8 @@ constructor(
     private val netWorthCalculator = NetWorthCalculator()
     private val accountBalanceCalculator = AccountBalanceCalculator()
     private val cashFlowCalculator = MonthlyCashFlowCalculator()
+
+    val fileUri: LiveData<Uri?> = preferencesDataSource.fileUri
 
     val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
 

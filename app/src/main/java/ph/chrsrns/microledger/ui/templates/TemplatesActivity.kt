@@ -56,6 +56,7 @@ import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.TransactionTemplate
 import ph.chrsrns.microledger.ui.add.AddActivity
+import ph.chrsrns.microledger.ui.common.NoFileState
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -139,10 +140,12 @@ fun TemplatesScreen(
 ) {
     val templates by templatesViewModel.templates.observeAsState(emptyList())
     val saving by templatesViewModel.saving.observeAsState(false)
+    val fileUri by templatesViewModel.fileUri.observeAsState()
 
     TemplatesScreenContent(
         templates = templates,
         saving = saving,
+        hasFile = fileUri != null,
         onBackClick = onBackClick,
         onAddClick = onAddClick,
         onTemplateClick = onTemplateClick,
@@ -165,11 +168,18 @@ fun TemplatesScreenContent(
     showTopBar: Boolean = true,
     showFab: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(),
+    hasFile: Boolean = true,
+    onGoToSettings: (() -> Unit)? = null,
 ) {
     var templateToDelete by remember { mutableStateOf<TransactionTemplate?>(null) }
 
     val content: @Composable (PaddingValues) -> Unit = { contentPadding ->
-        if (saving) {
+        if (!hasFile) {
+            NoFileState(
+                contentPadding = contentPadding,
+                onGoToSettings = onGoToSettings ?: {},
+            )
+        } else if (saving) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -393,6 +403,24 @@ fun TemplatesScreenPreview() {
             onTemplateClick = {},
             onEditClick = {},
             onDeleteClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TemplatesScreenNoFilePreview() {
+    MicroLedgerTheme {
+        TemplatesScreenContent(
+            templates = emptyList(),
+            saving = false,
+            hasFile = false,
+            onBackClick = {},
+            onAddClick = {},
+            onTemplateClick = {},
+            onEditClick = {},
+            onDeleteClick = {},
+            onGoToSettings = {},
         )
     }
 }

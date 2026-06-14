@@ -89,6 +89,7 @@ import ph.chrsrns.microledger.data.reporting.NetWorthCalculator
 import ph.chrsrns.microledger.ui.accounttransactions.AccountTransactionsActivity
 import ph.chrsrns.microledger.ui.add.AddActivity
 import ph.chrsrns.microledger.ui.cashflowtransactions.CashFlowTransactionsActivity
+import ph.chrsrns.microledger.ui.common.NoFileState
 import ph.chrsrns.microledger.ui.common.TRANSACTION_INDEX_KEY
 import ph.chrsrns.microledger.ui.dashboard.DashboardScreenContent
 import ph.chrsrns.microledger.ui.dashboard.DashboardViewModel
@@ -110,6 +111,7 @@ sealed class TabConfiguration {
         val accountBalances: AccountBalanceCalculator.AccountBalancesResult?,
         val cashFlow: MonthlyCashFlowCalculator.CashFlowResult?,
         val decimalSeparator: String,
+        val hasFile: Boolean,
         val onAccountClick: () -> Unit,
         val onCashFlowClick: () -> Unit,
     ) : TabConfiguration()
@@ -117,10 +119,12 @@ sealed class TabConfiguration {
     data class Templates(
         val templates: List<TransactionTemplate>,
         val saving: Boolean,
+        val hasFile: Boolean,
         val onAddClick: () -> Unit,
         val onTemplateClick: (TransactionTemplate) -> Unit,
         val onEditClick: (TransactionTemplate) -> Unit,
         val onDeleteClick: (String) -> Unit,
+        val onGoToSettings: () -> Unit,
     ) : TabConfiguration()
 
     data class Settings(
@@ -561,6 +565,7 @@ fun MainScreen(
                                 context.startActivity(intent)
                             },
                             onOpenFile = onOpenFile,
+                            onGoToSettings = { onSelectTab(MainTab.Settings) },
                             dashboardViewModel = dashboardViewModel,
                             templatesViewModel = templatesViewModel,
                             preferencesViewModel = preferencesViewModel,
@@ -582,6 +587,7 @@ fun MainTabContent(
     onTemplateClick: (TransactionTemplate) -> Unit,
     onTemplateEditClick: (TransactionTemplate) -> Unit,
     onOpenFile: () -> Unit,
+    onGoToSettings: () -> Unit,
     dashboardViewModel: DashboardViewModel,
     templatesViewModel: TemplatesViewModel,
     preferencesViewModel: PreferencesViewModel,
@@ -649,6 +655,7 @@ fun MainTabContent(
             accountBalances = accountBalances,
             cashFlow = cashFlow,
             decimalSeparator = decimalSeparator,
+            hasFile = fileUri != null,
             onAccountClick = onDashboardAccountClick,
             onCashFlowClick = onCashFlowClick,
         )
@@ -656,10 +663,12 @@ fun MainTabContent(
         MainTab.Templates -> TabConfiguration.Templates(
             templates = templates,
             saving = saving,
+            hasFile = fileUri != null,
             onAddClick = onTemplateAddClick,
             onTemplateClick = onTemplateClick,
             onEditClick = onTemplateEditClick,
             onDeleteClick = { templatesViewModel.deleteTemplate(it, {}) },
+            onGoToSettings = onGoToSettings,
         )
 
         MainTab.Settings -> TabConfiguration.Settings(
@@ -775,6 +784,7 @@ fun MainTabContent(
             accountBalances = configuration.accountBalances,
             cashFlow = configuration.cashFlow,
             decimalSeparator = configuration.decimalSeparator,
+            hasFile = configuration.hasFile,
             onBackClick = {},
             onAccountClick = configuration.onAccountClick,
             onCashFlowClick = configuration.onCashFlowClick,
@@ -785,6 +795,7 @@ fun MainTabContent(
         is TabConfiguration.Templates -> TemplatesScreenContent(
             templates = configuration.templates,
             saving = configuration.saving,
+            hasFile = configuration.hasFile,
             onBackClick = {},
             onAddClick = configuration.onAddClick,
             onTemplateClick = configuration.onTemplateClick,
@@ -793,6 +804,7 @@ fun MainTabContent(
             showTopBar = false,
             showFab = false,
             contentPadding = contentPadding,
+            onGoToSettings = configuration.onGoToSettings,
         )
 
         is TabConfiguration.Settings -> PreferencesScreen(
@@ -844,44 +856,6 @@ fun MainTabContent(
             onExpensesPrefixesChange = configuration.onExpensesPrefixesChange,
             showTopBar = false,
             contentPadding = contentPadding,
-        )
-    }
-}
-
-@Composable
-fun NoFileState(
-    contentPadding: PaddingValues,
-    onGoToSettings: () -> Unit,
-) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(contentPadding),
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            stringResource(R.string.no_file_yet),
-            style = MaterialTheme.typography.headlineLarge,
-            textAlign = TextAlign.Center,
-            modifier =
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(horizontal = 16.dp),
-        )
-        Text(
-            stringResource(R.string.go_to_settings),
-            style =
-                MaterialTheme.typography.headlineLarge.copy(
-                    textDecoration = TextDecoration.Underline,
-                    color = MaterialTheme.colorScheme.primary,
-                ),
-            textAlign = TextAlign.Center,
-            modifier =
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(horizontal = 16.dp)
-                    .clickable { onGoToSettings() },
         )
     }
 }
@@ -1382,6 +1356,7 @@ fun MainScreenDashboardTabPreview() {
                             expenseTransactions = emptyList(),
                         ),
                         decimalSeparator = ".",
+                        hasFile = true,
                         onAccountClick = {},
                         onCashFlowClick = {},
                     )
@@ -1389,10 +1364,12 @@ fun MainScreenDashboardTabPreview() {
                     MainTab.Templates -> TabConfiguration.Templates(
                         templates = emptyList(),
                         saving = false,
+                        hasFile = true,
                         onAddClick = {},
                         onTemplateClick = {},
                         onEditClick = {},
                         onDeleteClick = {},
+                        onGoToSettings = {},
                     )
 
                     MainTab.Settings -> TabConfiguration.Settings(
@@ -1492,6 +1469,7 @@ fun MainScreenTemplatesTabPreview() {
                         accountBalances = null,
                         cashFlow = null,
                         decimalSeparator = ".",
+                        hasFile = true,
                         onAccountClick = {},
                         onCashFlowClick = {},
                     )
@@ -1529,10 +1507,12 @@ fun MainScreenTemplatesTabPreview() {
                             ),
                         ),
                         saving = false,
+                        hasFile = true,
                         onAddClick = {},
                         onTemplateClick = {},
                         onEditClick = {},
                         onDeleteClick = {},
+                        onGoToSettings = {},
                     )
 
                     MainTab.Settings -> TabConfiguration.Settings(
@@ -1631,6 +1611,7 @@ fun MainScreenSettingsTabPreview() {
                         accountBalances = null,
                         cashFlow = null,
                         decimalSeparator = ".",
+                        hasFile = true,
                         onAccountClick = {},
                         onCashFlowClick = {},
                     )
@@ -1638,10 +1619,12 @@ fun MainScreenSettingsTabPreview() {
                     MainTab.Templates -> TabConfiguration.Templates(
                         templates = emptyList(),
                         saving = false,
+                        hasFile = true,
                         onAddClick = {},
                         onTemplateClick = {},
                         onEditClick = {},
                         onDeleteClick = {},
+                        onGoToSettings = {},
                     )
 
                     MainTab.Settings -> TabConfiguration.Settings(

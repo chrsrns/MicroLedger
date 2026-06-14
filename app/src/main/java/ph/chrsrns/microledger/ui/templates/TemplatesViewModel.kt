@@ -1,6 +1,7 @@
 package ph.chrsrns.microledger.ui.templates
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -24,6 +25,8 @@ constructor(
     private val preferencesDataSource: PreferencesDataSource,
 ) : AndroidViewModel(application) {
     val templates: LiveData<List<TransactionTemplate>> = ledgerRepository.templates
+
+    val fileUri: LiveData<Uri?> = preferencesDataSource.fileUri
 
     private val _saving = MutableLiveData(false)
     val saving: LiveData<Boolean> = _saving
