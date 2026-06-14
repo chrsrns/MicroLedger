@@ -1,5 +1,5 @@
 {
-  description = "Nanoledger android app";
+  description = "Microledger android app";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
@@ -28,9 +28,9 @@
       in
       {
         devShells = rec {
-          default = nanoledger;
-          nanoledger = pkgs.devshell.mkShell {
-            name = "Nanoledger";
+          default = microledger;
+          microledger = pkgs.devshell.mkShell {
+            name = "Microledger";
             packages = [ pkgs.jdk21 pkgs.nixpkgs-fmt ];
             env = [
               { name = "ANDROID_SDK_ROOT"; eval = "${composed.androidsdk}/libexec/android-sdk/"; }

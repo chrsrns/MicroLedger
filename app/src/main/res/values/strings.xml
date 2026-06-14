@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NanoLedger</string>
+    <string name="app_name">MicroLedger</string>
 
     <string name="account">Account</string>
     <string name="add">Add</string>

@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NanoLedger"
+rootProject.name = "MicroLedger"
 include(":app")

@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "be.chvp.nanoledger"
+    namespace = "ph.chrsrns.microledger"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "be.chvp.nanoledger"
+        applicationId = "ph.chrsrns.microledger"
         minSdk = 23
         targetSdk = 36
         versionCode = 2026040501
