@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" viewBox="0 0 108 108" width="108" height="108" version="1.1" id="svg3" sodipodi:docname="receipt-icon.svg" inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)">
+  <g id="g5" transform="matrix(1.0548916,0,0,1.0548383,-1.0751869,-3.9097016)" style="stroke-width:0.947989">
+    <g id="g7" style="stroke-width:0.947989">
+      <path id="path1" style="stroke-width:0.947989" d="M 31.130079 53.356755 L 31.130079 71.374549 L 34.203558 75.870202 L 37.277038 71.374549 L 40.350517 75.870202 L 43.423996 71.374549 L 46.497475 75.870202 L 49.570955 71.374549 L 52.644434 75.870202 L 55.717913 71.374549 L 58.791393 75.870202 L 61.864872 71.374549 L 64.938351 75.870202 L 68.011831 71.374549 L 68.011831 53.356755 L 31.130079 53.356755 z " />
+      <g id="g6">
+        <rect style="fill:#000000;stroke:none;stroke-width:2.36996;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" id="rect7" width="36.880459" height="27.781666" x="31.130812" y="31.851881" ry="3.2282209" />
+        <rect style="fill:#ffffff;stroke:#ffffff;stroke-width:2.36997;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" id="rect5" width="27.912457" height="1.3228173" x="35.614815" y="36.265091" />
+        <g id="g8" transform="matrix(0.99996615,0,0,0.87172519,0.47216896,14.223285)" style="stroke-width:1.01536">
+          <rect style="fill:#ffffff;stroke:none;stroke-width:2.5384;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" id="rect5-2" width="19.552977" height="2.1179318" x="33.959324" y="33.719666" ry="1.0589659" />
+          <rect style="fill:#ffffff;stroke:none;stroke-width:2.5384;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" id="rect5-2-9" width="7.9249415" height="2.1179318" x="56.316807" y="33.719666" ry="1.0589659" />
+        </g>
+        <g id="use8" transform="matrix(0.99996615,0.0,0.0,0.87172519,0.47216896,20.9142132)" style="stroke-width:1.01536">
+          <rect style="fill:#ffffff;stroke:none;stroke-width:2.5384;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" width="19.552977" height="2.1179318" x="33.959324" y="33.719666" ry="1.0589659" />
+          <rect style="fill:#ffffff;stroke:none;stroke-width:2.5384;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" width="7.9249415" height="2.1179318" x="56.316807" y="33.719666" ry="1.0589659" />
+        </g>
+        <g id="use9" transform="matrix(0.99996615,0.0,0.0,0.87172519,0.47216896,27.6051413)" style="stroke-width:1.01536">
+          <rect style="fill:#ffffff;stroke:none;stroke-width:2.5384;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" width="19.552977" height="2.1179318" x="33.959324" y="33.719666" ry="1.0589659" />
+          <rect style="fill:#ffffff;stroke:none;stroke-width:2.5384;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" width="7.9249415" height="2.1179318" x="56.316807" y="33.719666" ry="1.0589659" />
+        </g>
+        <g id="use10" transform="matrix(0.99996615,0.0,0.0,0.87172519,0.47216896,34.2960695)" style="stroke-width:1.01536">
+          <rect style="fill:#ffffff;stroke:none;stroke-width:2.5384;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" width="19.552977" height="2.1179318" x="33.959324" y="33.719666" ry="1.0589659" />
+          <rect style="fill:#ffffff;stroke:none;stroke-width:2.5384;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" width="7.9249415" height="2.1179318" x="56.316807" y="33.719666" ry="1.0589659" />
+        </g>
+        </g>
+    </g>
+    <path fill="#000000" d="m 75.074478,69.656257 a 10.287239,10.287239 0 1 1 -20.574477,0 10.287239,10.287239 0 1 1 20.574477,0 z" id="path2" style="fill:#000000;stroke:#000000;stroke-width:0.947989" />
+    <g transform="matrix(0.8,0,0,0.8,55.187238,60.056257)" id="g3" style="stroke-width:0.947989">
+      <circle style="fill:#ffffff;stroke:#ffffff;stroke-width:2.36997;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" id="path5" cx="76.721085" cy="46.623783" r="8" transform="matrix(1.25,0,0,1.25,-83.901351,-46.27973)" />
+      <path fill="#000000" fill-rule="evenodd" d="M 12,2 C 6.48,2 2,6.48 2,12 2,17.52 6.48,22 12,22 17.52,22 22,17.52 22,12 22,6.48 17.52,2 12,2 Z m 1.41,16.09 V 20 H 10.74 V 18.07 C 9.03,17.71 7.58,16.61 7.47,14.67 h 1.96 c 0.1,1.05 0.82,1.87 2.65,1.87 1.96,0 2.4,-0.98 2.4,-1.59 0,-0.83 -0.44,-1.61 -2.67,-2.14 C 9.33,12.21 7.63,11.19 7.63,9.14 7.63,7.42 9.02,6.3 10.74,5.93 V 4 h 2.67 v 1.95 c 1.86,0.45 2.79,1.86 2.85,3.39 H 14.3 C 14.25,8.23 13.66,7.47 12.08,7.47 c -1.5,0 -2.4,0.68 -2.4,1.64 0,0.84 0.65,1.39 2.67,1.91 2.02,0.52 4.18,1.39 4.18,3.91 -0.01,1.83 -1.38,2.83 -3.12,3.16 z" id="path3" style="stroke-width:0.947989" />
+    </g>
+  </g>
+  <circle style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-dasharray:none;paint-order:fill markers stroke" id="path4" cx="54" cy="54" r="34.151352" />
+</svg>
