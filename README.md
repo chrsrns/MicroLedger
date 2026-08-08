@@ -19,7 +19,7 @@ View your transactions and quickly add new ones, with autocomplete on fields whe
 
 ## Demo
 
-<video src="etc/app-recording.webm" controls></video>
+[app-recording.webm](https://github.com/user-attachments/assets/c3fe1a33-709c-407c-be74-fbb0f2414e38)
 
 ## Editing caveats
 
