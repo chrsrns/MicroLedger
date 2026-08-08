@@ -1,0 +1,340 @@
+; MicroLedger demo journal
+; Designed to populate the Dashboard with net worth, account balances,
+; and cash-flow data.
+; template-start: Grocery
+; id: grocery
+; payee: Supermarket
+; note: Groceries
+; account: Expenses:Food  € 45.00
+; account: Assets:Checking  € -45.00
+; template-end
+; template-start: Rent
+; id: rent
+; payee: Landlord
+; note: Rent
+; account: Expenses:Housing:Rent  € 1200.00
+; account: Assets:Checking  € -1200.00
+; template-end
+; template-start: Monthly Salary
+; id: salary
+; payee: Employer
+; note: Monthly Salary
+; account: Assets:Checking  € 2500.00
+; account: Income:Salary  € -2500.00
+; template-end
+; template-start: Freelance
+; id: freelance
+; payee: Client
+; note: Freelance Payment
+; account: Assets:Checking  € 600.00
+; account: Income:Freelance  € -600.00
+; template-end
+; template-start: Credit Card Payment
+; id: cc-payment
+; payee: Credit Card Payment
+; account: Liabilities:Credit Card  € 200.00
+; account: Assets:Checking  € -200.00
+; template-end
+; template-start: Cash Withdrawal
+; id: atm
+; payee: ATM
+; note: Cash Withdrawal
+; account: Assets:Cash  € 50.00
+; account: Assets:Checking  € -50.00
+; template-end
+
+2026-01-01 * Opening Balance
+    Assets:Checking                 € 2500.00
+    Assets:Savings                  € 5000.00
+    Assets:Cash                     € 100.00
+    Liabilities:Credit Card         € -800.00
+    Equity:Opening Balances         € -6800.00
+
+2026-01-02 * Employer | Monthly Salary
+    Assets:Checking                 € 2500.00
+    Income:Salary                   € -2500.00
+
+2026-01-03 * Landlord | Rent
+    Expenses:Housing:Rent           € 1200.00
+    Assets:Checking                 € -1200.00
+
+2026-01-05 * Heating Provider | Winter Heating
+    Expenses:Utilities:Heating      € 95.00
+    Assets:Checking                 € -95.00
+
+2026-01-08 * Supermarket | New Year Groceries
+    Expenses:Food                   € 78.30
+    Assets:Checking                 € -78.30
+
+2026-01-15 * Family | New Year Gift
+    Assets:Checking                 € 50.00
+    Income:Gift                     € -50.00
+
+2026-02-01 * Employer | Monthly Salary
+    Assets:Checking                 € 2600.00
+    Income:Salary                   € -2600.00
+
+2026-02-04 * Winter Clothing Store | Winter Coat
+    Expenses:Clothing:Winter        € 120.00
+    Liabilities:Credit Card         € -120.00
+
+2026-02-14 * Supermarket | Groceries
+    Expenses:Food                   € 88.50
+    Assets:Checking                 € -88.50
+
+2026-03-01 * Employer | Monthly Salary
+    Assets:Checking                 € 2500.00
+    Income:Salary                   € -2500.00
+
+2026-03-05 * Charity | Donation
+    Expenses:Gifts                  € 40.00
+    Assets:Cash                     € -40.00
+
+2026-04-01 * Employer | Monthly Salary
+    Assets:Checking                 € 2500.00
+    Income:Salary                   € -2500.00
+
+2026-04-02 * Landlord | Rent
+    Expenses:Housing:Rent           € 1200.00
+    Assets:Checking                 € -1200.00
+
+2026-04-12 * Concert Hall | Spring Concert
+    Expenses:Entertainment:Concert  € 68.00
+    Assets:Checking                 € -68.00
+
+2026-04-20 * Railway | Train Trip
+    Expenses:Transport:Train        € 42.50
+    Assets:Cash                     € -42.50
+
+2026-05-01 * Employer | Monthly Salary
+    Assets:Checking                 € 2500.00
+    Income:Salary                   € -2500.00
+
+2026-05-02 * Landlord | Rent
+    Expenses:Housing:Rent           € 1200.00
+    Assets:Checking                 € -1200.00
+
+2026-05-10 * Internet Provider | Internet
+    Expenses:Utilities:Internet     € 60.00
+    Assets:Checking                 € -60.00
+
+2026-05-15 * Pharmacy | Allergy Meds
+    Expenses:Health:Pharmacy        € 24.90
+    Assets:Checking                 € -24.90
+
+2026-06-01 * Employer | Monthly Salary
+    Assets:Checking                 € 2500.00
+    Income:Salary                   € -2500.00
+
+2026-06-02 * Landlord | Rent
+    Expenses:Housing:Rent           € 1200.00
+    Assets:Checking                 € -1200.00
+
+2026-06-20 * Client | Freelance
+    Assets:Checking                 € 700.00
+    Income:Freelance                € -700.00
+
+2026-06-25 * Ice Cream Shop | Summer Treats
+    Expenses:Food:IceCream          € 18.40
+    Assets:Cash                     € -18.40
+
+2026-07-02 * Landlord | Rent
+    Expenses:Housing:Rent           € 1200.00
+    Assets:Checking                 € -1200.00
+
+2026-07-03 * Supermarket | Groceries
+    Expenses:Food                   € 95.40
+    Assets:Checking                 € -95.40
+
+2026-07-05 * Employer | Monthly Salary
+    Assets:Checking                 € 2500.00
+    Income:Salary                   € -2500.00
+
+2026-07-07 * Internet Provider | Internet
+    Expenses:Utilities:Internet     € 60.00
+    Assets:Checking                 € -60.00
+
+2026-07-09 * ATM | Cash Withdrawal
+    Assets:Cash                     € 80.00
+    Assets:Checking                 € -80.00
+
+2026-07-12 * Client | Freelance
+    Assets:Checking                 € 600.00
+    Income:Freelance                € -600.00
+
+2026-07-15 * Credit Card Payment
+    Liabilities:Credit Card         € 200.00
+    Assets:Checking                 € -200.00
+
+2026-07-18 * Bistro | Dinner Out
+    Expenses:Food:Dining            € 62.50
+    Liabilities:Credit Card         € -62.50
+
+2026-07-25 * Power Company | Electricity
+    Expenses:Utilities:Electricity  € 75.00
+    Assets:Checking                 € -75.00
+
+2026-07-28 * Family | Birthday Gift
+    Assets:Checking                 € 120.00
+    Income:Gift                     € -120.00
+
+2026-08-01 * Employer | Monthly Salary
+    Assets:Checking                 € 2500.00
+    Income:Salary                   € -2500.00
+
+2026-08-02 * Landlord | Rent
+    Expenses:Housing:Rent           € 1200.00
+    Assets:Checking                 € -1200.00
+
+2026-08-03 * Supermarket | Groceries
+    Expenses:Food                   € 85.50
+    Assets:Checking                 € -85.50
+
+2026-08-04 * Internet Provider | Internet
+    Expenses:Utilities:Internet     € 60.00
+    Assets:Checking                 € -60.00
+
+2026-08-05 * Client | Freelance
+    Assets:Checking                 € 800.00
+    Income:Freelance                € -800.00
+
+2026-08-05 * Credit Card Payment
+    Liabilities:Credit Card         € 300.00
+    Assets:Checking                 € -300.00
+
+2026-08-06 * ATM | Cash Withdrawal
+    Assets:Cash                     € 50.00
+    Assets:Checking                 € -50.00
+
+2026-08-07 * Restaurant | Dinner
+    Expenses:Food                   € 45.00
+    Assets:Cash                     € -45.00
+
+2026-08-08 * Supermarket | Groceries
+    Expenses:Food                   € 120.00
+    Assets:Checking                 € -120.00
+
+2026-08-09 * Bus Company | Commute
+    Expenses:Transport:Bus          € 25.00
+    Assets:Cash                     € -25.00
+
+2026-08-10 * Friend | Reimbursement
+    Assets:Checking                 € 35.00
+    Assets:Receivable:Friend        € -35.00
+
+2026-08-12 * Phone Provider | Mobile Plan
+    Expenses:Utilities:Mobile       € 15.00
+    Assets:Checking                 € -15.00
+
+2026-08-15 * Restaurant | Dinner Out
+    Expenses:Food:Dining            € 58.50
+    Liabilities:Credit Card         € -58.50
+
+2026-08-18 * Employer | Bonus
+    Assets:Checking                 € 500.00
+    Income:Salary                   € -500.00
+
+2026-08-20 * Client | Freelance Payment
+    Assets:Checking                 € 600.00
+    Income:Freelance                € -600.00
+
+2026-08-22 * Family | Gift
+    Assets:Checking                 € 100.00
+    Income:Gift                     € -100.00
+
+2026-08-25 * Pharmacy | Medicines
+    Expenses:Health:Pharmacy        € 22.30
+    Assets:Checking                 € -22.30
+
+2026-08-31 * Movie Theater | Cinema
+    Expenses:Entertainment:Cinema   € 30.00
+    Assets:Cash                     € -30.00
+
+2026-09-01 * Employer | Monthly Salary
+    Assets:Checking                 € 2500.00
+    Income:Salary                   € -2500.00
+
+2026-09-01 * Landlord | Rent
+    Expenses:Housing:Rent           € 1200.00
+    Assets:Checking                 € -1200.00
+
+2026-09-02 * Supermarket | Groceries
+    Expenses:Food:Groceries         € 92.30
+    Assets:Checking                 € -92.30
+
+2026-09-03 * Internet Provider | Internet
+    Expenses:Utilities:Internet     € 60.00
+    Assets:Checking                 € -60.00
+
+2026-09-05 * ATM | Cash Withdrawal
+    Assets:Cash                     € 100.00
+    Assets:Checking                 € -100.00
+
+2026-09-06 * Client | Freelance
+    Assets:Checking                 € 600.00
+    Income:Freelance                € -600.00
+
+2026-09-08 * Bus Company | Monthly Pass
+    Expenses:Transport:Bus          € 45.00
+    Assets:Cash                     € -45.00
+
+2026-09-12 * Cinema | Movie Night
+    Expenses:Entertainment:Cinema   € 28.00
+    Assets:Checking                 € -28.00
+
+2026-09-15 * Power Company | Electricity
+    Expenses:Utilities:Electricity  € 75.00
+    Assets:Checking                 € -75.00
+
+2026-09-20 * Family | Birthday Gift
+    Assets:Checking                 € 150.00
+    Income:Gift                     € -150.00
+
+2026-09-28 * Credit Card Payment
+    Liabilities:Credit Card         € 200.00
+    Assets:Checking                 € -200.00
+
+2026-10-01 * Employer | Monthly Salary
+    Assets:Checking                 € 2600.00
+    Income:Salary                   € -2600.00
+
+2026-10-02 * Landlord | Rent
+    Expenses:Housing:Rent           € 1200.00
+    Assets:Checking                 € -1200.00
+
+2026-10-04 * Supermarket | Groceries
+    Expenses:Food                   € 92.40
+    Assets:Checking                 € -92.40
+
+2026-10-05 * Internet Provider | Internet
+    Expenses:Utilities:Internet     € 60.00
+    Assets:Checking                 € -60.00
+
+2026-10-06 * ATM | Cash Withdrawal
+    Assets:Cash                     € 80.00
+    Assets:Checking                 € -80.00
+
+2026-10-09 * Client A | Freelance
+    Assets:Checking                 € 450.00
+    Income:Freelance                € -450.00
+
+2026-10-10 * Bistro | Dinner
+    Expenses:Food:Dining            € 55.00
+    Assets:Cash                     € -55.00
+
+2026-10-12 * Public Transport | Bus tickets
+    Expenses:Transport:Bus          € 18.50
+    Assets:Cash                     € -18.50
+
+2026-10-15 * Pharmacy | Health supplies
+    Expenses:Health:Pharmacy        € 23.90
+    Assets:Checking                 € -23.90
+
+2026-10-20 * Credit Card Payment
+    Liabilities:Credit Card         € 250.00
+    Assets:Checking                 € -250.00
+
+2026-10-25 * Birthday Gift
+    Assets:Checking                 € 50.00
+    Income:Gift                     € -50.00
+
