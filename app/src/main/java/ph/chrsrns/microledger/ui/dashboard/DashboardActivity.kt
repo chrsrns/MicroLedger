@@ -120,24 +120,25 @@ fun DashboardScreenContent(
 ) {
     val content: @Composable (PaddingValues) -> Unit = { contentPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .alpha(if (hasFile) 1f else 0.38f),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .alpha(if (hasFile) 1f else 0.38f),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             NetWorthCard(netWorth, decimalSeparator)
             CashFlowCard(
                 cashFlow,
                 decimalSeparator,
-                onClick = if (hasFile) onCashFlowClick else ({})
+                onClick = if (hasFile) onCashFlowClick else ({}),
             )
             AccountBalancesCard(
                 accountBalances,
                 decimalSeparator,
-                onClick = if (hasFile) onAccountClick else ({})
+                onClick = if (hasFile) onAccountClick else ({}),
             )
         }
     }
@@ -158,11 +159,12 @@ fun DashboardScreenContent(
                         }
                     },
                     title = { Text(stringResource(R.string.dashboard)) },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
                 )
             },
             modifier = Modifier.imePadding(),
@@ -300,15 +302,16 @@ fun DashboardCard(
     content: @Composable () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable { onClick() }
-                } else {
-                    Modifier
-                }
-            ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .then(
+                    if (onClick != null) {
+                        Modifier.clickable { onClick() }
+                    } else {
+                        Modifier
+                    },
+                ),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -354,9 +357,10 @@ fun AmountRow(
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 2.dp),
     ) {
         Text(
             label,
@@ -403,46 +407,51 @@ fun NoDataText() {
 fun DashboardScreenPreview() {
     MicroLedgerTheme {
         DashboardScreenContent(
-            netWorth = NetWorthCalculator.NetWorthResult(
-                netWorth = BigDecimal("8450.00"),
-                totalAssets = BigDecimal("10000.00"),
-                totalLiabilities = BigDecimal("1550.00"),
-            ),
-            accountBalances = AccountBalanceCalculator.AccountBalancesResult(
-                assets = listOf(
-                    AccountBalanceCalculator.AccountBalance(
-                        "Assets:Checking",
-                        BigDecimal("3000.00"),
-                        "PHP",
-                        emptyList(),
-                    ),
-                    AccountBalanceCalculator.AccountBalance(
-                        "Assets:Savings",
-                        BigDecimal("7000.00"),
-                        "$",
-                        emptyList(),
-                    ),
+            netWorth =
+                NetWorthCalculator.NetWorthResult(
+                    netWorth = BigDecimal("8450.00"),
+                    totalAssets = BigDecimal("10000.00"),
+                    totalLiabilities = BigDecimal("1550.00"),
                 ),
-                liabilities = listOf(
-                    AccountBalanceCalculator.AccountBalance(
-                        "Liabilities:Credit Card",
-                        BigDecimal("1550.00"),
-                        "EUR",
-                        emptyList(),
-                    ),
+            accountBalances =
+                AccountBalanceCalculator.AccountBalancesResult(
+                    assets =
+                        listOf(
+                            AccountBalanceCalculator.AccountBalance(
+                                "Assets:Checking",
+                                BigDecimal("3000.00"),
+                                "PHP",
+                                emptyList(),
+                            ),
+                            AccountBalanceCalculator.AccountBalance(
+                                "Assets:Savings",
+                                BigDecimal("7000.00"),
+                                "$",
+                                emptyList(),
+                            ),
+                        ),
+                    liabilities =
+                        listOf(
+                            AccountBalanceCalculator.AccountBalance(
+                                "Liabilities:Credit Card",
+                                BigDecimal("1550.00"),
+                                "EUR",
+                                emptyList(),
+                            ),
+                        ),
+                    equity = emptyList(),
+                    income = emptyList(),
+                    expenses = emptyList(),
                 ),
-                equity = emptyList(),
-                income = emptyList(),
-                expenses = emptyList(),
-            ),
-            cashFlow = MonthlyCashFlowCalculator.CashFlowResult(
-                totalIncome = BigDecimal("5000.00"),
-                totalExpenses = BigDecimal("1635.00"),
-                netFlow = BigDecimal("3365.00"),
-                period = "2026-06",
-                incomeTransactions = emptyList(),
-                expenseTransactions = emptyList(),
-            ),
+            cashFlow =
+                MonthlyCashFlowCalculator.CashFlowResult(
+                    totalIncome = BigDecimal("5000.00"),
+                    totalExpenses = BigDecimal("1635.00"),
+                    netFlow = BigDecimal("3365.00"),
+                    period = "2026-06",
+                    incomeTransactions = emptyList(),
+                    expenseTransactions = emptyList(),
+                ),
             decimalSeparator = ".",
             onBackClick = {},
             onAccountClick = {},

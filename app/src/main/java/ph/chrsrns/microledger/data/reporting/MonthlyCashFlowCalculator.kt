@@ -107,7 +107,7 @@ class MonthlyCashFlowCalculator {
                 month,
                 decimalSeparator,
                 incomePrefixes,
-                expensesPrefixes
+                expensesPrefixes,
             )
         }
 

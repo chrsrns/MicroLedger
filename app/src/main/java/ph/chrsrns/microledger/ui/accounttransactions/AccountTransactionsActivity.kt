@@ -45,8 +45,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -101,7 +101,7 @@ fun AccountTransactionsScreen(
         if (index != null) {
             context.startActivity(
                 Intent(context, EditActivity::class.java)
-                    .putExtra(TRANSACTION_INDEX_KEY, index)
+                    .putExtra(TRANSACTION_INDEX_KEY, index),
             )
         }
     }
@@ -141,22 +141,24 @@ fun AccountTransactionsScreenContent(
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(
-                                if (selectedAccount != null) R.string.back else R.string.back
-                            ),
+                            contentDescription =
+                                stringResource(
+                                    if (selectedAccount != null) R.string.back else R.string.back,
+                                ),
                         )
                     }
                 },
                 title = {
                     Text(
-                        selectedAccount ?: stringResource(R.string.account_balances)
+                        selectedAccount ?: stringResource(R.string.account_balances),
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
             )
         },
         modifier = Modifier.imePadding(),
@@ -164,11 +166,12 @@ fun AccountTransactionsScreenContent(
         if (selectedAccount != null) {
             // Show transactions for selected account
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 if (accountTransactions.isNullOrEmpty()) {
                     Text(
@@ -193,11 +196,12 @@ fun AccountTransactionsScreenContent(
         } else {
             // Show account accordion list
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (accountBalances == null) {
@@ -272,10 +276,11 @@ fun AccountAccordionGroup(
     ) {
         Column {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded }
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { isExpanded = !isExpanded }
+                        .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -323,10 +328,11 @@ fun AccountRow(
     negate: Boolean = false,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onAccountClick(account.account, account.currency) }
-            .padding(16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onAccountClick(account.account, account.currency) }
+                .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -349,7 +355,7 @@ fun AccountRow(
             Text(
                 formatAmount(
                     if (negate) account.balance.negate() else account.balance,
-                    decimalSeparator
+                    decimalSeparator,
                 ),
                 modifier = Modifier.widthIn(min = 80.dp),
                 textAlign = TextAlign.End,
@@ -361,39 +367,41 @@ fun AccountRow(
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun AccountTransactionsScreenPreview() {
     MicroLedgerTheme {
         AccountTransactionsScreenContent(
-            accountBalances = AccountBalanceCalculator.AccountBalancesResult(
-                assets = listOf(
-                    AccountBalanceCalculator.AccountBalance(
-                        "Assets:Checking",
-                        BigDecimal("3000.00"),
-                        "$",
-                        emptyList(),
-                    ),
-                    AccountBalanceCalculator.AccountBalance(
-                        "Assets:Savings",
-                        BigDecimal("7000.00"),
-                        "$",
-                        emptyList(),
-                    ),
+            accountBalances =
+                AccountBalanceCalculator.AccountBalancesResult(
+                    assets =
+                        listOf(
+                            AccountBalanceCalculator.AccountBalance(
+                                "Assets:Checking",
+                                BigDecimal("3000.00"),
+                                "$",
+                                emptyList(),
+                            ),
+                            AccountBalanceCalculator.AccountBalance(
+                                "Assets:Savings",
+                                BigDecimal("7000.00"),
+                                "$",
+                                emptyList(),
+                            ),
+                        ),
+                    liabilities =
+                        listOf(
+                            AccountBalanceCalculator.AccountBalance(
+                                "Liabilities:Credit Card",
+                                BigDecimal("1550.00"),
+                                "$",
+                                emptyList(),
+                            ),
+                        ),
+                    equity = emptyList(),
+                    income = emptyList(),
+                    expenses = emptyList(),
                 ),
-                liabilities = listOf(
-                    AccountBalanceCalculator.AccountBalance(
-                        "Liabilities:Credit Card",
-                        BigDecimal("1550.00"),
-                        "$",
-                        emptyList(),
-                    ),
-                ),
-                equity = emptyList(),
-                income = emptyList(),
-                expenses = emptyList(),
-            ),
             accountTransactions = null,
             selectedAccount = null,
             decimalSeparator = ".",
@@ -411,20 +419,21 @@ fun AccountAccordionGroupPreview() {
     MicroLedgerTheme {
         AccountAccordionGroup(
             title = "Assets",
-            accounts = listOf(
-                AccountBalanceCalculator.AccountBalance(
-                    "Assets:Checking",
-                    BigDecimal("3000.00"),
-                    "$",
-                    emptyList(),
+            accounts =
+                listOf(
+                    AccountBalanceCalculator.AccountBalance(
+                        "Assets:Checking",
+                        BigDecimal("3000.00"),
+                        "$",
+                        emptyList(),
+                    ),
+                    AccountBalanceCalculator.AccountBalance(
+                        "Assets:Savings",
+                        BigDecimal("7000.00"),
+                        "$",
+                        emptyList(),
+                    ),
                 ),
-                AccountBalanceCalculator.AccountBalance(
-                    "Assets:Savings",
-                    BigDecimal("7000.00"),
-                    "$",
-                    emptyList(),
-                ),
-            ),
             onAccountClick = { _, _ -> },
             decimalSeparator = ".",
             initiallyExpanded = true,
@@ -438,116 +447,121 @@ fun AccountTransactionsScreenSelectedPreview() {
     MicroLedgerTheme {
         AccountTransactionsScreenContent(
             accountBalances = null,
-            accountTransactions = listOf(
-                Transaction(
-                    firstLine = 0,
-                    lastLine = 2,
-                    date = "2023-09-08",
-                    status = "*",
-                    code = null,
-                    payee = "Shop",
-                    note = "Groceries",
-                    postings = listOf(
-                        Posting(
-                            account = "Assets:Checking",
-                            amount = Amount("-2.19", "EUR", "-2.19 EUR"),
-                            cost = null,
-                            assertion = null,
-                            assertionCost = null,
-                            comment = null
-                        ),
-                        Posting(
-                            account = "Expenses:Groceries",
-                            amount = Amount("2.19", "EUR", "2.19 EUR"),
-                            cost = null,
-                            assertion = null,
-                            assertionCost = null,
-                            comment = null
-                        )
-                    )
+            accountTransactions =
+                listOf(
+                    Transaction(
+                        firstLine = 0,
+                        lastLine = 2,
+                        date = "2023-09-08",
+                        status = "*",
+                        code = null,
+                        payee = "Shop",
+                        note = "Groceries",
+                        postings =
+                            listOf(
+                                Posting(
+                                    account = "Assets:Checking",
+                                    amount = Amount("-2.19", "EUR", "-2.19 EUR"),
+                                    cost = null,
+                                    assertion = null,
+                                    assertionCost = null,
+                                    comment = null,
+                                ),
+                                Posting(
+                                    account = "Expenses:Groceries",
+                                    amount = Amount("2.19", "EUR", "2.19 EUR"),
+                                    cost = null,
+                                    assertion = null,
+                                    assertionCost = null,
+                                    comment = null,
+                                ),
+                            ),
+                    ),
+                    Transaction(
+                        firstLine = 3,
+                        lastLine = 5,
+                        date = "2023-09-09",
+                        status = "*",
+                        code = null,
+                        payee = "Bakery",
+                        note = "Bread",
+                        postings =
+                            listOf(
+                                Posting(
+                                    account = "Assets:Checking",
+                                    amount = Amount("-3.50", "EUR", "-3.50 EUR"),
+                                    cost = null,
+                                    assertion = null,
+                                    assertionCost = null,
+                                    comment = null,
+                                ),
+                                Posting(
+                                    account = "Expenses:Groceries",
+                                    amount = Amount("3.50", "EUR", "3.50 EUR"),
+                                    cost = null,
+                                    assertion = null,
+                                    assertionCost = null,
+                                    comment = null,
+                                ),
+                            ),
+                    ),
+                    Transaction(
+                        firstLine = 6,
+                        lastLine = 8,
+                        date = "2023-09-10",
+                        status = "*",
+                        code = null,
+                        payee = "Supermarket",
+                        note = "Weekly shop",
+                        postings =
+                            listOf(
+                                Posting(
+                                    account = "Assets:Checking",
+                                    amount = Amount("-45.20", "EUR", "-45.20 EUR"),
+                                    cost = null,
+                                    assertion = null,
+                                    assertionCost = null,
+                                    comment = null,
+                                ),
+                                Posting(
+                                    account = "Expenses:Groceries",
+                                    amount = Amount("45.20", "EUR", "45.20 EUR"),
+                                    cost = null,
+                                    assertion = null,
+                                    assertionCost = null,
+                                    comment = null,
+                                ),
+                            ),
+                    ),
+                    Transaction(
+                        firstLine = 9,
+                        lastLine = 11,
+                        date = "2023-09-11",
+                        status = "*",
+                        code = null,
+                        payee = "Farmer's Market",
+                        note = "Vegetables",
+                        postings =
+                            listOf(
+                                Posting(
+                                    account = "Assets:Checking",
+                                    amount = Amount("-12.00", "EUR", "-12.00 EUR"),
+                                    cost = null,
+                                    assertion = null,
+                                    assertionCost = null,
+                                    comment = null,
+                                ),
+                                Posting(
+                                    account = "Expenses:Groceries",
+                                    amount = Amount("12.00", "EUR", "12.00 EUR"),
+                                    cost = null,
+                                    assertion = null,
+                                    assertionCost = null,
+                                    comment = null,
+                                ),
+                            ),
+                    ),
                 ),
-                Transaction(
-                    firstLine = 3,
-                    lastLine = 5,
-                    date = "2023-09-09",
-                    status = "*",
-                    code = null,
-                    payee = "Bakery",
-                    note = "Bread",
-                    postings = listOf(
-                        Posting(
-                            account = "Assets:Checking",
-                            amount = Amount("-3.50", "EUR", "-3.50 EUR"),
-                            cost = null,
-                            assertion = null,
-                            assertionCost = null,
-                            comment = null
-                        ),
-                        Posting(
-                            account = "Expenses:Groceries",
-                            amount = Amount("3.50", "EUR", "3.50 EUR"),
-                            cost = null,
-                            assertion = null,
-                            assertionCost = null,
-                            comment = null
-                        )
-                    )
-                ),
-                Transaction(
-                    firstLine = 6,
-                    lastLine = 8,
-                    date = "2023-09-10",
-                    status = "*",
-                    code = null,
-                    payee = "Supermarket",
-                    note = "Weekly shop",
-                    postings = listOf(
-                        Posting(
-                            account = "Assets:Checking",
-                            amount = Amount("-45.20", "EUR", "-45.20 EUR"),
-                            cost = null,
-                            assertion = null,
-                            assertionCost = null,
-                            comment = null
-                        ),
-                        Posting(
-                            account = "Expenses:Groceries",
-                            amount = Amount("45.20", "EUR", "45.20 EUR"),
-                            cost = null,
-                            assertion = null,
-                            assertionCost = null,
-                            comment = null
-                        )
-                    )
-                ),
-                Transaction(
-                    firstLine = 9,
-                    lastLine = 11,
-                    date = "2023-09-11",
-                    status = "*",
-                    code = null,
-                    payee = "Farmer's Market",
-                    note = "Vegetables",
-                    postings = listOf(
-                        Posting(
-                            account = "Assets:Checking",
-                            amount = Amount("-12.00", "EUR", "-12.00 EUR"),
-                            cost = null,
-                            assertion = null,
-                            assertionCost = null,
-                            comment = null
-                        ),
-                        Posting(
-                            account = "Expenses:Groceries",
-                            amount = Amount("12.00", "EUR", "12.00 EUR"),
-                            cost = null,
-                            assertion = null,
-                            assertionCost = null,
-                            comment = null
-                        )
-                    )
-                )
-            ),
             selectedAccount = "Expenses:Groceries",
             decimalSeparator = ".",
             onBackClick = {},

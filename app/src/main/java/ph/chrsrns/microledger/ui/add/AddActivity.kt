@@ -79,8 +79,8 @@ class AddActivity : ComponentActivity() {
                 startActivity(
                     Intent(
                         context,
-                        MainActivity::class.java
-                    ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        MainActivity::class.java,
+                    ).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP),
                 )
             }
             val saving by addViewModel.saving.observeAsState()

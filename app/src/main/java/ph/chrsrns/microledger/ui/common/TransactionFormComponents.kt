@@ -175,7 +175,7 @@ fun TransactionForm(
                     StatusSelector(
                         status,
                         { viewModel.setStatus(it) },
-                        Modifier.width((3 * 16).sp.toDp())
+                        Modifier.width((3 * 16).sp.toDp()),
                     )
                     val code by viewModel.code.observeAsState()
                     CodeField(
@@ -411,7 +411,7 @@ fun DateSelector(
             Text(
                 stringResource(R.string.date),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         },
         colors =
@@ -506,7 +506,7 @@ fun CodeField(
                 Text(
                     stringResource(R.string.code),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             },
         )
@@ -587,7 +587,7 @@ fun PostingRow(
         with(LocalDensity.current) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 if (posting.isComment()) {
                     CommentField(posting.comment ?: "", onCommentChange, Modifier.weight(1.0f))
@@ -596,7 +596,7 @@ fun PostingRow(
                         posting.account ?: "",
                         accounts,
                         onAccountChange,
-                        Modifier.weight(1.0f)
+                        Modifier.weight(1.0f),
                     )
                 }
                 PostingFieldSelector(
@@ -611,7 +611,7 @@ fun PostingRow(
                 IconButton(onClick = onRemovePosting) {
                     Icon(
                         Icons.Default.RemoveCircleOutline,
-                        contentDescription = stringResource(R.string.remove_posting)
+                        contentDescription = stringResource(R.string.remove_posting),
                     )
                 }
             }
@@ -880,7 +880,7 @@ fun CommentField(
             Text(
                 stringResource(R.string.comment),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         },
         modifier = modifier,
@@ -955,7 +955,7 @@ fun CurrencyAndAmountFields(
                 showAmountHint,
                 unbalancedAmount,
                 onAmountChange,
-                Modifier.weight(1f)
+                Modifier.weight(1f),
             )
 
             if (currencyEnabled && !currencyBeforeAmount) {
@@ -1017,7 +1017,7 @@ fun AmountField(
                 Text(
                     stringResource(R.string.amount),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         },

@@ -42,9 +42,9 @@ data class Transaction(
                         postingWidth,
                         currencyBeforeAmount,
                         currencyAmountSpacing,
-                        currencyEnabled
+                        currencyEnabled,
                     )
-                }\n"
+                }\n",
             )
         }
         result.append('\n')

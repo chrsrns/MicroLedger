@@ -120,7 +120,7 @@ fun CashFlowTransactionsScreen(
         if (index != null) {
             context.startActivity(
                 Intent(context, EditActivity::class.java)
-                    .putExtra(TRANSACTION_INDEX_KEY, index)
+                    .putExtra(TRANSACTION_INDEX_KEY, index),
             )
         }
     }
@@ -368,9 +368,7 @@ fun AmountSummaryRow(
 }
 
 @Composable
-fun CashFlowGraphCard(
-    monthlyHistory: List<MonthlyCashFlowCalculator.CashFlowResult>?,
-) {
+fun CashFlowGraphCard(monthlyHistory: List<MonthlyCashFlowCalculator.CashFlowResult>?) {
     val incomeColor = MaterialTheme.colorScheme.primary
     val expenseColor = MaterialTheme.colorScheme.error
     val textColor = LocalContentColor.current
@@ -468,7 +466,11 @@ private fun DrawScope.drawBarChart(
         )
 
         // Derive month index from the period string ("YYYY-MM").
-        val monthIndex = result.period.substringAfter("-").toIntOrNull()?.minus(1) ?: index
+        val monthIndex =
+            result.period
+                .substringAfter("-")
+                .toIntOrNull()
+                ?.minus(1) ?: index
         val label = monthLabels.getOrElse(monthIndex) { "?" }
         val labelStyle =
             TextStyle(
