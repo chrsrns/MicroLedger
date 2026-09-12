@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
+import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import java.util.Calendar
 import javax.inject.Inject
@@ -115,4 +116,7 @@ constructor(
             _selectedMonth.value = month + 1
         }
     }
+
+    fun getTransactionIndex(transaction: Transaction): Int? =
+        ledgerRepository.transactions.value?.indexOf(transaction)?.takeIf { it >= 0 }
 }

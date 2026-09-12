@@ -20,10 +20,11 @@ fun parseQuantity(
     quantity: String,
     decimalSeparator: String,
 ): BigDecimal {
+    val separator = decimalSeparator.firstOrNull() ?: '.'
     val cleaned =
         quantity
-            .replace(Regex("[^-0-9$decimalSeparator]"), "")
-            .replace(decimalSeparator, ".")
+            .filter { it == '-' || it.isDigit() || it == separator }
+            .replace(separator, '.')
     return try {
         BigDecimal(cleaned)
     } catch (e: NumberFormatException) {

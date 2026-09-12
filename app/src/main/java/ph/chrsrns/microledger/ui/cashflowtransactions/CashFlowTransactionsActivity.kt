@@ -1,5 +1,6 @@
 package ph.chrsrns.microledger.ui.cashflowtransactions
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -48,6 +49,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextMeasurer
@@ -66,6 +68,8 @@ import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
+import ph.chrsrns.microledger.ui.common.TRANSACTION_INDEX_KEY
+import ph.chrsrns.microledger.ui.edit.EditActivity
 import ph.chrsrns.microledger.ui.main.TransactionCard
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
 import ph.chrsrns.microledger.ui.util.amountColor
@@ -109,6 +113,17 @@ fun CashFlowTransactionsScreen(
             .get(java.util.Calendar.MONTH) + 1,
     )
     val decimalSeparator by cashFlowTransactionsViewModel.decimalSeparator.observeAsState(".")
+    val context = LocalContext.current
+
+    val onTransactionClick = { transaction: Transaction ->
+        val index = cashFlowTransactionsViewModel.getTransactionIndex(transaction)
+        if (index != null) {
+            context.startActivity(
+                Intent(context, EditActivity::class.java)
+                    .putExtra(TRANSACTION_INDEX_KEY, index)
+            )
+        }
+    }
 
     CashFlowTransactionsScreenContent(
         cashFlow = cashFlow,
@@ -120,6 +135,7 @@ fun CashFlowTransactionsScreen(
         onPreviousMonth = cashFlowTransactionsViewModel::previousMonth,
         onNextMonth = cashFlowTransactionsViewModel::nextMonth,
         onSelectMonth = cashFlowTransactionsViewModel::selectMonth,
+        onTransactionClick = onTransactionClick,
     )
 }
 
@@ -134,6 +150,7 @@ fun CashFlowTransactionsScreenContent(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSelectMonth: (Int, Int) -> Unit,
+    onTransactionClick: (Transaction) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -182,11 +199,13 @@ fun CashFlowTransactionsScreenContent(
                 title = stringResource(R.string.top_income),
                 transactions = cashFlow?.incomeTransactions ?: emptyList(),
                 emptyMessage = stringResource(R.string.no_income_transactions),
+                onTransactionClick = onTransactionClick,
             )
             RankingCard(
                 title = stringResource(R.string.top_expenses),
                 transactions = cashFlow?.expenseTransactions ?: emptyList(),
                 emptyMessage = stringResource(R.string.no_expense_transactions),
+                onTransactionClick = onTransactionClick,
             )
         }
     }
@@ -488,6 +507,7 @@ fun RankingCard(
     title: String,
     transactions: List<Transaction>,
     emptyMessage: String,
+    onTransactionClick: (Transaction) -> Unit = {},
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -511,7 +531,7 @@ fun RankingCard(
                         TransactionCard(
                             transaction = transaction,
                             selected = false,
-                            onClick = {},
+                            onClick = { onTransactionClick(transaction) },
                         )
                     }
                 }
