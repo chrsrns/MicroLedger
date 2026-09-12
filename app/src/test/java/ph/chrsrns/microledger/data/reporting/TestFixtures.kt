@@ -4,7 +4,7 @@ import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
 
-/**
+/*
  * Test fixtures and factory functions for creating test data.
  * These reduce boilerplate in calculator tests.
  */
