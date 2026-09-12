@@ -23,6 +23,11 @@ class AccountTransactionsViewModel
         private val accountBalanceCalculator = AccountBalanceCalculator()
 
         val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
+        val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
+        val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
+        val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
+        val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
+        val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
 
         private val _selectedAccount = MutableLiveData<String?>()
         val selectedAccount: LiveData<String?> = _selectedAccount
