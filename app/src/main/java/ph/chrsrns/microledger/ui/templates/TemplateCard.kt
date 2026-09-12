@@ -10,7 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -62,8 +62,9 @@ fun TemplateCard(
                         2 -> "${accounts[0]} → ${accounts[1]}"
                         else ->
                             "${accounts[0]} → ${accounts[1]} " +
-                                stringResource(
-                                    R.string.template_accounts_more,
+                                pluralStringResource(
+                                    R.plurals.template_accounts_more,
+                                    accounts.size - 2,
                                     accounts.size - 2,
                                 )
                     }
