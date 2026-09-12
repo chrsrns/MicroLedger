@@ -16,7 +16,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
@@ -285,6 +284,10 @@ private fun SemanticsNodeInteraction.assertTextColor(expected: Color): Semantics
             if (action != null) {
                 action(results)
             }
-            results.firstOrNull()?.layoutInput?.style?.color == expected
+            results
+                .firstOrNull()
+                ?.layoutInput
+                ?.style
+                ?.color == expected
         },
     )

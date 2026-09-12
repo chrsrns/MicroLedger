@@ -119,9 +119,7 @@ fun TransactionCard(
 }
 
 @Composable
-private fun TransactionHeader(
-    transaction: Transaction,
-) {
+private fun TransactionHeader(transaction: Transaction) {
     val statusLabel = statusChipLabel(transaction.status)
     val mutedColor = LocalContentColor.current.copy(alpha = 0.6f)
 

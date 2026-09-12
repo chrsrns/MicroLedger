@@ -112,6 +112,7 @@ fun accountTypeColor(
     val accountName = account?.trim() ?: return null
     if (accountName.isBlank()) return null
     val isDark = isSystemInDarkTheme()
+
     fun matches(prefixes: List<String>) = prefixes.any { accountName.startsWith(it, ignoreCase = true) }
     return when {
         matches(assets) -> if (isDark) AccountAssetsColorDark else AccountAssetsColorLight
