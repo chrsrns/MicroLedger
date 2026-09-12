@@ -93,4 +93,7 @@ constructor(
         _selectedAccount.value = null
         _selectedCurrency.value = null
     }
+
+    fun getTransactionIndex(transaction: Transaction): Int? =
+        ledgerRepository.transactions.value?.indexOf(transaction)?.takeIf { it >= 0 }
 }
