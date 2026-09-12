@@ -151,7 +151,7 @@ class TemplateFormActivity : ComponentActivity() {
                                     if (isEditing && templateId != null) {
                                         templateFormViewModel.updateTemplate(
                                             templateId,
-                                            templateName
+                                            templateName,
                                         ) {
                                             scope.launch(Main) { navigateBackToTemplates() }
                                         }
@@ -276,7 +276,7 @@ fun TemplateForm(
         onPostingAssertionCostCurrencyChange = { i, it ->
             viewModel.setAssertionCostCurrency(
                 i,
-                it
+                it,
             )
         },
         onPostingAssertionCostAmountChange = { i, it -> viewModel.setAssertionCostAmount(i, it) },
@@ -352,9 +352,10 @@ fun TemplateForm(
                 value = templateName,
                 onValueChange = onTemplateNameChange,
                 label = { Text(stringResource(R.string.template_name)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
                 singleLine = true,
             )
 
@@ -367,9 +368,11 @@ fun TemplateForm(
                 ) {
                     StatusSelector(status, onStatusChange, Modifier.width((3 * 16).sp.toDp()))
                     CodeField(
-                        code, onCodeChange, Modifier
+                        code,
+                        onCodeChange,
+                        Modifier
                             .weight(0.5f)
-                            .width((16 * 16).sp.toDp())
+                            .width((16 * 16).sp.toDp()),
                     )
                     PayeeSelector(
                         payee,
@@ -377,7 +380,7 @@ fun TemplateForm(
                         onPayeeChange,
                         Modifier
                             .weight(0.5f)
-                            .width((16 * 16).sp.toDp())
+                            .width((16 * 16).sp.toDp()),
                     )
                     NoteSelector(
                         note,
@@ -385,7 +388,7 @@ fun TemplateForm(
                         onNoteChange,
                         Modifier
                             .weight(0.75f)
-                            .width((16 * 16).sp.toDp())
+                            .width((16 * 16).sp.toDp()),
                     )
                 }
                 postings?.forEachIndexed { i, posting ->
@@ -415,7 +418,7 @@ fun TemplateForm(
                         onAssertionCostCurrencyChange = {
                             onPostingAssertionCostCurrencyChange(
                                 i,
-                                it
+                                it,
                             )
                         },
                         onAssertionCostAmountChange = { onPostingAssertionCostAmountChange(i, it) },

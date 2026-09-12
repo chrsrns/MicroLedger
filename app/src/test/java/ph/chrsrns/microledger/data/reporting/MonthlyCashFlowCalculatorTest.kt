@@ -1082,14 +1082,15 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(
-            transactions,
-            2024,
-            1,
-            ".",
-            incomePrefixes = listOf("MyIncome"),
-            expensesPrefixes = listOf("MyExpenses"),
-        )
+        val result =
+            calculator.calculateForMonth(
+                transactions,
+                2024,
+                1,
+                ".",
+                incomePrefixes = listOf("MyIncome"),
+                expensesPrefixes = listOf("MyExpenses"),
+            )
 
         assertEquals("2024-01", result.period)
         assertEquals(BigDecimal("3000.00"), result.totalIncome)
@@ -1115,13 +1116,14 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(
-            transactions,
-            2024,
-            1,
-            ".",
-            incomePrefixes = listOf("Income", "Einkommen"),
-        )
+        val result =
+            calculator.calculateForMonth(
+                transactions,
+                2024,
+                1,
+                ".",
+                incomePrefixes = listOf("Income", "Einkommen"),
+            )
 
         assertEquals(BigDecimal("2500.00"), result.totalIncome)
         assertEquals(BigDecimal.ZERO, result.totalExpenses)

@@ -564,15 +564,16 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(
-            transactions,
-            ".",
-            assetsPrefixes = listOf("MyAssets"),
-            liabilitiesPrefixes = listOf("MyLiabilities"),
-            equityPrefixes = listOf("MyEquity"),
-            incomePrefixes = listOf("MyIncome"),
-            expensesPrefixes = listOf("MyExpenses"),
-        )
+        val result =
+            calculator.calculate(
+                transactions,
+                ".",
+                assetsPrefixes = listOf("MyAssets"),
+                liabilitiesPrefixes = listOf("MyLiabilities"),
+                equityPrefixes = listOf("MyEquity"),
+                incomePrefixes = listOf("MyIncome"),
+                expensesPrefixes = listOf("MyExpenses"),
+            )
 
         assertEquals(1, result.assets.size)
         assertEquals("MyAssets:Checking", result.assets[0].account)
@@ -613,11 +614,12 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(
-            transactions,
-            ".",
-            assetsPrefixes = listOf("Assets", "Aktiva"),
-        )
+        val result =
+            calculator.calculate(
+                transactions,
+                ".",
+                assetsPrefixes = listOf("Assets", "Aktiva"),
+            )
 
         assertEquals(2, result.assets.size)
         assertEquals("Aktiva:Savings", result.assets[0].account)
@@ -642,11 +644,12 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(
-            transactions,
-            ".",
-            assetsPrefixes = listOf("Assets"),
-        )
+        val result =
+            calculator.calculate(
+                transactions,
+                ".",
+                assetsPrefixes = listOf("Assets"),
+            )
 
         assertEquals(0, result.assets.size)
     }

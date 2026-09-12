@@ -102,40 +102,40 @@ fun PreferencesScreen(
 ) {
     val fileUri by preferencesViewModel.fileUri.observeAsState()
     val transactionDefaultElements by preferencesViewModel.transactionDefaultElements.observeAsState(
-        emptyList()
+        emptyList(),
     )
     val transactionStatusPresentByDefault by preferencesViewModel.transactionStatusPresentByDefault.observeAsState(
-        true
+        true,
     )
     val transactionCodePresentByDefault by preferencesViewModel.transactionCodePresentByDefault.observeAsState(
-        false
+        false,
     )
     val transactionPayeePresentByDefault by preferencesViewModel.transactionPayeePresentByDefault.observeAsState(
-        true
+        true,
     )
     val transactionNotePresentByDefault by preferencesViewModel.transactionNotePresentByDefault.observeAsState(
-        true
+        true,
     )
     val transactionCurrenciesPresentByDefault by preferencesViewModel.transactionCurrenciesPresentByDefault.observeAsState(
-        true
+        true,
     )
     val postingDefaultElements by preferencesViewModel.postingDefaultElements.observeAsState(
-        emptyList()
+        emptyList(),
     )
     val postingAmountPresentByDefault by preferencesViewModel.postingAmountPresentByDefault.observeAsState(
-        true
+        true,
     )
     val postingCostPresentByDefault by preferencesViewModel.postingCostPresentByDefault.observeAsState(
-        false
+        false,
     )
     val postingAssertionPresentByDefault by preferencesViewModel.postingAssertionPresentByDefault.observeAsState(
-        false
+        false,
     )
     val postingAssertionCostPresentByDefault by preferencesViewModel.postingAssertionCostPresentByDefault.observeAsState(
-        false
+        false,
     )
     val postingCommentPresentByDefault by preferencesViewModel.postingCommentPresentByDefault.observeAsState(
-        false
+        false,
     )
     val defaultCurrency by preferencesViewModel.defaultCurrency.observeAsState("€")
     val postingWidth by preferencesViewModel.postingWidth.observeAsState(72)
@@ -143,7 +143,7 @@ fun PreferencesScreen(
     val decimalSeparator by preferencesViewModel.decimalSeparator.observeAsState(".")
     val currencyBeforeAmount by preferencesViewModel.currencyBeforeAmount.observeAsState(true)
     val currencyAmountSpacing by preferencesViewModel.spacingBetweenCurrencyAndAmount.observeAsState(
-        true
+        true,
     )
     val assetsPrefixes by preferencesViewModel.assetsPrefixes.observeAsState(listOf("Assets"))
     val liabilitiesPrefixes by preferencesViewModel.liabilitiesPrefixes.observeAsState(listOf("Liabilities"))
@@ -1005,9 +1005,10 @@ fun PreferencesScreenPreview() {
 fun PrefixListDialogPreview() {
     MicroLedgerTheme {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
             contentAlignment = Alignment.Center,
         ) {
             PrefixListDialogContent(
@@ -1026,9 +1027,10 @@ fun PrefixListDialogPreview() {
 fun PrefixListDialogSingleItemPreview() {
     MicroLedgerTheme {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
             contentAlignment = Alignment.Center,
         ) {
             PrefixListDialogContent(

@@ -27,9 +27,10 @@ fun TemplateCard(
     onLongClick: (() -> Unit)? = null,
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
@@ -59,10 +60,11 @@ fun TemplateCard(
                     when (accounts.size) {
                         1 -> accounts[0]
                         2 -> "${accounts[0]} → ${accounts[1]}"
-                        else -> "${accounts[0]} → ${accounts[1]} " +
+                        else ->
+                            "${accounts[0]} → ${accounts[1]} " +
                                 stringResource(
                                     R.string.template_accounts_more,
-                                    accounts.size - 2
+                                    accounts.size - 2,
                                 )
                     }
                 Text(
@@ -132,4 +134,3 @@ fun TemplateCardComplexPreview() {
         )
     }
 }
-

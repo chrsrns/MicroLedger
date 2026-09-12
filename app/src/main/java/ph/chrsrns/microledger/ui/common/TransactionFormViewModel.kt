@@ -72,12 +72,13 @@ abstract class TransactionFormViewModel(
                 note.switchMap { note ->
                     val listToSearch: Set<String> = if (note == null) payees + notes else payees
                     payee.map { search ->
-                        listToSearch.filter {
-                            it.contains(
-                                (search ?: ""),
-                                ignoreCase = true
-                            )
-                        }.sorted()
+                        listToSearch
+                            .filter {
+                                it.contains(
+                                    (search ?: ""),
+                                    ignoreCase = true,
+                                )
+                            }.sorted()
                     }
                 }
             }
@@ -89,12 +90,13 @@ abstract class TransactionFormViewModel(
                 payee.switchMap { payee ->
                     val listToSearch: Set<String> = if (payee == null) notes + payees else notes
                     note.map { search ->
-                        listToSearch.filter {
-                            it.contains(
-                                (search ?: ""),
-                                ignoreCase = true
-                            )
-                        }.sorted()
+                        listToSearch
+                            .filter {
+                                it.contains(
+                                    (search ?: ""),
+                                    ignoreCase = true,
+                                )
+                            }.sorted()
                     }
                 }
             }
@@ -163,10 +165,12 @@ abstract class TransactionFormViewModel(
                         .dropLast(1)
                         .filter { !it.isComment() }
                         .filter {
-                            (it.amount?.quantity ?: "") == "" && (it.assertion?.quantity
-                                ?: "") == ""
-                        }
-                        .size > 1
+                            (it.amount?.quantity ?: "") == "" &&
+                                (
+                                    it.assertion?.quantity
+                                        ?: ""
+                                ) == ""
+                        }.size > 1
                 ) {
                     return@map false
                 }
@@ -210,7 +214,7 @@ abstract class TransactionFormViewModel(
             postingWidth,
             currencyBeforeAmount,
             currencyAmountSpacing,
-            currencyEnabled.value ?: true
+            currencyEnabled.value ?: true,
         )
     }
 
@@ -277,15 +281,15 @@ abstract class TransactionFormViewModel(
         setNote(transaction.note)
         if (
             (
-                    preferencesDataSource.getTransactionPayeePresentByDefault() &&
-                            !preferencesDataSource.getTransactionNotePresentByDefault() &&
-                            transaction.payee == null
-                    ) ||
+                preferencesDataSource.getTransactionPayeePresentByDefault() &&
+                    !preferencesDataSource.getTransactionNotePresentByDefault() &&
+                    transaction.payee == null
+            ) ||
             (
-                    preferencesDataSource.getTransactionNotePresentByDefault() &&
-                            !preferencesDataSource.getTransactionPayeePresentByDefault() &&
-                            transaction.note == null
-                    )
+                preferencesDataSource.getTransactionNotePresentByDefault() &&
+                    !preferencesDataSource.getTransactionPayeePresentByDefault() &&
+                    transaction.note == null
+            )
         ) {
             setPayee(transaction.note)
             setNote(transaction.payee)
@@ -295,9 +299,9 @@ abstract class TransactionFormViewModel(
             transaction.postings
                 .map {
                     (it.amount?.currency ?: "") != "" ||
-                            (it.cost?.amount?.currency ?: "") != "" ||
-                            (it.assertion?.currency ?: "") != "" ||
-                            (it.assertionCost?.amount?.currency ?: "") != ""
+                        (it.cost?.amount?.currency ?: "") != "" ||
+                        (it.assertion?.currency ?: "") != "" ||
+                        (it.assertionCost?.amount?.currency ?: "") != ""
                 }.reduce { acc, bool -> acc || bool }
     }
 
@@ -594,15 +598,23 @@ abstract class TransactionFormViewModel(
         Posting(
             "",
             if (preferencesDataSource.getPostingAmountPresentByDefault()) defaultAmount() else null,
-            if (preferencesDataSource.getPostingCostPresentByDefault()) Cost(
-                defaultAmount(),
-                CostType.UNIT
-            ) else null,
+            if (preferencesDataSource.getPostingCostPresentByDefault()) {
+                Cost(
+                    defaultAmount(),
+                    CostType.UNIT,
+                )
+            } else {
+                null
+            },
             if (preferencesDataSource.getPostingAssertionPresentByDefault()) defaultAmount() else null,
-            if (preferencesDataSource.getPostingAssertionCostPresentByDefault()) Cost(
-                defaultAmount(),
-                CostType.UNIT
-            ) else null,
+            if (preferencesDataSource.getPostingAssertionCostPresentByDefault()) {
+                Cost(
+                    defaultAmount(),
+                    CostType.UNIT,
+                )
+            } else {
+                null
+            },
             if (preferencesDataSource.getPostingCommentPresentByDefault()) "" else null,
         )
 }

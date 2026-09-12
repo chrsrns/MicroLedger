@@ -225,7 +225,9 @@ fun TemplatesScreenContent(
 
         Scaffold(
             topBar = {
-                if (showTopBar) TemplatesBar(onBackClick) else {
+                if (showTopBar) {
+                    TemplatesBar(onBackClick)
+                } else {
                 }
             },
             floatingActionButton = {

@@ -14,86 +14,91 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AccountTransactionsViewModel
-@Inject
-constructor(
-    application: Application,
-    private val ledgerRepository: LedgerRepository,
-    private val preferencesDataSource: PreferencesDataSource,
-) : AndroidViewModel(application) {
-    private val accountBalanceCalculator = AccountBalanceCalculator()
+    @Inject
+    constructor(
+        application: Application,
+        private val ledgerRepository: LedgerRepository,
+        private val preferencesDataSource: PreferencesDataSource,
+    ) : AndroidViewModel(application) {
+        private val accountBalanceCalculator = AccountBalanceCalculator()
 
-    val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
+        val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
 
-    private val _selectedAccount = MutableLiveData<String?>()
-    val selectedAccount: LiveData<String?> = _selectedAccount
+        private val _selectedAccount = MutableLiveData<String?>()
+        val selectedAccount: LiveData<String?> = _selectedAccount
 
-    private val _selectedCurrency = MutableLiveData<String?>()
-    val selectedCurrency: LiveData<String?> = _selectedCurrency
+        private val _selectedCurrency = MutableLiveData<String?>()
+        val selectedCurrency: LiveData<String?> = _selectedCurrency
 
-    val accountBalances: LiveData<AccountBalanceCalculator.AccountBalancesResult> =
-        MediatorLiveData<AccountBalanceCalculator.AccountBalancesResult>().apply {
-            fun compute() {
-                val transactions = ledgerRepository.transactions.value ?: return
-                value =
-                    accountBalanceCalculator.calculate(
-                        transactions,
-                        preferencesDataSource.getDecimalSeparator(),
-                        preferencesDataSource.getAssetsPrefixes(),
-                        preferencesDataSource.getLiabilitiesPrefixes(),
-                        preferencesDataSource.getEquityPrefixes(),
-                        preferencesDataSource.getIncomePrefixes(),
-                        preferencesDataSource.getExpensesPrefixes(),
-                    )
+        val accountBalances: LiveData<AccountBalanceCalculator.AccountBalancesResult> =
+            MediatorLiveData<AccountBalanceCalculator.AccountBalancesResult>().apply {
+                fun compute() {
+                    val transactions = ledgerRepository.transactions.value ?: return
+                    value =
+                        accountBalanceCalculator.calculate(
+                            transactions,
+                            preferencesDataSource.getDecimalSeparator(),
+                            preferencesDataSource.getAssetsPrefixes(),
+                            preferencesDataSource.getLiabilitiesPrefixes(),
+                            preferencesDataSource.getEquityPrefixes(),
+                            preferencesDataSource.getIncomePrefixes(),
+                            preferencesDataSource.getExpensesPrefixes(),
+                        )
+                }
+                addSource(ledgerRepository.transactions) { compute() }
+                addSource(preferencesDataSource.assetsPrefixes) { compute() }
+                addSource(preferencesDataSource.liabilitiesPrefixes) { compute() }
+                addSource(preferencesDataSource.equityPrefixes) { compute() }
+                addSource(preferencesDataSource.incomePrefixes) { compute() }
+                addSource(preferencesDataSource.expensesPrefixes) { compute() }
             }
-            addSource(ledgerRepository.transactions) { compute() }
-            addSource(preferencesDataSource.assetsPrefixes) { compute() }
-            addSource(preferencesDataSource.liabilitiesPrefixes) { compute() }
-            addSource(preferencesDataSource.equityPrefixes) { compute() }
-            addSource(preferencesDataSource.incomePrefixes) { compute() }
-            addSource(preferencesDataSource.expensesPrefixes) { compute() }
-        }
 
-    val accountTransactions: LiveData<List<Transaction>> =
-        MediatorLiveData<List<Transaction>>().apply {
-            fun computeTransactions() {
-                val account = _selectedAccount.value
-                val currency = _selectedCurrency.value
-                val balances = accountBalances.value
-                value =
-                    if (account != null && balances != null) {
-                        val allBalances =
-                            balances.assets + balances.liabilities + balances.equity +
+        val accountTransactions: LiveData<List<Transaction>> =
+            MediatorLiveData<List<Transaction>>().apply {
+                fun computeTransactions() {
+                    val account = _selectedAccount.value
+                    val currency = _selectedCurrency.value
+                    val balances = accountBalances.value
+                    value =
+                        if (account != null && balances != null) {
+                            val allBalances =
+                                balances.assets + balances.liabilities + balances.equity +
                                     balances.income + balances.expenses
-                        if (currency != null) {
-                            allBalances
-                                .find { it.account == account && it.currency == currency }
-                                ?.transactions ?: emptyList()
+                            if (currency != null) {
+                                allBalances
+                                    .find { it.account == account && it.currency == currency }
+                                    ?.transactions ?: emptyList()
+                            } else {
+                                allBalances
+                                    .filter { it.account == account }
+                                    .flatMap { it.transactions }
+                                    .distinct()
+                                    .sortedBy { it.firstLine }
+                            }
                         } else {
-                            allBalances
-                                .filter { it.account == account }
-                                .flatMap { it.transactions }
-                                .distinct()
-                                .sortedBy { it.firstLine }
+                            emptyList()
                         }
-                    } else {
-                        emptyList()
-                    }
+                }
+                addSource(accountBalances) { computeTransactions() }
+                addSource(_selectedAccount) { computeTransactions() }
+                addSource(_selectedCurrency) { computeTransactions() }
             }
-            addSource(accountBalances) { computeTransactions() }
-            addSource(_selectedAccount) { computeTransactions() }
-            addSource(_selectedCurrency) { computeTransactions() }
+
+        fun selectAccount(
+            account: String,
+            currency: String? = null,
+        ) {
+            _selectedAccount.value = account
+            _selectedCurrency.value = currency
         }
 
-    fun selectAccount(account: String, currency: String? = null) {
-        _selectedAccount.value = account
-        _selectedCurrency.value = currency
-    }
+        fun clearSelectedAccount() {
+            _selectedAccount.value = null
+            _selectedCurrency.value = null
+        }
 
-    fun clearSelectedAccount() {
-        _selectedAccount.value = null
-        _selectedCurrency.value = null
+        fun getTransactionIndex(transaction: Transaction): Int? =
+            ledgerRepository.transactions.value
+                ?.indexOf(transaction)
+                ?.takeIf { it >= 0 }
     }
-
-    fun getTransactionIndex(transaction: Transaction): Int? =
-        ledgerRepository.transactions.value?.indexOf(transaction)?.takeIf { it >= 0 }
-}

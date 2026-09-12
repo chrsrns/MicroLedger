@@ -473,12 +473,13 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(
-            transactions,
-            ".",
-            assetsPrefixes = listOf("MyAssets"),
-            liabilitiesPrefixes = listOf("MyLiabilities"),
-        )
+        val result =
+            calculator.calculate(
+                transactions,
+                ".",
+                assetsPrefixes = listOf("MyAssets"),
+                liabilitiesPrefixes = listOf("MyLiabilities"),
+            )
 
         assertEquals(BigDecimal("3000.00"), result.totalAssets)
         assertEquals(BigDecimal("800.00"), result.totalLiabilities)
@@ -503,11 +504,12 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(
-            transactions,
-            ".",
-            assetsPrefixes = listOf("Assets", "Aktiva"),
-        )
+        val result =
+            calculator.calculate(
+                transactions,
+                ".",
+                assetsPrefixes = listOf("Assets", "Aktiva"),
+            )
 
         assertEquals(BigDecimal("3000.00"), result.totalAssets)
         assertEquals(BigDecimal.ZERO, result.totalLiabilities)
