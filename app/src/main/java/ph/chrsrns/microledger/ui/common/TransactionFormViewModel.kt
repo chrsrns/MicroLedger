@@ -16,6 +16,7 @@ import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.TransactionTemplate
+import ph.chrsrns.microledger.data.reporting.parseQuantity
 import ph.chrsrns.microledger.ui.util.Event
 import java.io.IOException
 import java.math.BigDecimal
@@ -124,17 +125,7 @@ abstract class TransactionFormViewModel(
                 .mapNotNull { p -> p.amount }
                 .map { p -> p.quantity }
                 .map { quantity ->
-                    val cleaned =
-                        quantity
-                            .replace(
-                                Regex("[^-0-9${preferencesDataSource.getDecimalSeparator()}]"),
-                                "",
-                            ).replace(preferencesDataSource.getDecimalSeparator(), ".")
-                    try {
-                        BigDecimal(cleaned)
-                    } catch (_: NumberFormatException) {
-                        BigDecimal.ZERO
-                    }
+                    parseQuantity(quantity, preferencesDataSource.getDecimalSeparator())
                 }.fold(BigDecimal.ZERO) { l, r -> l + r }
                 .negate()
                 .let { num ->
