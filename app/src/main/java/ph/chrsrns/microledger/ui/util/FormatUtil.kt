@@ -29,3 +29,34 @@ fun amountColor(amount: BigDecimal): Color =
         amount < BigDecimal.ZERO -> MaterialTheme.colorScheme.error
         else -> LocalContentColor.current
     }
+
+enum class Sign {
+    POSITIVE,
+    NEGATIVE,
+    ZERO,
+    BLANK,
+    UNPARSEABLE,
+}
+
+fun postingAmountSign(
+    quantity: String,
+    decimalSeparator: String,
+): Sign {
+    if (quantity.isBlank()) return Sign.BLANK
+    val separator = decimalSeparator.firstOrNull() ?: '.'
+    val cleaned =
+        quantity
+            .filter { it == '-' || it.isDigit() || it == separator }
+            .replace(separator, '.')
+    if (cleaned.isEmpty()) return Sign.UNPARSEABLE
+    return try {
+        val value = BigDecimal(cleaned)
+        when {
+            value > BigDecimal.ZERO -> Sign.POSITIVE
+            value < BigDecimal.ZERO -> Sign.NEGATIVE
+            else -> Sign.ZERO
+        }
+    } catch (e: NumberFormatException) {
+        Sign.UNPARSEABLE
+    }
+}
