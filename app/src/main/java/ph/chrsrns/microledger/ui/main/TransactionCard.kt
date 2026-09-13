@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
@@ -101,10 +103,10 @@ fun TransactionCard(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .padding(8.dp),
+                            .padding(vertical = 14.dp, horizontal = 16.dp),
                 ) {
                     TransactionHeader(transaction)
-                    for (posting in transaction.postings) {
+                    for ((index, posting) in transaction.postings.withIndex()) {
                         TransactionPosting(
                             posting = posting,
                             assetsPrefixes = assetsPrefixes,
@@ -114,6 +116,9 @@ fun TransactionCard(
                             expensesPrefixes = expensesPrefixes,
                             decimalSeparator = decimalSeparator,
                         )
+                        if (index != transaction.postings.lastIndex) {
+                            HorizontalDivider()
+                        }
                     }
                 }
             }
@@ -127,14 +132,19 @@ private fun TransactionHeader(transaction: Transaction) {
     val mutedColor = LocalContentColor.current.copy(alpha = 0.6f)
 
     Row(
+        horizontalArrangement = Arrangement.spacedBy(10.dp, alignment = Alignment.Start),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
     ) {
         Text(
             text = transaction.date,
             style =
                 MaterialTheme.typography.bodySmall.copy(
                     fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.SemiBold,
                     color = mutedColor,
                 ),
             maxLines = 1,
@@ -143,26 +153,23 @@ private fun TransactionHeader(transaction: Transaction) {
             text = transactionTitle(transaction),
             style =
                 MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                 ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp),
+            modifier = Modifier.weight(1f),
         )
         if (statusLabel != null) {
             Surface(
-                shape = MaterialTheme.shapes.small,
+                shape = CircleShape,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.testTag("StatusChip"),
             ) {
                 Text(
                     text = statusLabel,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                 )
             }
         }
@@ -192,21 +199,20 @@ private fun TransactionPosting(
     expensesPrefixes: List<String>,
     decimalSeparator: String,
 ) {
+    val mutedColor = LocalContentColor.current.copy(alpha = 0.6f)
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(top = 2.dp),
+                .padding(vertical = 6.dp),
     ) {
         if (posting.isComment()) {
             Text(
                 text = posting.fullAmountDisplayString(),
-                style =
-                    MaterialTheme.typography.bodySmall.copy(
-                        color = LocalContentColor.current.copy(alpha = 0.6f),
-                    ),
+                style = MaterialTheme.typography.bodyMedium.copy(color = mutedColor),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -237,7 +243,11 @@ private fun TransactionPosting(
                 }
                 Text(
                     text = posting.account ?: "",
-                    style = MaterialTheme.typography.bodySmall,
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = mutedColor,
+                        ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -248,9 +258,9 @@ private fun TransactionPosting(
             Text(
                 text = posting.fullAmountDisplayString(),
                 style =
-                    MaterialTheme.typography.bodySmall.copy(
+                    MaterialTheme.typography.bodyMedium.copy(
                         fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         color = amountColor,
                     ),
                 maxLines = 1,
@@ -258,7 +268,7 @@ private fun TransactionPosting(
                 textAlign = TextAlign.End,
                 modifier =
                     Modifier
-                        .padding(start = 2.dp)
+                        .padding(start = 12.dp)
                         .testTag("Amount"),
             )
         }
