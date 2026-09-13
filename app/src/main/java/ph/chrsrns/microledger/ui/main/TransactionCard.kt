@@ -29,9 +29,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
+import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
 import ph.chrsrns.microledger.ui.util.accountTypeColor
 import ph.chrsrns.microledger.ui.util.postingAmountColor
 import ph.chrsrns.microledger.ui.util.statusChipLabel
@@ -259,5 +262,91 @@ private fun TransactionPosting(
                         .testTag("Amount"),
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TransactionCardPreview() {
+    MicroLedgerTheme {
+        TransactionCard(
+            transaction =
+                Transaction(
+                    firstLine = 0,
+                    lastLine = 0,
+                    date = "2023-10-27",
+                    status = "*",
+                    code = null,
+                    payee = "Supermarket",
+                    note = "Weekly groceries",
+                    postings =
+                        listOf(
+                            Posting(
+                                account = "expenses:groceries",
+                                amount = Amount("50.00", "EUR", "50.00 EUR"),
+                                cost = null,
+                                assertion = null,
+                                assertionCost = null,
+                                comment = null,
+                            ),
+                            Posting(
+                                account = "assets:checking",
+                                amount = Amount("-50.00", "EUR", "-50.00 EUR"),
+                                cost = null,
+                                assertion = null,
+                                assertionCost = null,
+                                comment = null,
+                            ),
+                        ),
+                ),
+            selected = false,
+            onClick = {},
+            modifier = Modifier.padding(8.dp),
+            assetsPrefixes = listOf("assets"),
+            expensesPrefixes = listOf("expenses"),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TransactionCardSelectedPreview() {
+    MicroLedgerTheme {
+        TransactionCard(
+            transaction =
+                Transaction(
+                    firstLine = 0,
+                    lastLine = 0,
+                    date = "2023-10-28",
+                    status = "!",
+                    code = "123",
+                    payee = "Employer",
+                    note = "Monthly salary",
+                    postings =
+                        listOf(
+                            Posting(
+                                account = "assets:checking",
+                                amount = Amount("3000.00", "EUR", "3000.00 EUR"),
+                                cost = null,
+                                assertion = null,
+                                assertionCost = null,
+                                comment = null,
+                            ),
+                            Posting(
+                                account = "income:salary",
+                                amount = Amount("-3000.00", "EUR", "-3000.00 EUR"),
+                                cost = null,
+                                assertion = null,
+                                assertionCost = null,
+                                comment = null,
+                            ),
+                        ),
+                ),
+            selected = true,
+            onClick = {},
+            modifier = Modifier.padding(8.dp),
+            assetsPrefixes = listOf("assets"),
+            incomePrefixes = listOf("income"),
+        )
     }
 }
