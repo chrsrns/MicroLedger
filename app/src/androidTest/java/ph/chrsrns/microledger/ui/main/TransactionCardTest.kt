@@ -1,6 +1,9 @@
 package ph.chrsrns.microledger.ui.main
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.getOrNull
@@ -44,13 +47,14 @@ class TransactionCardTest {
                         ),
                     selected = false,
                     onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
 
         composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
         composeRule.onNodeWithText("Friend | Reconciliation", substring = true).assertIsDisplayed()
-        composeRule.onNodeWithTag("StatusChip").assertIsDisplayed()
+        composeRule.onNodeWithTag("StatusChip", useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithText("CLEARED").assertIsDisplayed()
     }
 
@@ -72,39 +76,78 @@ class TransactionCardTest {
                         ),
                     selected = false,
                     onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
 
-        composeRule.onNodeWithTag("StatusChip").assertIsDisplayed()
+        composeRule.onNodeWithTag("StatusChip", useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithText("PENDING").assertIsDisplayed()
     }
 
     @Test
     fun hidesStatusChipForBlankAndUnknownStatuses() {
-        for (status in listOf(null, " ", "#")) {
-            composeRule.setContent {
-                MicroLedgerTheme(dynamicColor = false) {
+        composeRule.setContent {
+            MicroLedgerTheme(dynamicColor = false) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     TransactionCard(
                         transaction =
                             Transaction(
                                 firstLine = 0,
                                 lastLine = 0,
                                 date = "2023-09-02",
-                                status = status,
+                                status = null,
                                 code = null,
                                 payee = "Landlord",
-                                note = "Rent",
+                                note = "Blank",
                                 postings = emptyList(),
                             ),
                         selected = false,
                         onClick = {},
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    TransactionCard(
+                        transaction =
+                            Transaction(
+                                firstLine = 0,
+                                lastLine = 0,
+                                date = "2023-09-02",
+                                status = " ",
+                                code = null,
+                                payee = "Landlord",
+                                note = "Space",
+                                postings = emptyList(),
+                            ),
+                        selected = false,
+                        onClick = {},
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    TransactionCard(
+                        transaction =
+                            Transaction(
+                                firstLine = 0,
+                                lastLine = 0,
+                                date = "2023-09-02",
+                                status = "#",
+                                code = null,
+                                payee = "Landlord",
+                                note = "Hash",
+                                postings = emptyList(),
+                            ),
+                        selected = false,
+                        onClick = {},
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
-
-            composeRule.onNodeWithTag("StatusChip").assertDoesNotExist()
         }
+
+        composeRule.onNodeWithText("Landlord | Blank", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Landlord | Space", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Landlord | Hash", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("StatusChip", useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithText("CLEARED").assertDoesNotExist()
+        composeRule.onNodeWithText("PENDING").assertDoesNotExist()
     }
 
     @Test
@@ -137,15 +180,16 @@ class TransactionCardTest {
                         ),
                     selected = false,
                     onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
                     assetsPrefixes = listOf("assets"),
                     incomePrefixes = listOf("income"),
                 )
             }
         }
 
-        composeRule.onNodeWithTag("AccountDot").assertIsDisplayed()
+        composeRule.onNodeWithTag("AccountDot", useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithText("assets:checking account").assertIsDisplayed()
-        composeRule.onNodeWithTag("Amount").assertTextColor(expectedPrimary)
+        composeRule.onNodeWithTag("Amount", useUnmergedTree = true).assertTextColor(expectedPrimary)
     }
 
     @Test
@@ -178,13 +222,14 @@ class TransactionCardTest {
                         ),
                     selected = false,
                     onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
                     assetsPrefixes = listOf("assets"),
                     incomePrefixes = listOf("income"),
                 )
             }
         }
 
-        composeRule.onNodeWithTag("Amount").assertTextColor(expectedError)
+        composeRule.onNodeWithTag("Amount", useUnmergedTree = true).assertTextColor(expectedError)
     }
 
     @Test
@@ -215,12 +260,13 @@ class TransactionCardTest {
                         ),
                     selected = false,
                     onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
                     assetsPrefixes = listOf("assets"),
                 )
             }
         }
 
-        composeRule.onNodeWithTag("AccountDot").assertDoesNotExist()
+        composeRule.onNodeWithTag("AccountDot", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -241,6 +287,7 @@ class TransactionCardTest {
                         ),
                     selected = true,
                     onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
@@ -267,6 +314,7 @@ class TransactionCardTest {
                         ),
                     selected = false,
                     onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
