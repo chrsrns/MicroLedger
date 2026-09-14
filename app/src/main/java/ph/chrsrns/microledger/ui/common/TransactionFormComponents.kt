@@ -80,7 +80,6 @@ const val TRANSACTION_INDEX_KEY = "transaction_index"
 fun TransactionForm(
     viewModel: TransactionFormViewModel,
     contentPadding: PaddingValues,
-    bottomOffset: Dp,
     snackbarHostState: SnackbarHostState,
 ) {
     val context = LocalContext.current
