@@ -216,7 +216,8 @@ abstract class TransactionFormViewModel(
                 code.value,
                 payee.value,
                 note.value,
-                postings.value!!.dropLast(1)
+                postings.value!!
+                    .dropLast(1)
                     .filter { it.isVirtual() || it.isComment() || !it.account.isNullOrBlank() },
             )
         return transaction.format(

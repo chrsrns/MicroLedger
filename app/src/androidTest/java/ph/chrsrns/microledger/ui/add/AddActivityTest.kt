@@ -45,7 +45,11 @@ class AddActivityTest {
         composeRule.onNodeWithText(context.getString(R.string.balance)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText(context.getString(R.string.edit_posting)).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.account)).assertIsDisplayed().performTextReplacement("Account 2")
-        composeRule.onAllNodesWithTag("posting_sheet_amount").onFirst().assertIsDisplayed().performTextReplacement("-10")
+        composeRule
+            .onAllNodesWithTag("posting_sheet_amount")
+            .onFirst()
+            .assertIsDisplayed()
+            .performTextReplacement("-10")
         composeRule.onNodeWithTag("posting_sheet_save").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithContentDescription(context.getString(R.string.save)).assertIsDisplayed().performClick()
@@ -60,7 +64,11 @@ class AddActivityTest {
         composeRule.onNodeWithText(context.getString(R.string.balance)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText(context.getString(R.string.edit_posting)).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.account)).assertIsDisplayed().performTextReplacement("Expenses:Food")
-        composeRule.onAllNodesWithTag("posting_sheet_amount").onFirst().assertIsDisplayed().performTextReplacement("10")
+        composeRule
+            .onAllNodesWithTag("posting_sheet_amount")
+            .onFirst()
+            .assertIsDisplayed()
+            .performTextReplacement("10")
         composeRule.onNodeWithTag("posting_sheet_save").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithText("Expenses:Food").assertIsDisplayed()
@@ -73,12 +81,20 @@ class AddActivityTest {
 
         composeRule.onNodeWithText(context.getString(R.string.balance)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText(context.getString(R.string.account)).assertIsDisplayed().performTextReplacement("Expenses:Food")
-        composeRule.onAllNodesWithTag("posting_sheet_amount").onFirst().assertIsDisplayed().performTextReplacement("10")
+        composeRule
+            .onAllNodesWithTag("posting_sheet_amount")
+            .onFirst()
+            .assertIsDisplayed()
+            .performTextReplacement("10")
         composeRule.onNodeWithTag("posting_sheet_save").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithText(context.getString(R.string.balance)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText(context.getString(R.string.account)).assertIsDisplayed().performTextReplacement("Income:Salary")
-        composeRule.onAllNodesWithTag("posting_sheet_amount").onFirst().assertIsDisplayed().performTextReplacement("-10")
+        composeRule
+            .onAllNodesWithTag("posting_sheet_amount")
+            .onFirst()
+            .assertIsDisplayed()
+            .performTextReplacement("-10")
         composeRule.onNodeWithTag("posting_sheet_save").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithText("Expenses:Food").assertIsDisplayed().performClick()

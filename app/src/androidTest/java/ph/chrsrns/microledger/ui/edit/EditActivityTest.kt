@@ -75,7 +75,11 @@ class EditActivityTest {
 
         composeRule.onNodeWithText("expenses:food:restaurant").assertIsDisplayed().performClick()
         composeRule.onNodeWithText(context.getString(R.string.edit_posting)).assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.account)).assertIsDisplayed().performTextReplacement("expenses:food:restaurant:friend")
+        composeRule
+            .onNodeWithText(
+                context.getString(R.string.account),
+            ).assertIsDisplayed()
+            .performTextReplacement("expenses:food:restaurant:friend")
         composeRule.onNodeWithTag("posting_sheet_save").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithContentDescription(context.getString(R.string.save)).assertIsDisplayed().performClick()
