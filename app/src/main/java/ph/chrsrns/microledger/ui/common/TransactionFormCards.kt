@@ -5,12 +5,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.Card
@@ -22,6 +24,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,6 +41,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.Amount
+import ph.chrsrns.microledger.data.Cost
+import ph.chrsrns.microledger.data.CostType
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.ui.util.accountTypeColor
 import ph.chrsrns.microledger.ui.util.postingAmountColor
@@ -409,5 +414,392 @@ fun AccountDot(
         )
     } else {
         Box(modifier = Modifier.size(12.dp))
+    }
+}
+
+@Composable
+fun PostingEditBottomSheet(
+    posting: Posting,
+    accounts: List<String>,
+    isBalance: Boolean,
+    currencyEnabled: Boolean,
+    currencyBeforeAmount: Boolean,
+    currencyAmountSpacing: Boolean,
+    decimalSeparator: String,
+    defaultCurrency: String,
+    unbalancedAmount: String?,
+    assetsPrefixes: List<String>,
+    liabilitiesPrefixes: List<String>,
+    equityPrefixes: List<String>,
+    incomePrefixes: List<String>,
+    expensesPrefixes: List<String>,
+    onDismiss: () -> Unit,
+    onSave: (Posting) -> Unit,
+    onRemove: () -> Unit,
+) {
+    val sheetState = androidx.compose.material3.rememberModalBottomSheetState()
+    var edited by androidx.compose.runtime.remember(posting) { mutableStateOf(posting) }
+
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SheetHeader(isBalance, onRemove, onDismiss)
+
+            edited.account?.let { account ->
+                AccountSelector(
+                    value = account,
+                    options = accounts,
+                    onAccountChange = { edited = edited.withAccount(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            edited.amount?.let { amount ->
+                AmountEditor(
+                    amount = amount,
+                    showHint = isBalance && !unbalancedAmount.isNullOrBlank(),
+                    hint = unbalancedAmount,
+                    currencyEnabled = currencyEnabled,
+                    currencyBeforeAmount = currencyBeforeAmount,
+                    currencyAmountSpacing = currencyAmountSpacing,
+                    onAmountChange = { edited = edited.withAmount(it) },
+                )
+            }
+
+            edited.cost?.let { cost ->
+                CostEditor(
+                    cost = cost,
+                    currencyEnabled = currencyEnabled,
+                    currencyBeforeAmount = currencyBeforeAmount,
+                    currencyAmountSpacing = currencyAmountSpacing,
+                    onCostChange = { edited = edited.withCost(it) },
+                )
+            }
+
+            edited.assertion?.let { assertion ->
+                AssertionEditor(
+                    assertion = assertion,
+                    currencyEnabled = currencyEnabled,
+                    currencyBeforeAmount = currencyBeforeAmount,
+                    currencyAmountSpacing = currencyAmountSpacing,
+                    onAssertionChange = { edited = edited.withAssertion(it) },
+                )
+            }
+
+            edited.assertionCost?.let { assertionCost ->
+                CostEditor(
+                    cost = assertionCost,
+                    prefix = "= ",
+                    currencyEnabled = currencyEnabled,
+                    currencyBeforeAmount = currencyBeforeAmount,
+                    currencyAmountSpacing = currencyAmountSpacing,
+                    onCostChange = { edited = edited.withAssertionCost(it) },
+                )
+            }
+
+            edited.comment?.let { comment ->
+                CommentField(
+                    comment = comment,
+                    onCommentChange = { edited = edited.withComment(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            OptionalChips(
+                posting = edited,
+                defaultCurrency = defaultCurrency,
+                onToggleAccount = { edited = edited.withAccount(if (it) "" else null) },
+                onToggleAmount = {
+                    edited =
+                        edited.withAmount(
+                            if (it) Amount("", defaultCurrency, "") else null,
+                        )
+                },
+                onToggleCost = {
+                    edited =
+                        edited.withCost(
+                            if (it) Cost(Amount("", defaultCurrency, ""), CostType.UNIT) else null,
+                        )
+                },
+                onToggleAssertion = {
+                    edited =
+                        edited.withAssertion(
+                            if (it) Amount("", defaultCurrency, "") else null,
+                        )
+                },
+                onToggleAssertionCost = {
+                    edited =
+                        edited.withAssertionCost(
+                            if (it) Cost(Amount("", defaultCurrency, ""), CostType.UNIT) else null,
+                        )
+                },
+                onToggleComment = { edited = edited.withComment(if (it) "" else null) },
+            )
+
+            SheetFooter(
+                canSave = edited.isComment() || !edited.account.isNullOrBlank(),
+                onCancel = onDismiss,
+                onSave = {
+                    onSave(edited)
+                    onDismiss()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SheetHeader(
+    isBalance: Boolean,
+    onRemove: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.edit_posting),
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!isBalance) {
+                TextButton(
+                    onClick = {
+                        onRemove()
+                        onDismiss()
+                    },
+                ) {
+                    Text(
+                        stringResource(R.string.delete),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(R.string.cancel),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AmountEditor(
+    amount: Amount,
+    showHint: Boolean,
+    hint: String?,
+    currencyEnabled: Boolean,
+    currencyBeforeAmount: Boolean,
+    currencyAmountSpacing: Boolean,
+    onAmountChange: (Amount) -> Unit,
+) {
+    fun update(quantity: String = amount.quantity, currency: String = amount.currency) {
+        onAmountChange(Amount(quantity, currency, ""))
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        if (currencyEnabled && currencyBeforeAmount) {
+            CurrencyField(
+                currency = amount.currency,
+                onCurrencyChange = { update(currency = it) },
+                modifier = Modifier.padding(end = 4.dp),
+            )
+        }
+
+        AmountField(
+            quantity = amount.quantity,
+            showAmountHint = showHint,
+            unbalancedAmount = hint,
+            onAmountChange = { update(quantity = it) },
+            modifier = Modifier.weight(1f),
+        )
+
+        if (currencyEnabled && !currencyBeforeAmount) {
+            CurrencyField(
+                currency = amount.currency,
+                onCurrencyChange = { update(currency = it) },
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CostEditor(
+    cost: Cost,
+    prefix: String = "",
+    currencyEnabled: Boolean,
+    currencyBeforeAmount: Boolean,
+    currencyAmountSpacing: Boolean,
+    onCostChange: (Cost) -> Unit,
+) {
+    fun update(
+        type: CostType = cost.type,
+        quantity: String = cost.amount.quantity,
+        currency: String = cost.amount.currency,
+    ) {
+        onCostChange(Cost(Amount(quantity, currency, ""), type))
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        if (prefix.isNotBlank()) {
+            Text(prefix, modifier = Modifier.padding(horizontal = 4.dp))
+        }
+        CostTypeSelector(cost.type) { update(type = it) }
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            if (currencyEnabled && currencyBeforeAmount) {
+                CurrencyField(
+                    currency = cost.amount.currency,
+                    onCurrencyChange = { update(currency = it) },
+                    modifier = Modifier.padding(end = 4.dp),
+                )
+            }
+            AmountField(
+                quantity = cost.amount.quantity,
+                showAmountHint = false,
+                unbalancedAmount = null,
+                onAmountChange = { update(quantity = it) },
+                modifier = Modifier.weight(1f),
+            )
+            if (currencyEnabled && !currencyBeforeAmount) {
+                CurrencyField(
+                    currency = cost.amount.currency,
+                    onCurrencyChange = { update(currency = it) },
+                    modifier = Modifier.padding(start = 4.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AssertionEditor(
+    assertion: Amount,
+    currencyEnabled: Boolean,
+    currencyBeforeAmount: Boolean,
+    currencyAmountSpacing: Boolean,
+    onAssertionChange: (Amount) -> Unit,
+) {
+    AmountEditor(
+        amount = assertion,
+        showHint = false,
+        hint = null,
+        currencyEnabled = currencyEnabled,
+        currencyBeforeAmount = currencyBeforeAmount,
+        currencyAmountSpacing = currencyAmountSpacing,
+        onAmountChange = { onAssertionChange(it) },
+    )
+}
+
+@Composable
+private fun OptionalChips(
+    posting: Posting,
+    defaultCurrency: String,
+    onToggleAccount: (Boolean) -> Unit,
+    onToggleAmount: (Boolean) -> Unit,
+    onToggleCost: (Boolean) -> Unit,
+    onToggleAssertion: (Boolean) -> Unit,
+    onToggleAssertionCost: (Boolean) -> Unit,
+    onToggleComment: (Boolean) -> Unit,
+) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ToggleChip(
+            active = posting.account != null,
+            addLabel = stringResource(R.string.add_account),
+            removeLabel = stringResource(R.string.remove_account),
+            onClick = { onToggleAccount(posting.account == null) },
+        )
+        ToggleChip(
+            active = posting.amount != null,
+            addLabel = stringResource(R.string.add_amount),
+            removeLabel = stringResource(R.string.remove_amount),
+            onClick = { onToggleAmount(posting.amount == null) },
+        )
+        ToggleChip(
+            active = posting.cost != null,
+            addLabel = stringResource(R.string.add_cost),
+            removeLabel = stringResource(R.string.remove_cost),
+            onClick = { onToggleCost(posting.cost == null) },
+        )
+        ToggleChip(
+            active = posting.assertion != null,
+            addLabel = stringResource(R.string.add_assertion),
+            removeLabel = stringResource(R.string.remove_assertion),
+            onClick = { onToggleAssertion(posting.assertion == null) },
+        )
+        ToggleChip(
+            active = posting.assertionCost != null,
+            addLabel = stringResource(R.string.add_assertion_cost),
+            removeLabel = stringResource(R.string.remove_assertion_cost),
+            onClick = { onToggleAssertionCost(posting.assertionCost == null) },
+        )
+        ToggleChip(
+            active = posting.comment != null,
+            addLabel = stringResource(R.string.add_comment),
+            removeLabel = stringResource(R.string.remove_comment),
+            onClick = { onToggleComment(posting.comment == null) },
+        )
+    }
+}
+
+@Composable
+private fun ToggleChip(
+    active: Boolean,
+    addLabel: String,
+    removeLabel: String,
+    onClick: () -> Unit,
+) {
+    androidx.compose.material3.FilterChip(
+        selected = active,
+        onClick = onClick,
+        label = { Text(if (active) removeLabel else addLabel) },
+    )
+}
+
+@Composable
+private fun SheetFooter(
+    canSave: Boolean,
+    onCancel: () -> Unit,
+    onSave: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TextButton(onClick = onCancel) {
+            Text(stringResource(R.string.cancel))
+        }
+        TextButton(
+            onClick = onSave,
+            enabled = canSave,
+        ) {
+            Text(stringResource(R.string.save))
+        }
     }
 }
