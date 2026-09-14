@@ -35,6 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers.Main
@@ -92,6 +94,7 @@ class AddActivity : ComponentActivity() {
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     bottomBar = {
                         Surface(tonalElevation = 3.dp) {
+                            val saveDescription = stringResource(R.string.save)
                             Button(
                                 onClick = {
                                     if (enabled) {
@@ -111,7 +114,8 @@ class AddActivity : ComponentActivity() {
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp),
+                                        .padding(16.dp)
+                                        .semantics { contentDescription = saveDescription },
                             ) {
                                 if (saving ?: true) {
                                     CircularProgressIndicator(
