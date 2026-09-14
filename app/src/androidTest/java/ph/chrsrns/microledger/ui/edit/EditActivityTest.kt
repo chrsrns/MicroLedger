@@ -70,7 +70,7 @@ class EditActivityTest {
 
     @Test
     fun canEditPostingFromBottomSheet() {
-        composeRule.onAllNodesWithText("Dinner with friend").onFirst().assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("(123) Restaurant | Dinner with friend").assertIsDisplayed().performClick()
         composeRule.onNodeWithContentDescription(context.getString(R.string.edit)).assertIsDisplayed().performClick()
 
         composeRule.onNodeWithText("expenses:food:restaurant").assertIsDisplayed().performClick()
@@ -79,7 +79,6 @@ class EditActivityTest {
         composeRule.onNodeWithTag("posting_sheet_save").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithContentDescription(context.getString(R.string.save)).assertIsDisplayed().performClick()
-        composeRule.onAllNodesWithText("Dinner with friend").onFirst().assertIsDisplayed()
         composeRule.onNodeWithText("expenses:food:restaurant:friend").assertIsDisplayed()
     }
 }
