@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -278,6 +279,15 @@ fun PostingRowCompact(
                 )
             }
             else -> {
+                val accountColor =
+                    accountTypeColor(
+                        posting.account,
+                        assetsPrefixes,
+                        liabilitiesPrefixes,
+                        equityPrefixes,
+                        incomePrefixes,
+                        expensesPrefixes,
+                    ) ?: LocalTextStyle.current.color
                 AccountDot(
                     account = posting.account,
                     assetsPrefixes = assetsPrefixes,
@@ -288,6 +298,7 @@ fun PostingRowCompact(
                 )
                 Text(
                     text = posting.account ?: "",
+                    color = accountColor,
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -299,6 +310,12 @@ fun PostingRowCompact(
                         color = postingAmountColor(amount, decimalSeparator) ?: LocalTextStyle.current.color,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                IconButton(onClick = onClick) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.edit),
                     )
                 }
                 if (showRemove) {
@@ -545,7 +562,9 @@ fun PostingEditBottomSheet(
             )
 
             SheetFooter(
-                canSave = edited.isComment() || !edited.account.isNullOrBlank(),
+                canSave =
+                    !edited.account.isNullOrBlank() ||
+                        (edited.account == null && !edited.comment.isNullOrBlank()),
                 onCancel = onDismiss,
                 onSave = {
                     onSave(edited)
