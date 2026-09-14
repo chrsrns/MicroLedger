@@ -72,6 +72,10 @@
     <string name="remove_note">Remove note</string>
     <string name="remove_payee">Remove payee</string>
     <string name="remove_posting">Remove posting</string>
+    <string name="add_posting">Add posting</string>
+    <string name="edit_posting">Edit posting</string>
+    <string name="balance">Balance</string>
+    <string name="postings">Postings</string>
     <string name="remove_status">Remove status</string>
     <string name="save">Save</string>
     <string name="search">Search</string>
