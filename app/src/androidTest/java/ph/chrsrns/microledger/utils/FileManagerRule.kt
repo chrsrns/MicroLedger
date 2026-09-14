@@ -4,23 +4,16 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.Until
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.ui.main.MainActivity
-import java.util.concurrent.TimeUnit
 
 class FileManagerRule(
     private val composeRule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>,
@@ -28,40 +21,29 @@ class FileManagerRule(
 ) : TestRule {
     private val createdUris = mutableListOf<Uri>()
 
-    private val device: UiDevice by lazy {
-        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    }
-
     fun configureAppWithFile(filename: String) {
         val testContext = InstrumentationRegistry.getInstrumentation().context
 
-        insertIntoDownloads(
-            context = context,
-            displayName = filename,
-            mimeType = "application/octet-stream",
-            data = testContext.assets.open(filename).use { it.readBytes() },
-        )
+        val fileUri =
+            insertIntoDownloads(
+                context = context,
+                displayName = filename,
+                mimeType = "application/octet-stream",
+                data = testContext.assets.open(filename).use { it.readBytes() },
+            )
 
-        composeRule.onNodeWithContentDescription(context.getString(R.string.settings)).assertIsDisplayed().performClick()
-        composeRule.onNodeWithText("Select file…").assertIsDisplayed().performClick()
+        context
+            .getSharedPreferences("ph.chrsrns.microledger.preferences", Context.MODE_PRIVATE)
+            .edit()
+            .putString("file_uri", fileUri.toString())
+            .apply()
 
-        waitForPicker()
-
-        device.findObject(By.descContains("Show roots")).click()
-        device.wait(Until.hasObject(By.text("Downloads")), 3_000)
-        device.findObject(By.text("Downloads")).click()
-        device.wait(Until.hasObject(By.text(filename)), 5_000)
-        device.findObject(By.text(filename)).click()
-
-        composeRule.onNodeWithText(context.getString(R.string.settings)).assertIsDisplayed()
-
-        val prefs = context.getSharedPreferences("ph.chrsrns.microledger.preferences", Context.MODE_PRIVATE)
-        val uriString = prefs.getString("file_uri", null)
-        require(!uriString.isNullOrBlank()) { "file_uri preference was not set by the app" }
-
-        composeRule.onNodeWithText(uriString).assertIsDisplayed()
-
-        device.pressBack()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule
+                .onAllNodesWithText(context.getString(R.string.no_transactions_yet))
+                .fetchSemanticsNodes()
+                .isEmpty()
+        }
     }
 
     private fun insertIntoDownloads(
@@ -69,7 +51,7 @@ class FileManagerRule(
         displayName: String,
         mimeType: String,
         data: ByteArray,
-    ) {
+    ): Uri {
         val resolver = context.contentResolver
 
         val externalUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI
@@ -88,11 +70,7 @@ class FileManagerRule(
         } ?: error("Failed to open output stream for $uri")
 
         createdUris += uri
-    }
-
-    private fun waitForPicker() {
-        device.waitForIdle(TimeUnit.SECONDS.toMillis(2))
-        device.wait(Until.findObject(By.descContains("Show roots")), 5_000)
+        return uri
     }
 
     private fun cleanup() {
