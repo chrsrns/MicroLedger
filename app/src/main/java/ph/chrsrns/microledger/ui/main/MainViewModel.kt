@@ -79,6 +79,13 @@ class MainViewModel
         private val _selectedTab = MutableLiveData<MainTab>(MainTab.Home)
         val selectedTab: LiveData<MainTab> = _selectedTab
 
+        val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
+        val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
+        val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
+        val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
+        val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
+        val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
+
         fun selectTab(tab: MainTab) {
             val previousTab = _selectedTab.value
             _selectedTab.value = tab

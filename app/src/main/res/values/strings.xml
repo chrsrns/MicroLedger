@@ -83,6 +83,8 @@
     <string name="status">Status</string>
     <string name="status_cleared">Cleared (*)</string>
     <string name="status_pending">Pending (!)</string>
+    <string name="status_cleared_chip">CLEARED</string>
+    <string name="status_pending_chip">PENDING</string>
     <string name="status_unmarked">Unmarked</string>
     <string name="stop_searching">Stop searching</string>
     <string name="stop_selection">Stop selection</string>

@@ -312,6 +312,12 @@ fun MainScreen(
     val isRefreshing by mainViewModel.isRefreshing.observeAsState()
     val selected by mainViewModel.selectedIndex.observeAsState()
     val selectedTab by mainViewModel.selectedTab.observeAsState()
+    val decimalSeparator by mainViewModel.decimalSeparator.observeAsState(".")
+    val assetsPrefixes by mainViewModel.assetsPrefixes.observeAsState(emptyList())
+    val liabilitiesPrefixes by mainViewModel.liabilitiesPrefixes.observeAsState(emptyList())
+    val equityPrefixes by mainViewModel.equityPrefixes.observeAsState(emptyList())
+    val incomePrefixes by mainViewModel.incomePrefixes.observeAsState(emptyList())
+    val expensesPrefixes by mainViewModel.expensesPrefixes.observeAsState(emptyList())
 
     // Handle back button when in search mode
     BackHandler(enabled = (searching ?: false) && selectedTab == MainTab.Home) {
@@ -327,6 +333,12 @@ fun MainScreen(
         isRefreshing = isRefreshing ?: false,
         selected = selected,
         selectedTab = selectedTab ?: MainTab.Home,
+        decimalSeparator = decimalSeparator,
+        assetsPrefixes = assetsPrefixes,
+        liabilitiesPrefixes = liabilitiesPrefixes,
+        equityPrefixes = equityPrefixes,
+        incomePrefixes = incomePrefixes,
+        expensesPrefixes = expensesPrefixes,
         onRefresh = { mainViewModel.refresh() },
         onToggleSelect = { mainViewModel.toggleSelect(it) },
         onSearchClick = { mainViewModel.setSearching(true) },
@@ -366,6 +378,12 @@ fun MainScreen(
     isRefreshing: Boolean,
     selected: Int?,
     selectedTab: MainTab,
+    decimalSeparator: String = ".",
+    assetsPrefixes: List<String> = emptyList(),
+    liabilitiesPrefixes: List<String> = emptyList(),
+    equityPrefixes: List<String> = emptyList(),
+    incomePrefixes: List<String> = emptyList(),
+    expensesPrefixes: List<String> = emptyList(),
     onRefresh: () -> Unit,
     onToggleSelect: (Int) -> Unit,
     onSearchClick: () -> Unit,
@@ -535,6 +553,12 @@ fun MainScreen(
                             onRefresh = onRefresh,
                             onToggleSelect = onToggleSelect,
                             contentPadding = contentPadding,
+                            decimalSeparator = decimalSeparator,
+                            assetsPrefixes = assetsPrefixes,
+                            liabilitiesPrefixes = liabilitiesPrefixes,
+                            equityPrefixes = equityPrefixes,
+                            incomePrefixes = incomePrefixes,
+                            expensesPrefixes = expensesPrefixes,
                         )
                     } else {
                         NoFileState(
@@ -909,6 +933,12 @@ fun MainContent(
     onRefresh: () -> Unit,
     onToggleSelect: (Int) -> Unit,
     contentPadding: PaddingValues,
+    decimalSeparator: String = ".",
+    assetsPrefixes: List<String> = emptyList(),
+    liabilitiesPrefixes: List<String> = emptyList(),
+    equityPrefixes: List<String> = emptyList(),
+    incomePrefixes: List<String> = emptyList(),
+    expensesPrefixes: List<String> = emptyList(),
 ) {
     val context = LocalContext.current
     PullToRefreshBox(
@@ -923,17 +953,24 @@ fun MainContent(
                     val index = transactions.size - it - 1
                     val (originalIndex, transaction) = transactions[index]
                     TransactionCard(
-                        transaction,
-                        originalIndex == selected,
-                        { onToggleSelect(originalIndex) },
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                8.dp,
-                                if (it == 0) 8.dp else 4.dp,
-                                8.dp,
-                                if (it == transactions.size - 1) 8.dp else 4.dp,
-                            ),
+                        transaction = transaction,
+                        selected = originalIndex == selected,
+                        onClick = { onToggleSelect(originalIndex) },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    8.dp,
+                                    if (it == 0) 8.dp else 4.dp,
+                                    8.dp,
+                                    if (it == transactions.size - 1) 8.dp else 4.dp,
+                                ),
+                        assetsPrefixes = assetsPrefixes,
+                        liabilitiesPrefixes = liabilitiesPrefixes,
+                        equityPrefixes = equityPrefixes,
+                        incomePrefixes = incomePrefixes,
+                        expensesPrefixes = expensesPrefixes,
+                        decimalSeparator = decimalSeparator,
                     )
                 }
             }

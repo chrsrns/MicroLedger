@@ -113,6 +113,11 @@ fun CashFlowTransactionsScreen(
             .get(java.util.Calendar.MONTH) + 1,
     )
     val decimalSeparator by cashFlowTransactionsViewModel.decimalSeparator.observeAsState(".")
+    val assetsPrefixes by cashFlowTransactionsViewModel.assetsPrefixes.observeAsState(emptyList())
+    val liabilitiesPrefixes by cashFlowTransactionsViewModel.liabilitiesPrefixes.observeAsState(emptyList())
+    val equityPrefixes by cashFlowTransactionsViewModel.equityPrefixes.observeAsState(emptyList())
+    val incomePrefixes by cashFlowTransactionsViewModel.incomePrefixes.observeAsState(emptyList())
+    val expensesPrefixes by cashFlowTransactionsViewModel.expensesPrefixes.observeAsState(emptyList())
     val context = LocalContext.current
 
     val onTransactionClick = { transaction: Transaction ->
@@ -131,6 +136,11 @@ fun CashFlowTransactionsScreen(
         selectedYear = selectedYear,
         selectedMonth = selectedMonth,
         decimalSeparator = decimalSeparator,
+        assetsPrefixes = assetsPrefixes,
+        liabilitiesPrefixes = liabilitiesPrefixes,
+        equityPrefixes = equityPrefixes,
+        incomePrefixes = incomePrefixes,
+        expensesPrefixes = expensesPrefixes,
         onBackClick = onBackClick,
         onPreviousMonth = cashFlowTransactionsViewModel::previousMonth,
         onNextMonth = cashFlowTransactionsViewModel::nextMonth,
@@ -146,6 +156,11 @@ fun CashFlowTransactionsScreenContent(
     selectedYear: Int,
     selectedMonth: Int,
     decimalSeparator: String,
+    assetsPrefixes: List<String> = emptyList(),
+    liabilitiesPrefixes: List<String> = emptyList(),
+    equityPrefixes: List<String> = emptyList(),
+    incomePrefixes: List<String> = emptyList(),
+    expensesPrefixes: List<String> = emptyList(),
     onBackClick: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
@@ -200,12 +215,24 @@ fun CashFlowTransactionsScreenContent(
                 transactions = cashFlow?.incomeTransactions ?: emptyList(),
                 emptyMessage = stringResource(R.string.no_income_transactions),
                 onTransactionClick = onTransactionClick,
+                assetsPrefixes = assetsPrefixes,
+                liabilitiesPrefixes = liabilitiesPrefixes,
+                equityPrefixes = equityPrefixes,
+                incomePrefixes = incomePrefixes,
+                expensesPrefixes = expensesPrefixes,
+                decimalSeparator = decimalSeparator,
             )
             RankingCard(
                 title = stringResource(R.string.top_expenses),
                 transactions = cashFlow?.expenseTransactions ?: emptyList(),
                 emptyMessage = stringResource(R.string.no_expense_transactions),
                 onTransactionClick = onTransactionClick,
+                assetsPrefixes = assetsPrefixes,
+                liabilitiesPrefixes = liabilitiesPrefixes,
+                equityPrefixes = equityPrefixes,
+                incomePrefixes = incomePrefixes,
+                expensesPrefixes = expensesPrefixes,
+                decimalSeparator = decimalSeparator,
             )
         }
     }
@@ -510,6 +537,12 @@ fun RankingCard(
     transactions: List<Transaction>,
     emptyMessage: String,
     onTransactionClick: (Transaction) -> Unit = {},
+    assetsPrefixes: List<String> = emptyList(),
+    liabilitiesPrefixes: List<String> = emptyList(),
+    equityPrefixes: List<String> = emptyList(),
+    incomePrefixes: List<String> = emptyList(),
+    expensesPrefixes: List<String> = emptyList(),
+    decimalSeparator: String = ".",
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -534,6 +567,12 @@ fun RankingCard(
                             transaction = transaction,
                             selected = false,
                             onClick = { onTransactionClick(transaction) },
+                            assetsPrefixes = assetsPrefixes,
+                            liabilitiesPrefixes = liabilitiesPrefixes,
+                            equityPrefixes = equityPrefixes,
+                            incomePrefixes = incomePrefixes,
+                            expensesPrefixes = expensesPrefixes,
+                            decimalSeparator = decimalSeparator,
                         )
                     }
                 }

@@ -34,34 +34,41 @@ class MainActivityTest {
 
     @Test
     fun showsTransaction() {
-        composeRule.onNodeWithText("2023-09-04 * Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
+        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
     }
 
     @Test
     fun allowsSearchByPayee() {
         composeRule.onNodeWithContentDescription(context.getString(R.string.search)).assertIsDisplayed().performClick()
         // Should still show the transactions if nothing is entered
-        composeRule.onNodeWithText("2023-09-04 * Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
+        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
         composeRule.onNodeWithTag("search-field").assertIsDisplayed().performTextInput("Employer")
-        composeRule.onNodeWithText("2023-09-01 * Employer | Payment").assertIsDisplayed()
-        composeRule.onNodeWithText("2023-09-04 * Friend | Reconciliation").assertDoesNotExist()
+        composeRule.onNodeWithText("2023-09-01").assertIsDisplayed()
+        composeRule.onNodeWithText("Employer | Payment").assertIsDisplayed()
+        composeRule.onNodeWithText("Friend | Reconciliation").assertDoesNotExist()
 
         composeRule.onNodeWithContentDescription(context.getString(R.string.stop_searching)).assertIsDisplayed().performClick()
         // Stopping the search should remove the filter
-        composeRule.onNodeWithText("2023-09-04 * Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
+        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
     }
 
     @Test
     fun allowsSearchByAmount() {
         composeRule.onNodeWithContentDescription(context.getString(R.string.search)).assertIsDisplayed().performClick()
         // Should still show the transactions if nothing is entered
-        composeRule.onNodeWithText("2023-09-04 * Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
+        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
         composeRule.onNodeWithTag("search-field").assertIsDisplayed().performTextInput("100")
-        composeRule.onNodeWithText("2023-09-01 * Employer | Payment").assertIsDisplayed()
-        composeRule.onNodeWithText("2023-09-04 * Friend | Reconciliation").assertDoesNotExist()
+        composeRule.onNodeWithText("2023-09-01").assertIsDisplayed()
+        composeRule.onNodeWithText("Employer | Payment").assertIsDisplayed()
+        composeRule.onNodeWithText("Friend | Reconciliation").assertDoesNotExist()
 
         composeRule.onNodeWithContentDescription(context.getString(R.string.stop_searching)).assertIsDisplayed().performClick()
         // Stopping the search should remove the filter
-        composeRule.onNodeWithText("2023-09-04 * Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
+        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
     }
 }

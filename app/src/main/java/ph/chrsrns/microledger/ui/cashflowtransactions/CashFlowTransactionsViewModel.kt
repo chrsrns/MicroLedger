@@ -24,6 +24,11 @@ class CashFlowTransactionsViewModel
         private val cashFlowCalculator = MonthlyCashFlowCalculator()
 
         val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
+        val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
+        val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
+        val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
+        val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
+        val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
 
         private val _selectedYear = MutableLiveData(Calendar.getInstance().get(Calendar.YEAR))
         val selectedYear: LiveData<Int> = _selectedYear
