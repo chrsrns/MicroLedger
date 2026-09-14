@@ -66,7 +66,7 @@ class TemplateFormViewModel
                         note = note.value,
                         status = status.value,
                         code = code.value,
-                        postings = postings.value ?: emptyList(),
+                        postings = templatePostings(),
                     )
                 ledgerRepository.updateTemplate(
                     uri,

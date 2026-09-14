@@ -111,7 +111,10 @@ abstract class TransactionFormViewModel(
     val accounts: LiveData<List<String>> = ledgerRepository.accounts.map { it.sorted() }
     val unbalancedAmount: LiveData<String> =
         postings.map { ps ->
-            val relevantPostings = ps.filter { p -> !p.isVirtual() && !p.isComment() }
+            val relevantPostings =
+                ps.filter { p ->
+                    !p.isVirtual() && !p.isComment() && !p.account.isNullOrBlank()
+                }
             if (relevantPostings.any { it.assertion != null && it.amount == null }) return@map ""
             if (relevantPostings.any { it.cost != null }) return@map ""
             if (relevantPostings
@@ -248,7 +251,7 @@ abstract class TransactionFormViewModel(
                     note = note.value,
                     status = status.value,
                     code = code.value,
-                    postings = postings.value ?: emptyList(),
+                    postings = templatePostings(),
                 )
             ledgerRepository.addTemplate(
                 uri,
@@ -618,6 +621,20 @@ abstract class TransactionFormViewModel(
             filteredResult.add(newPosting())
         }
         return filteredResult
+    }
+
+    protected fun templatePostings(): List<Posting> {
+        val current = postings.value ?: return emptyList()
+        if (current.isEmpty()) return current
+        val withoutSentinel =
+            if (current.last() == newPosting()) {
+                current.dropLast(1)
+            } else {
+                current
+            }
+        return withoutSentinel.filter {
+            it.isVirtual() || it.isComment() || !it.account.isNullOrBlank()
+        }
     }
 
     fun defaultAmount() = Amount("", preferencesDataSource.getDefaultCurrency(), "")
