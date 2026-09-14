@@ -193,6 +193,15 @@ abstract class TransactionFormViewModel(
     }
 
     val currencyBeforeAmount: LiveData<Boolean> = preferencesDataSource.currencyBeforeAmount
+    val currencyAmountSpacing: LiveData<Boolean> =
+        preferencesDataSource.spacingBetweenCurrencyAndAmount
+    val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
+    val defaultCurrency: LiveData<String> = preferencesDataSource.defaultCurrency
+    val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
+    val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
+    val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
+    val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
+    val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
 
     protected fun toTransactionString(): String {
         val postingWidth = preferencesDataSource.getPostingWidth()
