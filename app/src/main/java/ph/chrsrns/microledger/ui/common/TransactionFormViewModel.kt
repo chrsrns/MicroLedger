@@ -145,32 +145,28 @@ abstract class TransactionFormViewModel(
     val valid: LiveData<Boolean> =
         postings.switchMap { postings ->
             unbalancedAmount.map { unbalancedAmount ->
-                if (postings.filter { !it.isVirtual() && !it.isComment() }.size < 2) {
+                val withoutSentinel = postings.dropLast(1)
+                val realPostings =
+                    withoutSentinel.filter { !it.isVirtual() && !it.isComment() }
+                if (realPostings.size < 2) {
                     return@map false
                 }
+                if (realPostings.any { it.account.isNullOrBlank() }) {
+                    return@map false
+                }
+                val nonComment = withoutSentinel.filter { !it.isComment() }
                 // If there is an unbalanced amount, and there are no postings with an empty amount, it's invalid
                 if (unbalancedAmount != "" &&
-                    postings
-                        .dropLast(1)
-                        .filter {
-                            !it.isComment()
-                        }.all {
-                            (it.amount?.quantity ?: "") != ""
-                        }
+                    nonComment.all { (it.amount?.quantity ?: "") != "" }
                 ) {
                     return@map false
                 }
                 // If there are multiple postings with an empty amount and no assertions, it's invalid
-                if (postings
-                        .dropLast(1)
-                        .filter { !it.isComment() }
-                        .filter {
-                            (it.amount?.quantity ?: "") == "" &&
-                                (
-                                    it.assertion?.quantity
-                                        ?: ""
-                                ) == ""
-                        }.size > 1
+                if (
+                    nonComment.count {
+                        (it.amount?.quantity ?: "") == "" &&
+                            (it.assertion?.quantity ?: "") == ""
+                    } > 1
                 ) {
                     return@map false
                 }
@@ -217,7 +213,8 @@ abstract class TransactionFormViewModel(
                 code.value,
                 payee.value,
                 note.value,
-                postings.value!!.dropLast(1),
+                postings.value!!.dropLast(1)
+                    .filter { it.isVirtual() || it.isComment() || !it.account.isNullOrBlank() },
             )
         return transaction.format(
             postingWidth,
@@ -367,6 +364,28 @@ abstract class TransactionFormViewModel(
 
     fun setPostings(newPostings: List<Posting>) {
         _postings.value = filterPostings(newPostings)
+    }
+
+    fun addPosting() {
+        val current = ArrayList(postings.value ?: listOf(newPosting()))
+        val sentinelIndex = current.indexOfLast { it == newPosting() }
+        if (sentinelIndex >= 0) {
+            current.add(sentinelIndex, Posting("", null, null, null, null, null))
+        } else {
+            current.add(Posting("", null, null, null, null, null))
+        }
+        _postings.value = filterPostings(current)
+    }
+
+    fun setPosting(
+        index: Int,
+        posting: Posting,
+    ) {
+        val current = ArrayList(postings.value ?: emptyList())
+        if (index in current.indices) {
+            current[index] = posting
+            _postings.value = filterPostings(current)
+        }
     }
 
     fun setAccount(
