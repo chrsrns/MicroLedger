@@ -3,6 +3,8 @@ package ph.chrsrns.microledger.ui.main
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -35,7 +37,7 @@ class MainActivityTest {
     @Test
     fun showsTransaction() {
         composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
-        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Friend | Reconciliation").onFirst().assertIsDisplayed()
     }
 
     @Test
@@ -43,16 +45,16 @@ class MainActivityTest {
         composeRule.onNodeWithContentDescription(context.getString(R.string.search)).assertIsDisplayed().performClick()
         // Should still show the transactions if nothing is entered
         composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
-        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Friend | Reconciliation").onFirst().assertIsDisplayed()
         composeRule.onNodeWithTag("search-field").assertIsDisplayed().performTextInput("Employer")
         composeRule.onNodeWithText("2023-09-01").assertIsDisplayed()
-        composeRule.onNodeWithText("Employer | Payment").assertIsDisplayed()
-        composeRule.onNodeWithText("Friend | Reconciliation").assertDoesNotExist()
+        composeRule.onAllNodesWithText("Employer | Payment").onFirst().assertIsDisplayed()
+        composeRule.onNodeWithText("2023-09-04").assertDoesNotExist()
 
         composeRule.onNodeWithContentDescription(context.getString(R.string.stop_searching)).assertIsDisplayed().performClick()
         // Stopping the search should remove the filter
         composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
-        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Friend | Reconciliation").onFirst().assertIsDisplayed()
     }
 
     @Test
@@ -60,15 +62,15 @@ class MainActivityTest {
         composeRule.onNodeWithContentDescription(context.getString(R.string.search)).assertIsDisplayed().performClick()
         // Should still show the transactions if nothing is entered
         composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
-        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Friend | Reconciliation").onFirst().assertIsDisplayed()
         composeRule.onNodeWithTag("search-field").assertIsDisplayed().performTextInput("100")
         composeRule.onNodeWithText("2023-09-01").assertIsDisplayed()
-        composeRule.onNodeWithText("Employer | Payment").assertIsDisplayed()
-        composeRule.onNodeWithText("Friend | Reconciliation").assertDoesNotExist()
+        composeRule.onAllNodesWithText("Employer | Payment").onFirst().assertIsDisplayed()
+        composeRule.onNodeWithText("2023-09-04").assertDoesNotExist()
 
         composeRule.onNodeWithContentDescription(context.getString(R.string.stop_searching)).assertIsDisplayed().performClick()
         // Stopping the search should remove the filter
         composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
-        composeRule.onNodeWithText("Friend | Reconciliation").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Friend | Reconciliation").onFirst().assertIsDisplayed()
     }
 }

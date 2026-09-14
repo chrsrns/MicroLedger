@@ -3,6 +3,8 @@ package ph.chrsrns.microledger.ui.edit
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -34,31 +36,34 @@ class EditActivityTest {
 
     @Test
     fun canDoSimpleEdit() {
-        composeRule.onNodeWithText("2023-09-04 * Friend | Reconciliation").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("2023-09-04").assertIsDisplayed().performClick()
         composeRule.onNodeWithContentDescription(context.getString(R.string.edit)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Reconciliation").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Reconciliation").assertIsDisplayed().performTextReplacement("Changed description")
         composeRule.onNodeWithContentDescription(context.getString(R.string.save)).assertIsDisplayed().performClick()
-        composeRule.onNodeWithText("2023-09-04 * Friend | Changed description").assertIsDisplayed()
+        composeRule.onNodeWithText("2023-09-04").assertIsDisplayed()
+        composeRule.onNodeWithText("Friend | Changed description").assertIsDisplayed()
     }
 
     @Test
     fun codeInAccountSurvivesEdit() {
-        composeRule.onNodeWithText("2023-09-02 * (123) Restaurant | Dinner with friend").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("(123) Restaurant | Dinner with friend").assertIsDisplayed().performClick()
         composeRule.onNodeWithContentDescription(context.getString(R.string.edit)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Dinner with friend").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Dinner with friend").assertIsDisplayed().performTextReplacement("Changed description")
         composeRule.onNodeWithContentDescription(context.getString(R.string.save)).assertIsDisplayed().performClick()
-        composeRule.onNodeWithText("2023-09-02 * (123) Restaurant | Changed description").assertIsDisplayed()
+        composeRule.onAllNodesWithText("2023-09-02").onFirst().assertIsDisplayed()
+        composeRule.onNodeWithText("(123) Restaurant | Changed description").assertIsDisplayed()
     }
 
     @Test
     fun canDoEditWithOnlyNote() {
-        composeRule.onNodeWithText("2026-02-26 Found").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("2026-02-26").assertIsDisplayed().performClick()
         composeRule.onNodeWithContentDescription(context.getString(R.string.edit)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Found").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Found").assertIsDisplayed().performTextReplacement("Stolen")
         composeRule.onNodeWithContentDescription(context.getString(R.string.save)).assertIsDisplayed().performClick()
-        composeRule.onNodeWithText("2026-02-26 Stolen").assertIsDisplayed()
+        composeRule.onNodeWithText("2026-02-26").assertIsDisplayed()
+        composeRule.onNodeWithText("Stolen").assertIsDisplayed()
     }
 }
