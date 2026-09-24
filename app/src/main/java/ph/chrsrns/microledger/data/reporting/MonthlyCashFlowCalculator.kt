@@ -1,5 +1,7 @@
 package ph.chrsrns.microledger.data.reporting
 
+import ph.chrsrns.microledger.data.AccountType
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Transaction
 import java.math.BigDecimal
 import java.util.Locale
@@ -40,6 +42,14 @@ class MonthlyCashFlowCalculator {
         expensesPrefixes: List<String> = listOf("Expenses"),
     ): CashFlowResult {
         val period = String.format(Locale.US, "%04d-%02d", year, month)
+        val prefixes =
+            AccountTypePrefixes(
+                assets = emptyList(),
+                liabilities = emptyList(),
+                equity = emptyList(),
+                income = incomePrefixes,
+                expenses = expensesPrefixes,
+            )
         var totalIncome = BigDecimal.ZERO
         var totalExpenses = BigDecimal.ZERO
         val incomeTransactionSet = mutableSetOf<Transaction>()
@@ -55,20 +65,22 @@ class MonthlyCashFlowCalculator {
                 val account = posting.account ?: continue
                 val quantity = parseQuantity(amount.quantity, decimalSeparator)
 
-                when {
-                    incomePrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
+                when (prefixes.classify(account)) {
+                    AccountType.INCOME -> {
                         // Income postings are credits (negative amounts in ledger)
                         // Display as positive for cash flow
                         totalIncome += quantity.negate()
                         incomeTransactionSet.add(transaction)
                     }
 
-                    expensesPrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
+                    AccountType.EXPENSES -> {
                         // Expense postings are debits (positive amounts in ledger)
                         // Keep as positive for cash flow
                         totalExpenses += quantity
                         expenseTransactionSet.add(transaction)
                     }
+
+                    else -> {}
                 }
             }
         }

@@ -1,5 +1,7 @@
 package ph.chrsrns.microledger.data.reporting
 
+import ph.chrsrns.microledger.data.AccountType
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Transaction
 import java.math.BigDecimal
 
@@ -66,6 +68,15 @@ class AccountBalanceCalculator {
             }
         }
 
+        val prefixes =
+            AccountTypePrefixes(
+                assets = assetsPrefixes,
+                liabilities = liabilitiesPrefixes,
+                equity = equityPrefixes,
+                income = incomePrefixes,
+                expenses = expensesPrefixes,
+            )
+
         // Split by account type
         val assets = mutableListOf<AccountBalance>()
         val liabilities = mutableListOf<AccountBalance>()
@@ -76,30 +87,15 @@ class AccountBalanceCalculator {
         for ((account, currencyMap) in accountBalances) {
             for ((currency, pair) in currencyMap) {
                 val (rawBalance, transactionSet) = pair
+                val type = prefixes.classify(account)
                 // For display purposes, negate Liability, Equity, and Income balances so they show as positive
                 // (these are credit accounts stored as negative amounts in ledger postings)
                 val displayBalance =
-                    when {
-                        liabilitiesPrefixes.any {
-                            account.startsWith(
-                                it,
-                                ignoreCase = true,
-                            )
-                        } -> rawBalance.negate()
-
-                        equityPrefixes.any {
-                            account.startsWith(
-                                it,
-                                ignoreCase = true,
-                            )
-                        } -> rawBalance.negate()
-
-                        incomePrefixes.any {
-                            account.startsWith(
-                                it,
-                                ignoreCase = true,
-                            )
-                        } -> rawBalance.negate()
+                    when (type) {
+                        AccountType.LIABILITIES,
+                        AccountType.EQUITY,
+                        AccountType.INCOME,
+                        -> rawBalance.negate()
 
                         else -> rawBalance
                     }
@@ -112,31 +108,13 @@ class AccountBalanceCalculator {
                         transactions = transactionSet.sortedBy { it.firstLine },
                     )
 
-                when {
-                    assetsPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        assets.add(
-                            accountBalance,
-                        )
-
-                    liabilitiesPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        liabilities.add(
-                            accountBalance,
-                        )
-
-                    equityPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        equity.add(
-                            accountBalance,
-                        )
-
-                    incomePrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        income.add(
-                            accountBalance,
-                        )
-
-                    expensesPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        expenses.add(
-                            accountBalance,
-                        )
+                when (type) {
+                    AccountType.ASSETS -> assets.add(accountBalance)
+                    AccountType.LIABILITIES -> liabilities.add(accountBalance)
+                    AccountType.EQUITY -> equity.add(accountBalance)
+                    AccountType.INCOME -> income.add(accountBalance)
+                    AccountType.EXPENSES -> expenses.add(accountBalance)
+                    null -> {}
                 }
             }
         }

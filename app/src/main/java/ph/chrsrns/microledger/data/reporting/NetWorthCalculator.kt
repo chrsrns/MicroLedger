@@ -1,5 +1,7 @@
 package ph.chrsrns.microledger.data.reporting
 
+import ph.chrsrns.microledger.data.AccountType
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Transaction
 import java.math.BigDecimal
 
@@ -34,6 +36,14 @@ class NetWorthCalculator {
         assetsPrefixes: List<String> = listOf("Assets"),
         liabilitiesPrefixes: List<String> = listOf("Liabilities"),
     ): NetWorthResult {
+        val prefixes =
+            AccountTypePrefixes(
+                assets = assetsPrefixes,
+                liabilities = liabilitiesPrefixes,
+                equity = emptyList(),
+                income = emptyList(),
+                expenses = emptyList(),
+            )
         var totalAssets = BigDecimal.ZERO
         var totalLiabilities = BigDecimal.ZERO
 
@@ -43,16 +53,18 @@ class NetWorthCalculator {
                 val account = posting.account ?: continue
                 val quantity = parseQuantity(amount.quantity, decimalSeparator)
 
-                when {
-                    assetsPrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
+                when (prefixes.classify(account)) {
+                    AccountType.ASSETS -> {
                         totalAssets += quantity
                     }
 
-                    liabilitiesPrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
+                    AccountType.LIABILITIES -> {
                         // Liabilities are stored as negative in postings (credits)
                         // We treat them as positive amounts for net worth calculation
                         totalLiabilities += quantity.negate()
                     }
+
+                    else -> {}
                 }
             }
         }
