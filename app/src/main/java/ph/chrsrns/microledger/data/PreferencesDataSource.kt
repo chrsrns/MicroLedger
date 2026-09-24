@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.map
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.json.JSONArray
@@ -323,5 +324,29 @@ class PreferencesDataSource
         fun setExpensesPrefixes(prefixes: List<String>) =
             sharedPreferences.edit {
                 putString(EXPENSES_PREFIXES_KEY, serializeStringList(prefixes))
+            }
+
+        val reportingPreferences: LiveData<ReportingPreferences> =
+            MediatorLiveData<ReportingPreferences>().apply {
+                fun compute() {
+                    value =
+                        ReportingPreferences(
+                            decimalSeparator = getDecimalSeparator(),
+                            prefixes =
+                                AccountTypePrefixes(
+                                    assets = getAssetsPrefixes(),
+                                    liabilities = getLiabilitiesPrefixes(),
+                                    equity = getEquityPrefixes(),
+                                    income = getIncomePrefixes(),
+                                    expenses = getExpensesPrefixes(),
+                                ),
+                        )
+                }
+                addSource(decimalSeparator) { compute() }
+                addSource(assetsPrefixes) { compute() }
+                addSource(liabilitiesPrefixes) { compute() }
+                addSource(equityPrefixes) { compute() }
+                addSource(incomePrefixes) { compute() }
+                addSource(expensesPrefixes) { compute() }
             }
     }
