@@ -1,7 +1,6 @@
 package ph.chrsrns.microledger.data.reporting
 
 import ph.chrsrns.microledger.data.AccountType
-import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Transaction
 import java.math.BigDecimal
 
@@ -34,26 +33,20 @@ class AccountBalanceCalculator {
     )
 
     /**
-     * Calculates all account balances from the given transactions.
+     * Calculates all account balances from the given inputs.
      *
-     * @param transactions List of transactions to process
-     * @param decimalSeparator The user's decimal separator used to parse quantities
+     * @param inputs Transactions and reporting preferences to process
      * @return AccountBalancesResult containing balances grouped by type
      */
-    fun calculate(
-        transactions: List<Transaction>,
-        decimalSeparator: String,
-        assetsPrefixes: List<String> = listOf("Assets"),
-        liabilitiesPrefixes: List<String> = listOf("Liabilities"),
-        equityPrefixes: List<String> = listOf("Equity"),
-        incomePrefixes: List<String> = listOf("Income"),
-        expensesPrefixes: List<String> = listOf("Expenses"),
-    ): AccountBalancesResult {
+    fun calculate(inputs: ReportingInputs): AccountBalancesResult {
+        val decimalSeparator = inputs.preferences.decimalSeparator
+        val prefixes = inputs.preferences.prefixes
+
         // Map of account name -> (currency -> (balance, mutableSet of transactions))
         val accountBalances =
             mutableMapOf<String, MutableMap<String, Pair<BigDecimal, MutableSet<Transaction>>>>()
 
-        for (transaction in transactions) {
+        for (transaction in inputs.transactions) {
             for (posting in transaction.postings) {
                 val amount = posting.amount ?: continue
                 val account = posting.account ?: continue
@@ -67,15 +60,6 @@ class AccountBalanceCalculator {
                 currencyMap[currency] = Pair(existingBalance + quantity, existingTransactions)
             }
         }
-
-        val prefixes =
-            AccountTypePrefixes(
-                assets = assetsPrefixes,
-                liabilities = liabilitiesPrefixes,
-                equity = equityPrefixes,
-                income = incomePrefixes,
-                expenses = expensesPrefixes,
-            )
 
         // Split by account type
         val assets = mutableListOf<AccountBalance>()

@@ -9,7 +9,7 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun emptyTransactionListShouldReturnZeroCashFlow() {
-        val result = calculator.calculateForMonth(emptyList(), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(emptyList()), 2024, 1)
 
         assertEquals(BigDecimal.ZERO, result.totalIncome)
         assertEquals(BigDecimal.ZERO, result.totalExpenses)
@@ -24,7 +24,7 @@ class MonthlyCashFlowCalculatorTest {
                 incomeTransaction(amount = "5000.00", date = "2024-01-15"),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         assertEquals("2024-01", result.period)
         // Income postings are credits (negative), we display as positive
@@ -44,7 +44,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         assertEquals("2024-01", result.period)
         assertEquals(BigDecimal.ZERO, result.totalIncome)
@@ -71,7 +71,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 2, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 2)
 
         assertEquals("2024-02", result.period)
         assertEquals(BigDecimal("5000.00"), result.totalIncome)
@@ -97,7 +97,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 2, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 2)
 
         assertEquals("2024-02", result.period)
         // Both transactions are outside February
@@ -130,7 +130,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 2, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 2)
 
         assertEquals("2024-02", result.period)
         assertEquals(BigDecimal("3000.00"), result.totalIncome)
@@ -158,7 +158,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 3, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 3)
 
         assertEquals("2024-03", result.period)
         assertEquals(BigDecimal("1000.00"), result.totalIncome)
@@ -205,7 +205,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         assertEquals("2024-01", result.period)
         // Total income: 3000 + 500 + 200 = 3700
@@ -253,7 +253,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         assertEquals("2024-01", result.period)
         assertEquals(BigDecimal.ZERO, result.totalIncome)
@@ -312,7 +312,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         assertEquals("2024-01", result.period)
         // Income: 4000 + 800 = 4800
@@ -350,7 +350,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         assertEquals("2024-01", result.period)
         // Only January 2024 transaction should count
@@ -384,19 +384,19 @@ class MonthlyCashFlowCalculatorTest {
             )
 
         // Test January
-        val janResult = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val janResult = calculator.calculateForMonth(inputs(transactions), 2024, 1)
         assertEquals("2024-01", janResult.period)
         assertEquals(BigDecimal.ZERO, janResult.totalIncome)
         assertEquals(BigDecimal("500.00"), janResult.totalExpenses)
 
         // Test February
-        val febResult = calculator.calculateForMonth(transactions, 2024, 2, ".")
+        val febResult = calculator.calculateForMonth(inputs(transactions), 2024, 2)
         assertEquals("2024-02", febResult.period)
         assertEquals(BigDecimal("3000.00"), febResult.totalIncome)
         assertEquals(BigDecimal.ZERO, febResult.totalExpenses)
 
         // Test March
-        val marResult = calculator.calculateForMonth(transactions, 2024, 3, ".")
+        val marResult = calculator.calculateForMonth(inputs(transactions), 2024, 3)
         assertEquals("2024-03", marResult.period)
         assertEquals(BigDecimal.ZERO, marResult.totalIncome)
         assertEquals(BigDecimal("200.00"), marResult.totalExpenses)
@@ -415,7 +415,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 2, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 2)
 
         assertEquals("2024-02", result.period)
         assertEquals(BigDecimal("1000.00"), result.totalIncome)
@@ -440,7 +440,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2023, 2, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2023, 2)
 
         assertEquals("2023-02", result.period)
         // Feb 28 transaction should be included, March 1 should not
@@ -471,7 +471,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         assertEquals("2024-01", result.period)
         // Only the income should count
@@ -572,7 +572,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         assertEquals("2024-01", result.period)
 
@@ -585,143 +585,6 @@ class MonthlyCashFlowCalculatorTest {
         // Net: 5150 - 1636.70 = 3513.30
         assertEquals(BigDecimal("3513.30"), result.netFlow)
     }
-
-    // -------------------------------------------------------------------------
-    // C1–C7: calculateForYear tests
-    // -------------------------------------------------------------------------
-
-    @Test
-    fun calculateForYearShouldReturnTwelveResults() {
-        val result = calculator.calculateForYear(emptyList(), 2024, ".")
-
-        assertEquals(12, result.size)
-    }
-
-    @Test
-    fun calculateForYearEmptyTransactionsShouldReturnTwelveZeroFlowMonths() {
-        val result = calculator.calculateForYear(emptyList(), 2024, ".")
-
-        assertEquals(12, result.size)
-        result.forEach { month ->
-            assertEquals(BigDecimal.ZERO, month.totalIncome)
-            assertEquals(BigDecimal.ZERO, month.totalExpenses)
-            assertEquals(BigDecimal.ZERO, month.netFlow)
-        }
-    }
-
-    @Test
-    fun calculateForYearResultsShouldBeOrderedJanuaryToDecember() {
-        val result = calculator.calculateForYear(emptyList(), 2024, ".")
-
-        assertEquals(12, result.size)
-        val expectedPeriods =
-            (1..12).map { month ->
-                "2024-%02d".format(month)
-            }
-        result.forEachIndexed { index, cashFlowResult ->
-            assertEquals(expectedPeriods[index], cashFlowResult.period)
-        }
-    }
-
-    @Test
-    fun calculateForYearPeriodStringShouldIdentifyEachMonth() {
-        val result = calculator.calculateForYear(emptyList(), 2025, ".")
-
-        assertEquals("2025-01", result[0].period)
-        assertEquals("2025-06", result[5].period)
-        assertEquals("2025-12", result[11].period)
-    }
-
-    @Test
-    fun calculateForYearShouldMatchCalculateForMonthForEachMonth() {
-        val transactions =
-            listOf(
-                incomeTransaction(amount = "3000.00", date = "2024-03-10", firstLine = 1),
-                expenseTransaction(amount = "150.00", date = "2024-07-22", firstLine = 4),
-                incomeTransaction(amount = "500.00", date = "2024-11-05", firstLine = 7),
-            )
-
-        val yearResult = calculator.calculateForYear(transactions, 2024, ".")
-
-        (1..12).forEach { month ->
-            val monthResult = calculator.calculateForMonth(transactions, 2024, month, ".")
-            val yearMonthResult = yearResult[month - 1]
-            assertEquals(
-                monthResult.totalIncome,
-                yearMonthResult.totalIncome,
-                "totalIncome mismatch for month $month",
-            )
-            assertEquals(
-                monthResult.totalExpenses,
-                yearMonthResult.totalExpenses,
-                "totalExpenses mismatch for month $month",
-            )
-            assertEquals(
-                monthResult.netFlow,
-                yearMonthResult.netFlow,
-                "netFlow mismatch for month $month",
-            )
-            assertEquals(
-                monthResult.period,
-                yearMonthResult.period,
-                "period mismatch for month $month",
-            )
-        }
-    }
-
-    @Test
-    fun calculateForYearShouldOnlyIncludeTransactionsFromThatYear() {
-        val transactions =
-            listOf(
-                incomeTransaction(amount = "1000.00", date = "2023-06-15", firstLine = 1),
-                incomeTransaction(amount = "2000.00", date = "2024-06-15", firstLine = 4),
-                incomeTransaction(amount = "3000.00", date = "2025-06-15", firstLine = 7),
-            )
-
-        val result = calculator.calculateForYear(transactions, 2024, ".")
-
-        // Only the 2024 transaction should appear; sum across all months
-        val totalIncomeAcrossYear = result.fold(BigDecimal.ZERO) { acc, m -> acc + m.totalIncome }
-        assertEquals(BigDecimal("2000.00"), totalIncomeAcrossYear)
-    }
-
-    @Test
-    fun calculateForYearWithTransactionsSpanningMultipleMonthsShouldDistributeCorrectly() {
-        val transactions =
-            listOf(
-                incomeTransaction(amount = "5000.00", date = "2024-01-15", firstLine = 1),
-                expenseTransaction(amount = "300.00", date = "2024-03-20", firstLine = 4),
-            )
-
-        val result = calculator.calculateForYear(transactions, 2024, ".")
-
-        // January: income only
-        assertEquals(BigDecimal("5000.00"), result[0].totalIncome)
-        assertEquals(BigDecimal.ZERO, result[0].totalExpenses)
-
-        // February: nothing
-        assertEquals(BigDecimal.ZERO, result[1].totalIncome)
-        assertEquals(BigDecimal.ZERO, result[1].totalExpenses)
-
-        // March: expense only
-        assertEquals(BigDecimal.ZERO, result[2].totalIncome)
-        assertEquals(BigDecimal("300.00"), result[2].totalExpenses)
-
-        // All other months: zero
-        (3..11).forEach { idx ->
-            assertEquals(
-                BigDecimal.ZERO,
-                result[idx].totalIncome,
-                "month ${idx + 1} should have no income",
-            )
-            assertEquals(
-                BigDecimal.ZERO,
-                result[idx].totalExpenses,
-                "month ${idx + 1} should have no expenses",
-            )
-        }
-    }
-
     // -------------------------------------------------------------------------
     // M1: malformed date handling
     // -------------------------------------------------------------------------
@@ -756,7 +619,7 @@ class MonthlyCashFlowCalculatorTest {
                 incomeTransaction(amount = "2000.00", date = "2024-01-10", firstLine = 7),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         // Only the valid transaction should be included; the malformed-date ones are excluded
         assertEquals(BigDecimal("2000.00"), result.totalIncome)
@@ -790,7 +653,7 @@ class MonthlyCashFlowCalculatorTest {
                 incomeTransaction(amount = "1000.00", date = "2024-01-15", firstLine = 7),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         // Asset and equity postings must not inflate income or expenses
         assertEquals(BigDecimal("1000.00"), result.totalIncome)
@@ -822,7 +685,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         // The liability postings themselves should not appear in income
         // The expense posting from liabilityTransaction should still count
@@ -865,7 +728,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         // Quantities are summed regardless of currency
         assertEquals(BigDecimal("1500.00"), result.totalIncome)
@@ -899,7 +762,7 @@ class MonthlyCashFlowCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculateForMonth(transactions, 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
 
         assertEquals(BigDecimal("100.00"), result.totalIncome)
         assertEquals(BigDecimal("30.00"), result.totalExpenses)
@@ -912,7 +775,7 @@ class MonthlyCashFlowCalculatorTest {
 
     @Test
     fun emptyTransactionListShouldReturnEmptyTransactionLists() {
-        val result = calculator.calculateForMonth(emptyList(), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(emptyList()), 2024, 1)
 
         assertEquals(emptyList<Any>(), result.incomeTransactions)
         assertEquals(emptyList<Any>(), result.expenseTransactions)
@@ -921,7 +784,7 @@ class MonthlyCashFlowCalculatorTest {
     @Test
     fun incomeTransactionShouldAppearInIncomeTransactions() {
         val tx = incomeTransaction(amount = "1000.00", date = "2024-01-10", firstLine = 1)
-        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(tx)), 2024, 1)
 
         assertEquals(listOf(tx), result.incomeTransactions)
         assertEquals(emptyList<Any>(), result.expenseTransactions)
@@ -930,7 +793,7 @@ class MonthlyCashFlowCalculatorTest {
     @Test
     fun expenseTransactionShouldAppearInExpenseTransactions() {
         val tx = expenseTransaction(amount = "200.00", date = "2024-01-10", firstLine = 1)
-        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(tx)), 2024, 1)
 
         assertEquals(emptyList<Any>(), result.incomeTransactions)
         assertEquals(listOf(tx), result.expenseTransactions)
@@ -940,7 +803,7 @@ class MonthlyCashFlowCalculatorTest {
     fun mixedTransactionsShouldPopulateBothLists() {
         val income = incomeTransaction(amount = "3000.00", date = "2024-02-01", firstLine = 1)
         val expense = expenseTransaction(amount = "500.00", date = "2024-02-15", firstLine = 4)
-        val result = calculator.calculateForMonth(listOf(income, expense), 2024, 2, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(income, expense)), 2024, 2)
 
         assertEquals(listOf(income), result.incomeTransactions)
         assertEquals(listOf(expense), result.expenseTransactions)
@@ -950,7 +813,7 @@ class MonthlyCashFlowCalculatorTest {
     fun outOfMonthTransactionsShouldNotAppearInTransactionLists() {
         val inMonth = incomeTransaction(amount = "1000.00", date = "2024-03-15", firstLine = 1)
         val outOfMonth = expenseTransaction(amount = "200.00", date = "2024-04-01", firstLine = 4)
-        val result = calculator.calculateForMonth(listOf(inMonth, outOfMonth), 2024, 3, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(inMonth, outOfMonth)), 2024, 3)
 
         assertEquals(listOf(inMonth), result.incomeTransactions)
         assertEquals(emptyList<Any>(), result.expenseTransactions)
@@ -971,7 +834,7 @@ class MonthlyCashFlowCalculatorTest {
                         posting("Assets:Checking", amount("70.00")),
                     ),
             )
-        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(tx)), 2024, 1)
 
         assertEquals(listOf(tx), result.incomeTransactions)
         assertEquals(listOf(tx), result.expenseTransactions)
@@ -992,7 +855,7 @@ class MonthlyCashFlowCalculatorTest {
                         posting("Income:Bonus", amount("-200.00")),
                     ),
             )
-        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(tx)), 2024, 1)
 
         assertEquals(listOf(tx), result.incomeTransactions)
         assertEquals(emptyList<Any>(), result.expenseTransactions)
@@ -1013,7 +876,7 @@ class MonthlyCashFlowCalculatorTest {
                         posting("Assets:Checking", amount("-75.00")),
                     ),
             )
-        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(tx)), 2024, 1)
 
         assertEquals(emptyList<Any>(), result.incomeTransactions)
         assertEquals(listOf(tx), result.expenseTransactions)
@@ -1025,7 +888,7 @@ class MonthlyCashFlowCalculatorTest {
         val tx2 = incomeTransaction(amount = "2000.00", date = "2024-01-05", firstLine = 1)
         val tx3 = incomeTransaction(amount = "500.00", date = "2024-01-12", firstLine = 4)
         // Pass in deliberately unsorted order
-        val result = calculator.calculateForMonth(listOf(tx1, tx2, tx3), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(tx1, tx2, tx3)), 2024, 1)
 
         assertEquals(listOf(tx2, tx3, tx1), result.incomeTransactions)
     }
@@ -1035,7 +898,7 @@ class MonthlyCashFlowCalculatorTest {
         val tx1 = expenseTransaction(amount = "100.00", date = "2024-01-20", firstLine = 7)
         val tx2 = expenseTransaction(amount = "50.00", date = "2024-01-02", firstLine = 1)
         val tx3 = expenseTransaction(amount = "75.00", date = "2024-01-10", firstLine = 4)
-        val result = calculator.calculateForMonth(listOf(tx1, tx2, tx3), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(tx1, tx2, tx3)), 2024, 1)
 
         assertEquals(listOf(tx2, tx3, tx1), result.expenseTransactions)
     }
@@ -1054,7 +917,7 @@ class MonthlyCashFlowCalculatorTest {
                         posting("Assets:Checking", amount("-500.00")),
                     ),
             )
-        val result = calculator.calculateForMonth(listOf(tx), 2024, 1, ".")
+        val result = calculator.calculateForMonth(inputs(listOf(tx)), 2024, 1)
 
         assertEquals(emptyList<Any>(), result.incomeTransactions)
         assertEquals(emptyList<Any>(), result.expenseTransactions)
@@ -1084,12 +947,16 @@ class MonthlyCashFlowCalculatorTest {
 
         val result =
             calculator.calculateForMonth(
-                transactions,
+                inputs(
+                    transactions,
+                    prefixes =
+                        DEFAULT_PREFIXES.copy(
+                            income = listOf("MyIncome"),
+                            expenses = listOf("MyExpenses"),
+                        ),
+                ),
                 2024,
                 1,
-                ".",
-                incomePrefixes = listOf("MyIncome"),
-                expensesPrefixes = listOf("MyExpenses"),
             )
 
         assertEquals("2024-01", result.period)
@@ -1118,11 +985,12 @@ class MonthlyCashFlowCalculatorTest {
 
         val result =
             calculator.calculateForMonth(
-                transactions,
+                inputs(
+                    transactions,
+                    prefixes = DEFAULT_PREFIXES.copy(income = listOf("Income", "Einkommen")),
+                ),
                 2024,
                 1,
-                ".",
-                incomePrefixes = listOf("Income", "Einkommen"),
             )
 
         assertEquals(BigDecimal("2500.00"), result.totalIncome)

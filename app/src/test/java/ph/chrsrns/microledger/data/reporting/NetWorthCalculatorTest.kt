@@ -9,7 +9,7 @@ class NetWorthCalculatorTest {
 
     @Test
     fun emptyTransactionListShouldReturnZeroNetWorth() {
-        val result = calculator.calculate(emptyList(), ".")
+        val result = calculator.calculate(inputs(emptyList()))
 
         assertEquals(BigDecimal.ZERO, result.netWorth)
         assertEquals(BigDecimal.ZERO, result.totalAssets)
@@ -20,7 +20,7 @@ class NetWorthCalculatorTest {
     fun singleAssetPostingShouldCalculatePositiveNetWorth() {
         val transactions = listOf(openingTransaction())
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(BigDecimal("1000.00"), result.totalAssets)
         assertEquals(BigDecimal.ZERO, result.totalLiabilities)
@@ -45,7 +45,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(BigDecimal("5000.00"), result.totalAssets)
         assertEquals(BigDecimal("500.00"), result.totalLiabilities)
@@ -76,7 +76,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // Assets: Checking = 1000 + 2000 = 3000
         assertEquals(BigDecimal("3000.00"), result.totalAssets)
@@ -114,7 +114,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // The calculator should sum by currency separately or combine them
         // For this test, we verify that both currencies are included in total assets
@@ -147,7 +147,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // Only the Expenses:Food posting with an amount should be considered
         // Assets:Checking has no amount so it's ignored
@@ -173,7 +173,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // Assets can be negative (overdraft)
         assertEquals(BigDecimal("-200.00"), result.totalAssets)
@@ -211,7 +211,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // Assets: Checking = 3000 + 2500 = 5500, Savings = 5000, Total = 10500
         assertEquals(BigDecimal("10500.00"), result.totalAssets)
@@ -238,7 +238,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(BigDecimal("2000.00"), result.totalAssets)
         assertEquals(BigDecimal.ZERO, result.totalLiabilities)
@@ -263,7 +263,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(BigDecimal("3000.00"), result.totalAssets)
         assertEquals(BigDecimal("800.00"), result.totalLiabilities)
@@ -293,7 +293,7 @@ class NetWorthCalculatorTest {
                 openingTransaction(amount = "500.00", date = "2024-01-16", firstLine = 4),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // The malformed quantity contributes 0; only the valid 500.00 should count
         assertEquals(BigDecimal("500.00"), result.totalAssets)
@@ -317,7 +317,7 @@ class NetWorthCalculatorTest {
                 expenseTransaction(amount = "400.00", date = "2024-01-10", firstLine = 7),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // totalAssets = 2000 (opening) + 3000 (income deposit) - 400 (expense withdrawal) = 4600
         assertEquals(BigDecimal("4600.00"), result.totalAssets)
@@ -341,7 +341,7 @@ class NetWorthCalculatorTest {
                 expenseTransaction(amount = "250.00", date = "2024-01-15", firstLine = 10),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // The invariant must hold regardless of the specific values
         assertEquals(
@@ -383,7 +383,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // Liabilities across currencies are summed numerically
         assertEquals(BigDecimal("1100.00"), result.totalLiabilities)
@@ -411,7 +411,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(BigDecimal("3000.00"), result.totalAssets)
         assertEquals(BigDecimal("800.00"), result.totalLiabilities)
@@ -441,7 +441,7 @@ class NetWorthCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // Assets reduced by the 500 withdrawal
         assertEquals(BigDecimal("-500.00"), result.totalAssets)
@@ -475,10 +475,14 @@ class NetWorthCalculatorTest {
 
         val result =
             calculator.calculate(
-                transactions,
-                ".",
-                assetsPrefixes = listOf("MyAssets"),
-                liabilitiesPrefixes = listOf("MyLiabilities"),
+                inputs(
+                    transactions,
+                    prefixes =
+                        DEFAULT_PREFIXES.copy(
+                            assets = listOf("MyAssets"),
+                            liabilities = listOf("MyLiabilities"),
+                        ),
+                ),
             )
 
         assertEquals(BigDecimal("3000.00"), result.totalAssets)
@@ -506,9 +510,10 @@ class NetWorthCalculatorTest {
 
         val result =
             calculator.calculate(
-                transactions,
-                ".",
-                assetsPrefixes = listOf("Assets", "Aktiva"),
+                inputs(
+                    transactions,
+                    prefixes = DEFAULT_PREFIXES.copy(assets = listOf("Assets", "Aktiva")),
+                ),
             )
 
         assertEquals(BigDecimal("3000.00"), result.totalAssets)

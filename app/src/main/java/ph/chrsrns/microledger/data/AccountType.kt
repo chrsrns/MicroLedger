@@ -9,21 +9,14 @@ enum class AccountType {
 }
 
 data class AccountTypePrefixes(
-    val assets: List<String>,
-    val liabilities: List<String>,
-    val equity: List<String>,
-    val income: List<String>,
-    val expenses: List<String>,
+    val assets: List<String> = emptyList(),
+    val liabilities: List<String> = emptyList(),
+    val equity: List<String> = emptyList(),
+    val income: List<String> = emptyList(),
+    val expenses: List<String> = emptyList(),
 ) {
     companion object {
-        val EMPTY =
-            AccountTypePrefixes(
-                assets = emptyList(),
-                liabilities = emptyList(),
-                equity = emptyList(),
-                income = emptyList(),
-                expenses = emptyList(),
-            )
+        val EMPTY = AccountTypePrefixes()
     }
 
     fun classify(account: String?): AccountType? {

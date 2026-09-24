@@ -6,10 +6,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
+import ph.chrsrns.microledger.data.ReportingPreferences
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
+import ph.chrsrns.microledger.data.reporting.ReportingInputs
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -36,6 +39,23 @@ class CashFlowTransactionsViewModel
         private val _selectedMonth = MutableLiveData(Calendar.getInstance().get(Calendar.MONTH) + 1)
         val selectedMonth: LiveData<Int> = _selectedMonth
 
+        private fun reportingInputs(transactions: List<Transaction>) =
+            ReportingInputs(
+                transactions = transactions,
+                preferences =
+                    ReportingPreferences(
+                        decimalSeparator = preferencesDataSource.getDecimalSeparator(),
+                        prefixes =
+                            AccountTypePrefixes(
+                                assets = preferencesDataSource.getAssetsPrefixes(),
+                                liabilities = preferencesDataSource.getLiabilitiesPrefixes(),
+                                equity = preferencesDataSource.getEquityPrefixes(),
+                                income = preferencesDataSource.getIncomePrefixes(),
+                                expenses = preferencesDataSource.getExpensesPrefixes(),
+                            ),
+                    ),
+            )
+
         val currentMonthCashFlow: LiveData<MonthlyCashFlowCalculator.CashFlowResult> =
             MediatorLiveData<MonthlyCashFlowCalculator.CashFlowResult>().apply {
                 fun compute() {
@@ -44,12 +64,9 @@ class CashFlowTransactionsViewModel
                     val month = _selectedMonth.value ?: return
                     value =
                         cashFlowCalculator.calculateForMonth(
-                            transactions,
+                            reportingInputs(transactions),
                             year,
                             month,
-                            preferencesDataSource.getDecimalSeparator(),
-                            preferencesDataSource.getIncomePrefixes(),
-                            preferencesDataSource.getExpensesPrefixes(),
                         )
                 }
                 addSource(ledgerRepository.transactions) { compute() }
@@ -65,9 +82,6 @@ class CashFlowTransactionsViewModel
                     val transactions = ledgerRepository.transactions.value ?: return
                     val year = _selectedYear.value ?: return
                     val month = _selectedMonth.value ?: return
-                    val decimalSeparator = preferencesDataSource.getDecimalSeparator()
-                    val incomePrefixes = preferencesDataSource.getIncomePrefixes()
-                    val expensesPrefixes = preferencesDataSource.getExpensesPrefixes()
                     // Build the rolling 12-month window ending at (year, month) inclusive.
                     value =
                         (11 downTo 0).map { offset ->
@@ -76,12 +90,9 @@ class CashFlowTransactionsViewModel
                             val windowYear = totalMonths / 12
                             val windowMonth = totalMonths % 12 + 1
                             cashFlowCalculator.calculateForMonth(
-                                transactions,
+                                reportingInputs(transactions),
                                 windowYear,
                                 windowMonth,
-                                decimalSeparator,
-                                incomePrefixes,
-                                expensesPrefixes,
                             )
                         }
                 }

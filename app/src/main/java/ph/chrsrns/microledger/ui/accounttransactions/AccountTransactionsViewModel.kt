@@ -6,10 +6,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
+import ph.chrsrns.microledger.data.ReportingPreferences
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
+import ph.chrsrns.microledger.data.reporting.ReportingInputs
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,20 +38,28 @@ class AccountTransactionsViewModel
         private val _selectedCurrency = MutableLiveData<String?>()
         val selectedCurrency: LiveData<String?> = _selectedCurrency
 
+        private fun reportingInputs(transactions: List<Transaction>) =
+            ReportingInputs(
+                transactions = transactions,
+                preferences =
+                    ReportingPreferences(
+                        decimalSeparator = preferencesDataSource.getDecimalSeparator(),
+                        prefixes =
+                            AccountTypePrefixes(
+                                assets = preferencesDataSource.getAssetsPrefixes(),
+                                liabilities = preferencesDataSource.getLiabilitiesPrefixes(),
+                                equity = preferencesDataSource.getEquityPrefixes(),
+                                income = preferencesDataSource.getIncomePrefixes(),
+                                expenses = preferencesDataSource.getExpensesPrefixes(),
+                            ),
+                    ),
+            )
+
         val accountBalances: LiveData<AccountBalanceCalculator.AccountBalancesResult> =
             MediatorLiveData<AccountBalanceCalculator.AccountBalancesResult>().apply {
                 fun compute() {
                     val transactions = ledgerRepository.transactions.value ?: return
-                    value =
-                        accountBalanceCalculator.calculate(
-                            transactions,
-                            preferencesDataSource.getDecimalSeparator(),
-                            preferencesDataSource.getAssetsPrefixes(),
-                            preferencesDataSource.getLiabilitiesPrefixes(),
-                            preferencesDataSource.getEquityPrefixes(),
-                            preferencesDataSource.getIncomePrefixes(),
-                            preferencesDataSource.getExpensesPrefixes(),
-                        )
+                    value = accountBalanceCalculator.calculate(reportingInputs(transactions))
                 }
                 addSource(ledgerRepository.transactions) { compute() }
                 addSource(preferencesDataSource.assetsPrefixes) { compute() }

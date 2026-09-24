@@ -1,17 +1,12 @@
 package ph.chrsrns.microledger.data.reporting
 
 import ph.chrsrns.microledger.data.AccountType
-import ph.chrsrns.microledger.data.AccountTypePrefixes
-import ph.chrsrns.microledger.data.Transaction
 import java.math.BigDecimal
 
 /**
  * Calculates net worth from a list of transactions.
  *
  * Net worth = Total Assets - Total Liabilities
- *
- * Accounts starting with "Assets" are considered assets.
- * Accounts starting with "Liabilities" are considered liabilities.
  */
 class NetWorthCalculator {
     /**
@@ -24,30 +19,18 @@ class NetWorthCalculator {
     )
 
     /**
-     * Calculates net worth from the given transactions.
+     * Calculates net worth from the given inputs.
      *
-     * @param transactions List of transactions to process
-     * @param decimalSeparator The user's decimal separator used to parse quantities
+     * @param inputs Transactions and reporting preferences to process
      * @return NetWorthResult containing the calculated values
      */
-    fun calculate(
-        transactions: List<Transaction>,
-        decimalSeparator: String,
-        assetsPrefixes: List<String> = listOf("Assets"),
-        liabilitiesPrefixes: List<String> = listOf("Liabilities"),
-    ): NetWorthResult {
-        val prefixes =
-            AccountTypePrefixes(
-                assets = assetsPrefixes,
-                liabilities = liabilitiesPrefixes,
-                equity = emptyList(),
-                income = emptyList(),
-                expenses = emptyList(),
-            )
+    fun calculate(inputs: ReportingInputs): NetWorthResult {
+        val decimalSeparator = inputs.preferences.decimalSeparator
+        val prefixes = inputs.preferences.prefixes
         var totalAssets = BigDecimal.ZERO
         var totalLiabilities = BigDecimal.ZERO
 
-        for (transaction in transactions) {
+        for (transaction in inputs.transactions) {
             for (posting in transaction.postings) {
                 val amount = posting.amount ?: continue
                 val account = posting.account ?: continue

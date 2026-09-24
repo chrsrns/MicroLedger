@@ -1,7 +1,6 @@
 package ph.chrsrns.microledger.data.reporting
 
 import ph.chrsrns.microledger.data.AccountType
-import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Transaction
 import java.math.BigDecimal
 import java.util.Locale
@@ -27,35 +26,25 @@ class MonthlyCashFlowCalculator {
     /**
      * Calculates cash flow for a specific month.
      *
-     * @param transactions List of transactions to process
+     * @param inputs Transactions and reporting preferences to process
      * @param year The year (e.g., 2024)
      * @param month The month (1-12)
-     * @param decimalSeparator The user's decimal separator used to parse quantities
      * @return CashFlowResult for the specified month
      */
     fun calculateForMonth(
-        transactions: List<Transaction>,
+        inputs: ReportingInputs,
         year: Int,
         month: Int,
-        decimalSeparator: String,
-        incomePrefixes: List<String> = listOf("Income"),
-        expensesPrefixes: List<String> = listOf("Expenses"),
     ): CashFlowResult {
+        val decimalSeparator = inputs.preferences.decimalSeparator
+        val prefixes = inputs.preferences.prefixes
         val period = String.format(Locale.US, "%04d-%02d", year, month)
-        val prefixes =
-            AccountTypePrefixes(
-                assets = emptyList(),
-                liabilities = emptyList(),
-                equity = emptyList(),
-                income = incomePrefixes,
-                expenses = expensesPrefixes,
-            )
         var totalIncome = BigDecimal.ZERO
         var totalExpenses = BigDecimal.ZERO
         val incomeTransactionSet = mutableSetOf<Transaction>()
         val expenseTransactionSet = mutableSetOf<Transaction>()
 
-        for (transaction in transactions) {
+        for (transaction in inputs.transactions) {
             if (!isTransactionInMonth(transaction.date, year, month)) {
                 continue
             }
@@ -96,32 +85,6 @@ class MonthlyCashFlowCalculator {
             expenseTransactions = expenseTransactionSet.sortedBy { it.firstLine },
         )
     }
-
-    /**
-     * Calculates cash flow for multiple months.
-     *
-     * @param transactions List of transactions to process
-     * @param year The year
-     * @param decimalSeparator The user's decimal separator used to parse quantities
-     * @return List of CashFlowResult for each month in the year
-     */
-    fun calculateForYear(
-        transactions: List<Transaction>,
-        year: Int,
-        decimalSeparator: String,
-        incomePrefixes: List<String> = listOf("Income"),
-        expensesPrefixes: List<String> = listOf("Expenses"),
-    ): List<CashFlowResult> =
-        (1..12).map { month ->
-            calculateForMonth(
-                transactions,
-                year,
-                month,
-                decimalSeparator,
-                incomePrefixes,
-                expensesPrefixes,
-            )
-        }
 
     private fun isTransactionInMonth(
         date: String,
