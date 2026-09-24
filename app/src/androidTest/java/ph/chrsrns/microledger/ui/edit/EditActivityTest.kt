@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
@@ -65,5 +66,23 @@ class EditActivityTest {
         composeRule.onNodeWithContentDescription(context.getString(R.string.save)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText("2026-02-26").assertIsDisplayed()
         composeRule.onNodeWithText("Stolen").assertIsDisplayed()
+    }
+
+    @Test
+    fun canEditPostingFromBottomSheet() {
+        composeRule.onNodeWithText("(123) Restaurant | Dinner with friend").assertIsDisplayed().performClick()
+        composeRule.onNodeWithContentDescription(context.getString(R.string.edit)).assertIsDisplayed().performClick()
+
+        composeRule.onNodeWithText("expenses:food:restaurant").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText(context.getString(R.string.edit_posting)).assertIsDisplayed()
+        composeRule
+            .onNodeWithText(
+                context.getString(R.string.account),
+            ).assertIsDisplayed()
+            .performTextReplacement("expenses:food:restaurant:friend")
+        composeRule.onNodeWithTag("posting_sheet_save").assertIsDisplayed().performClick()
+
+        composeRule.onNodeWithContentDescription(context.getString(R.string.save)).assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("expenses:food:restaurant:friend").assertIsDisplayed()
     }
 }

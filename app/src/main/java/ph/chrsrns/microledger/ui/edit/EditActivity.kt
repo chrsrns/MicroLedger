@@ -9,34 +9,34 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers.Main
@@ -84,53 +84,49 @@ class EditActivity : ComponentActivity() {
             val valid by editViewModel.valid.observeAsState()
             val enabled = !(saving ?: true) && (valid ?: false)
 
-            var fabHeight by remember { mutableIntStateOf(0) }
-            val fabOffsetDp = with(LocalDensity.current) { fabHeight.toDp() + 16.dp }
-
             MicroLedgerTheme {
                 Scaffold(
                     topBar = { Bar(editViewModel) },
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-                    floatingActionButton = {
-                        FloatingActionButton(
-                            onClick = {
-                                if (enabled) {
-                                    editViewModel.save {
-                                        scope.launch(Main) {
-                                            finish()
-                                            startActivity(
-                                                Intent(context, MainActivity::class.java).setFlags(
-                                                    Intent.FLAG_ACTIVITY_CLEAR_TOP,
-                                                ),
-                                            )
+                    bottomBar = {
+                        Surface(tonalElevation = 3.dp) {
+                            val saveDescription = stringResource(R.string.save)
+                            Button(
+                                onClick = {
+                                    if (enabled) {
+                                        editViewModel.save {
+                                            scope.launch(Main) {
+                                                finish()
+                                                startActivity(
+                                                    Intent(context, MainActivity::class.java).setFlags(
+                                                        Intent.FLAG_ACTIVITY_CLEAR_TOP,
+                                                    ),
+                                                )
+                                            }
                                         }
                                     }
-                                }
-                            },
-                            containerColor =
-                                if (enabled) {
-                                    FloatingActionButtonDefaults.containerColor
-                                } else {
-                                    MaterialTheme.colorScheme.surface
                                 },
-                            modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
-                        ) {
-                            if (saving ?: true) {
-                                CircularProgressIndicator(
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Default.Done,
-                                    contentDescription = stringResource(R.string.save),
-                                )
+                                enabled = enabled,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                        .semantics { contentDescription = saveDescription },
+                            ) {
+                                if (saving ?: true) {
+                                    CircularProgressIndicator(
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        trackColor = MaterialTheme.colorScheme.primary,
+                                    )
+                                } else {
+                                    Text(stringResource(R.string.save))
+                                }
                             }
                         }
                     },
                     modifier = Modifier.imePadding(),
                 ) { contentPadding ->
-                    TransactionForm(editViewModel, contentPadding, fabOffsetDp, snackbarHostState)
+                    TransactionForm(editViewModel, contentPadding, snackbarHostState)
                 }
             }
         }

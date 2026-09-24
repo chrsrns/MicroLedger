@@ -111,7 +111,10 @@ abstract class TransactionFormViewModel(
     val accounts: LiveData<List<String>> = ledgerRepository.accounts.map { it.sorted() }
     val unbalancedAmount: LiveData<String> =
         postings.map { ps ->
-            val relevantPostings = ps.filter { p -> !p.isVirtual() && !p.isComment() }
+            val relevantPostings =
+                ps.filter { p ->
+                    !p.isVirtual() && !p.isComment() && !p.account.isNullOrBlank()
+                }
             if (relevantPostings.any { it.assertion != null && it.amount == null }) return@map ""
             if (relevantPostings.any { it.cost != null }) return@map ""
             if (relevantPostings
@@ -145,32 +148,28 @@ abstract class TransactionFormViewModel(
     val valid: LiveData<Boolean> =
         postings.switchMap { postings ->
             unbalancedAmount.map { unbalancedAmount ->
-                if (postings.filter { !it.isVirtual() && !it.isComment() }.size < 2) {
+                val withoutSentinel = postings.dropLast(1)
+                val realPostings =
+                    withoutSentinel.filter { !it.isVirtual() && !it.isComment() }
+                if (realPostings.size < 2) {
                     return@map false
                 }
+                if (realPostings.any { it.account.isNullOrBlank() }) {
+                    return@map false
+                }
+                val nonComment = withoutSentinel.filter { !it.isComment() }
                 // If there is an unbalanced amount, and there are no postings with an empty amount, it's invalid
                 if (unbalancedAmount != "" &&
-                    postings
-                        .dropLast(1)
-                        .filter {
-                            !it.isComment()
-                        }.all {
-                            (it.amount?.quantity ?: "") != ""
-                        }
+                    nonComment.all { (it.amount?.quantity ?: "") != "" }
                 ) {
                     return@map false
                 }
                 // If there are multiple postings with an empty amount and no assertions, it's invalid
-                if (postings
-                        .dropLast(1)
-                        .filter { !it.isComment() }
-                        .filter {
-                            (it.amount?.quantity ?: "") == "" &&
-                                (
-                                    it.assertion?.quantity
-                                        ?: ""
-                                ) == ""
-                        }.size > 1
+                if (
+                    nonComment.count {
+                        (it.amount?.quantity ?: "") == "" &&
+                            (it.assertion?.quantity ?: "") == ""
+                    } > 1
                 ) {
                     return@map false
                 }
@@ -193,6 +192,15 @@ abstract class TransactionFormViewModel(
     }
 
     val currencyBeforeAmount: LiveData<Boolean> = preferencesDataSource.currencyBeforeAmount
+    val currencyAmountSpacing: LiveData<Boolean> =
+        preferencesDataSource.spacingBetweenCurrencyAndAmount
+    val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
+    val defaultCurrency: LiveData<String> = preferencesDataSource.defaultCurrency
+    val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
+    val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
+    val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
+    val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
+    val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
 
     protected fun toTransactionString(): String {
         val postingWidth = preferencesDataSource.getPostingWidth()
@@ -208,7 +216,9 @@ abstract class TransactionFormViewModel(
                 code.value,
                 payee.value,
                 note.value,
-                postings.value!!.dropLast(1),
+                postings.value!!
+                    .dropLast(1)
+                    .filter { it.isVirtual() || it.isComment() || !it.account.isNullOrBlank() },
             )
         return transaction.format(
             postingWidth,
@@ -242,7 +252,7 @@ abstract class TransactionFormViewModel(
                     note = note.value,
                     status = status.value,
                     code = code.value,
-                    postings = postings.value ?: emptyList(),
+                    postings = templatePostings(),
                 )
             ledgerRepository.addTemplate(
                 uri,
@@ -358,6 +368,28 @@ abstract class TransactionFormViewModel(
 
     fun setPostings(newPostings: List<Posting>) {
         _postings.value = filterPostings(newPostings)
+    }
+
+    fun addPosting() {
+        val current = ArrayList(postings.value ?: listOf(newPosting()))
+        val sentinelIndex = current.indexOfLast { it == newPosting() }
+        if (sentinelIndex >= 0) {
+            current.add(sentinelIndex, Posting("", null, null, null, null, null))
+        } else {
+            current.add(Posting("", null, null, null, null, null))
+        }
+        _postings.value = filterPostings(current)
+    }
+
+    fun setPosting(
+        index: Int,
+        posting: Posting,
+    ) {
+        val current = ArrayList(postings.value ?: emptyList())
+        if (index in current.indices) {
+            current[index] = posting
+            _postings.value = filterPostings(current)
+        }
     }
 
     fun setAccount(
@@ -590,6 +622,20 @@ abstract class TransactionFormViewModel(
             filteredResult.add(newPosting())
         }
         return filteredResult
+    }
+
+    protected fun templatePostings(): List<Posting> {
+        val current = postings.value ?: return emptyList()
+        if (current.isEmpty()) return current
+        val withoutSentinel =
+            if (current.last() == newPosting()) {
+                current.dropLast(1)
+            } else {
+                current
+            }
+        return withoutSentinel.filter {
+            it.isVirtual() || it.isComment() || !it.account.isNullOrBlank()
+        }
     }
 
     fun defaultAmount() = Amount("", preferencesDataSource.getDefaultCurrency(), "")

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -47,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -63,7 +63,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
@@ -79,7 +78,6 @@ const val TRANSACTION_INDEX_KEY = "transaction_index"
 fun TransactionForm(
     viewModel: TransactionFormViewModel,
     contentPadding: PaddingValues,
-    bottomOffset: Dp,
     snackbarHostState: SnackbarHostState,
 ) {
     val context = LocalContext.current
@@ -124,6 +122,31 @@ fun TransactionForm(
         }
     }
 
+    val formattedDate by viewModel.formattedDate.observeAsState()
+    val status by viewModel.status.observeAsState()
+    val code by viewModel.code.observeAsState()
+    val payee by viewModel.payee.observeAsState()
+    val note by viewModel.note.observeAsState()
+    val possiblePayees by viewModel.possiblePayees.observeAsState()
+    val possibleNotes by viewModel.possibleNotes.observeAsState()
+
+    val currencyEnabled by viewModel.currencyEnabled.observeAsState(true)
+    val currencyBeforeAmount by viewModel.currencyBeforeAmount.observeAsState(true)
+    val currencyAmountSpacing by viewModel.currencyAmountSpacing.observeAsState(true)
+    val decimalSeparator by viewModel.decimalSeparator.observeAsState("")
+    val defaultCurrency by viewModel.defaultCurrency.observeAsState("")
+    val assetsPrefixes by viewModel.assetsPrefixes.observeAsState(emptyList())
+    val liabilitiesPrefixes by viewModel.liabilitiesPrefixes.observeAsState(emptyList())
+    val equityPrefixes by viewModel.equityPrefixes.observeAsState(emptyList())
+    val incomePrefixes by viewModel.incomePrefixes.observeAsState(emptyList())
+    val expensesPrefixes by viewModel.expensesPrefixes.observeAsState(emptyList())
+
+    val postings by viewModel.postings.observeAsState()
+    val accounts by viewModel.accounts.observeAsState()
+    val unbalancedAmount by viewModel.unbalancedAmount.observeAsState()
+
+    var selectedIndex by remember { mutableIntStateOf(-1) }
+
     Box(
         modifier =
             Modifier
@@ -155,71 +178,68 @@ fun TransactionForm(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(vertical = 2.dp)
+                    .padding(vertical = 8.dp, horizontal = 8.dp)
                     .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            with(LocalDensity.current) {
-                FlowRow(
-                    modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    itemVerticalAlignment = Alignment.Bottom,
-                ) {
-                    DateSelector(
-                        viewModel,
-                        Modifier
-                            .weight(0.25f)
-                            .width((8 * 16).sp.toDp()),
-                    )
-                    val status by viewModel.status.observeAsState()
-                    StatusSelector(
-                        status,
-                        { viewModel.setStatus(it) },
-                        Modifier.width((3 * 16).sp.toDp()),
-                    )
-                    val code by viewModel.code.observeAsState()
-                    CodeField(
-                        code,
-                        { viewModel.setCode(it) },
-                        Modifier
-                            .weight(0.5f)
-                            .width((16 * 16).sp.toDp()),
-                    )
-                    val payee by viewModel.payee.observeAsState()
-                    val options by viewModel.possiblePayees.observeAsState()
-                    PayeeSelector(
-                        payee,
-                        options ?: emptyList(),
-                        { viewModel.setPayee(it) },
-                        Modifier
-                            .weight(0.5f)
-                            .width((16 * 16).sp.toDp()),
-                    )
-                    val note by viewModel.note.observeAsState()
-                    val possibleNotes by viewModel.possibleNotes.observeAsState()
-                    NoteSelector(
-                        note,
-                        possibleNotes ?: emptyList(),
-                        { viewModel.setNote(it) },
-                        Modifier
-                            .weight(0.75f)
-                            .width((16 * 16).sp.toDp()),
-                    )
-                }
-                val postings by viewModel.postings.observeAsState()
-                postings?.forEachIndexed { i, posting ->
-                    HorizontalDivider(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                    )
-                    PostingRow(i, posting, posting.isEmpty(), viewModel)
-                }
-            }
-            Box(
-                Modifier
-                    .height(bottomOffset)
-                    .fillMaxWidth(),
+            TransactionHeaderCard(
+                formattedDate = formattedDate ?: "",
+                status = status,
+                code = code,
+                payee = payee,
+                note = note,
+                possiblePayees = possiblePayees ?: emptyList(),
+                possibleNotes = possibleNotes ?: emptyList(),
+                onDateChange = { viewModel.setDate(it) },
+                onStatusChange = { viewModel.setStatus(it) },
+                onCodeChange = { viewModel.setCode(it) },
+                onPayeeChange = { viewModel.setPayee(it) },
+                onNoteChange = { viewModel.setNote(it) },
+            )
+            PostingList(
+                postings = postings ?: emptyList(),
+                accounts = accounts ?: emptyList(),
+                selectedIndex = selectedIndex,
+                currencyEnabled = currencyEnabled,
+                currencyBeforeAmount = currencyBeforeAmount,
+                currencyAmountSpacing = currencyAmountSpacing,
+                decimalSeparator = decimalSeparator ?: "",
+                defaultCurrency = defaultCurrency ?: "",
+                unbalancedAmount = unbalancedAmount,
+                assetsPrefixes = assetsPrefixes ?: emptyList(),
+                liabilitiesPrefixes = liabilitiesPrefixes ?: emptyList(),
+                equityPrefixes = equityPrefixes ?: emptyList(),
+                incomePrefixes = incomePrefixes ?: emptyList(),
+                expensesPrefixes = expensesPrefixes ?: emptyList(),
+                onPostingClick = { selectedIndex = it },
+                onRemoveClick = { viewModel.removePosting(it) },
+                onAddClick = { viewModel.addPosting() },
+            )
+        }
+
+        val currentPostings = postings
+        if (selectedIndex >= 0 && currentPostings != null && selectedIndex < currentPostings.size) {
+            val posting = currentPostings[selectedIndex]
+            val isBalance =
+                selectedIndex == currentPostings.lastIndex && posting.account.isNullOrBlank()
+            PostingEditBottomSheet(
+                posting = posting,
+                accounts = accounts ?: emptyList(),
+                isBalance = isBalance,
+                currencyEnabled = currencyEnabled,
+                currencyBeforeAmount = currencyBeforeAmount,
+                currencyAmountSpacing = currencyAmountSpacing,
+                decimalSeparator = decimalSeparator ?: "",
+                defaultCurrency = defaultCurrency ?: "",
+                unbalancedAmount = if (isBalance) unbalancedAmount else null,
+                assetsPrefixes = assetsPrefixes ?: emptyList(),
+                liabilitiesPrefixes = liabilitiesPrefixes ?: emptyList(),
+                equityPrefixes = equityPrefixes ?: emptyList(),
+                incomePrefixes = incomePrefixes ?: emptyList(),
+                expensesPrefixes = expensesPrefixes ?: emptyList(),
+                onDismiss = { selectedIndex = -1 },
+                onSave = { viewModel.setPosting(selectedIndex, it) },
+                onRemove = { viewModel.removePosting(selectedIndex) },
             )
         }
     }
