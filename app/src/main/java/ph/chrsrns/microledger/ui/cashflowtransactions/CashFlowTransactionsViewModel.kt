@@ -75,19 +75,13 @@ class CashFlowTransactionsViewModel
                     val preferences = preferencesDataSource.reportingPreferences.value ?: return
                     val year = _selectedYear.value ?: return
                     val month = _selectedMonth.value ?: return
-                    // Build the rolling 12-month window ending at (year, month) inclusive.
                     value =
-                        (11 downTo 0).map { offset ->
-                            // Subtract offset months from the selected month.
-                            val totalMonths = (year * 12 + month - 1) - offset
-                            val windowYear = totalMonths / 12
-                            val windowMonth = totalMonths % 12 + 1
-                            cashFlowCalculator.calculateForMonth(
-                                ReportingInputs(transactions, preferences),
-                                windowYear,
-                                windowMonth,
-                            )
-                        }
+                        cashFlowCalculator.calculateRollingWindow(
+                            ReportingInputs(transactions, preferences),
+                            year,
+                            month,
+                            12,
+                        )
                 }
                 addSource(ledgerRepository.transactions) { compute() }
                 addSource(preferencesDataSource.reportingPreferences) { compute() }

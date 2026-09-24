@@ -997,4 +997,59 @@ class MonthlyCashFlowCalculatorTest {
         assertEquals(BigDecimal.ZERO, result.totalExpenses)
         assertEquals(BigDecimal("2500.00"), result.netFlow)
     }
+
+    // -------------------------------------------------------------------------
+    // R1: calculateRollingWindow
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun rollingWindowShouldReturnRequestedNumberOfMonths() {
+        val result = calculator.calculateRollingWindow(inputs(emptyList()), 2024, 6, 12)
+
+        assertEquals(12, result.size)
+    }
+
+    @Test
+    fun rollingWindowShouldEndAtRequestedMonthInclusive() {
+        val result = calculator.calculateRollingWindow(inputs(emptyList()), 2024, 6, 12)
+
+        assertEquals("2024-06", result.last().period)
+        assertEquals("2023-07", result.first().period)
+    }
+
+    @Test
+    fun rollingWindowShouldWrapAcrossYearBoundary() {
+        val result = calculator.calculateRollingWindow(inputs(emptyList()), 2024, 2, 12)
+
+        assertEquals("2023-03", result.first().period)
+        assertEquals("2024-02", result.last().period)
+        val periods = result.map { it.period }
+        assertEquals(
+            listOf(
+                "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08",
+                "2023-09", "2023-10", "2023-11", "2023-12", "2024-01", "2024-02",
+            ),
+            periods,
+        )
+    }
+
+    @Test
+    fun rollingWindowShouldMatchCalculateForMonthForEachMonth() {
+        val transactions =
+            listOf(
+                incomeTransaction(amount = "1000.00", date = "2024-01-15", firstLine = 1),
+                expenseTransaction(amount = "300.00", date = "2024-03-20", firstLine = 4),
+            )
+        val inputs = inputs(transactions)
+
+        val windowResult = calculator.calculateRollingWindow(inputs, 2024, 6, 6)
+        (1..6).forEach { month ->
+            val monthResult = calculator.calculateForMonth(inputs, 2024, month)
+            val windowMonthResult = windowResult[month - 1]
+            assertEquals(monthResult.totalIncome, windowMonthResult.totalIncome)
+            assertEquals(monthResult.totalExpenses, windowMonthResult.totalExpenses)
+            assertEquals(monthResult.netFlow, windowMonthResult.netFlow)
+            assertEquals(monthResult.period, windowMonthResult.period)
+        }
+    }
 }

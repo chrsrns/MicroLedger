@@ -86,6 +86,26 @@ class MonthlyCashFlowCalculator {
         )
     }
 
+    /**
+     * Calculates cash flow for a rolling window of months.
+     *
+     * @param inputs Transactions and reporting preferences to process
+     * @param endYear The year of the last month in the window
+     * @param endMonth The last month in the window (1-12, inclusive)
+     * @param months The number of consecutive months in the window
+     * @return List of CashFlowResult, oldest first, ending at (endYear, endMonth)
+     */
+    fun calculateRollingWindow(
+        inputs: ReportingInputs,
+        endYear: Int,
+        endMonth: Int,
+        months: Int,
+    ): List<CashFlowResult> =
+        (months - 1 downTo 0).map { offset ->
+            val totalMonths = (endYear * 12 + endMonth - 1) - offset
+            calculateForMonth(inputs, totalMonths / 12, totalMonths % 12 + 1)
+        }
+
     private fun isTransactionInMonth(
         date: String,
         year: Int,
