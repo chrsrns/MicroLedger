@@ -1,11 +1,5 @@
 package ph.chrsrns.microledger.ui.dashboard
 
-import android.content.Intent
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,78 +28,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.AccountType
 import ph.chrsrns.microledger.data.displaySign
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import ph.chrsrns.microledger.data.reporting.NetWorthCalculator
-import ph.chrsrns.microledger.ui.accounttransactions.AccountTransactionsActivity
-import ph.chrsrns.microledger.ui.cashflowtransactions.CashFlowTransactionsActivity
-import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
 import ph.chrsrns.microledger.ui.util.amountColor
 import ph.chrsrns.microledger.ui.util.formatAmount
 import java.math.BigDecimal
-
-@AndroidEntryPoint
-class DashboardActivity : ComponentActivity() {
-    private val dashboardViewModel: DashboardViewModel by viewModels()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            MicroLedgerTheme {
-                DashboardScreen(
-                    context = this,
-                    onBackClick = { finish() },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun DashboardScreen(
-    context: ComponentActivity,
-    dashboardViewModel: DashboardViewModel = viewModel(),
-    onBackClick: () -> Unit,
-    showTopBar: Boolean = true,
-) {
-    val netWorth by dashboardViewModel.netWorth.observeAsState()
-    val accountBalances by dashboardViewModel.accountBalances.observeAsState()
-    val cashFlow by dashboardViewModel.currentMonthCashFlow.observeAsState()
-    val decimalSeparator by dashboardViewModel.decimalSeparator.observeAsState(".")
-    val fileUri by dashboardViewModel.fileUri.observeAsState()
-
-    DashboardScreenContent(
-        netWorth = netWorth,
-        accountBalances = accountBalances,
-        cashFlow = cashFlow,
-        decimalSeparator = decimalSeparator,
-        hasFile = fileUri != null,
-        onBackClick = onBackClick,
-        onAccountClick = {
-            context.startActivity(Intent(context, AccountTransactionsActivity::class.java))
-        },
-        onCashFlowClick = {
-            context.startActivity(Intent(context, CashFlowTransactionsActivity::class.java))
-        },
-        showTopBar = showTopBar,
-    )
-}
 
 @Composable
 fun DashboardScreenContent(
@@ -408,80 +346,4 @@ fun NoDataText() {
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DashboardScreenPreview() {
-    MicroLedgerTheme {
-        DashboardScreenContent(
-            netWorth =
-                listOf(
-                    NetWorthCalculator.CurrencyNetWorth(
-                        currency = "€",
-                        netWorth = BigDecimal("8450.00"),
-                        totalAssets = BigDecimal("10000.00"),
-                        totalLiabilities = BigDecimal("1550.00"),
-                    ),
-                ),
-            accountBalances =
-                AccountBalanceCalculator.AccountBalancesResult(
-                    assets =
-                        listOf(
-                            AccountBalanceCalculator.AccountBalance(
-                                "Assets:Checking",
-                                BigDecimal("3000.00"),
-                                "PHP",
-                                emptyList(),
-                            ),
-                            AccountBalanceCalculator.AccountBalance(
-                                "Assets:Savings",
-                                BigDecimal("7000.00"),
-                                "$",
-                                emptyList(),
-                            ),
-                        ),
-                    liabilities =
-                        listOf(
-                            AccountBalanceCalculator.AccountBalance(
-                                "Liabilities:Credit Card",
-                                BigDecimal("1550.00"),
-                                "EUR",
-                                emptyList(),
-                            ),
-                        ),
-                    equity = emptyList(),
-                    income = emptyList(),
-                    expenses = emptyList(),
-                ),
-            cashFlow =
-                MonthlyCashFlowCalculator.CashFlowResult(
-                    totalIncome = BigDecimal("5000.00"),
-                    totalExpenses = BigDecimal("1635.00"),
-                    netFlow = BigDecimal("3365.00"),
-                    period = "2026-06",
-                    incomeTransactions = emptyList(),
-                    expenseTransactions = emptyList(),
-                ),
-            decimalSeparator = ".",
-            onBackClick = {},
-            onAccountClick = {},
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DashboardScreenNoFilePreview() {
-    MicroLedgerTheme {
-        DashboardScreenContent(
-            netWorth = null,
-            accountBalances = null,
-            cashFlow = null,
-            decimalSeparator = ".",
-            hasFile = false,
-            onBackClick = {},
-            onAccountClick = {},
-        )
-    }
 }
