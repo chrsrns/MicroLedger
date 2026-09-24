@@ -5,11 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.map
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
-import ph.chrsrns.microledger.data.ReportingPreferences
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.data.reporting.ReportingInputs
@@ -25,12 +24,18 @@ class AccountTransactionsViewModel
     ) : AndroidViewModel(application) {
         private val accountBalanceCalculator = AccountBalanceCalculator()
 
-        val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
-        val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
-        val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
-        val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
-        val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
-        val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
+        val decimalSeparator: LiveData<String> =
+            preferencesDataSource.reportingPreferences.map { it.decimalSeparator }
+        val assetsPrefixes: LiveData<List<String>> =
+            preferencesDataSource.reportingPreferences.map { it.prefixes.assets }
+        val liabilitiesPrefixes: LiveData<List<String>> =
+            preferencesDataSource.reportingPreferences.map { it.prefixes.liabilities }
+        val equityPrefixes: LiveData<List<String>> =
+            preferencesDataSource.reportingPreferences.map { it.prefixes.equity }
+        val incomePrefixes: LiveData<List<String>> =
+            preferencesDataSource.reportingPreferences.map { it.prefixes.income }
+        val expensesPrefixes: LiveData<List<String>> =
+            preferencesDataSource.reportingPreferences.map { it.prefixes.expenses }
 
         private val _selectedAccount = MutableLiveData<String?>()
         val selectedAccount: LiveData<String?> = _selectedAccount
@@ -38,35 +43,15 @@ class AccountTransactionsViewModel
         private val _selectedCurrency = MutableLiveData<String?>()
         val selectedCurrency: LiveData<String?> = _selectedCurrency
 
-        private fun reportingInputs(transactions: List<Transaction>) =
-            ReportingInputs(
-                transactions = transactions,
-                preferences =
-                    ReportingPreferences(
-                        decimalSeparator = preferencesDataSource.getDecimalSeparator(),
-                        prefixes =
-                            AccountTypePrefixes(
-                                assets = preferencesDataSource.getAssetsPrefixes(),
-                                liabilities = preferencesDataSource.getLiabilitiesPrefixes(),
-                                equity = preferencesDataSource.getEquityPrefixes(),
-                                income = preferencesDataSource.getIncomePrefixes(),
-                                expenses = preferencesDataSource.getExpensesPrefixes(),
-                            ),
-                    ),
-            )
-
         val accountBalances: LiveData<AccountBalanceCalculator.AccountBalancesResult> =
             MediatorLiveData<AccountBalanceCalculator.AccountBalancesResult>().apply {
                 fun compute() {
                     val transactions = ledgerRepository.transactions.value ?: return
-                    value = accountBalanceCalculator.calculate(reportingInputs(transactions))
+                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
+                    value = accountBalanceCalculator.calculate(ReportingInputs(transactions, preferences))
                 }
                 addSource(ledgerRepository.transactions) { compute() }
-                addSource(preferencesDataSource.assetsPrefixes) { compute() }
-                addSource(preferencesDataSource.liabilitiesPrefixes) { compute() }
-                addSource(preferencesDataSource.equityPrefixes) { compute() }
-                addSource(preferencesDataSource.incomePrefixes) { compute() }
-                addSource(preferencesDataSource.expensesPrefixes) { compute() }
+                addSource(preferencesDataSource.reportingPreferences) { compute() }
             }
 
         val accountTransactions: LiveData<List<Transaction>> =
