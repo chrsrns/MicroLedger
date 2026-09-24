@@ -19,6 +19,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
@@ -181,8 +182,11 @@ class TransactionCardTest {
                     selected = false,
                     onClick = {},
                     modifier = Modifier.fillMaxWidth(),
-                    assetsPrefixes = listOf("assets"),
-                    incomePrefixes = listOf("income"),
+                    prefixes =
+                        AccountTypePrefixes(
+                            assets = listOf("assets"),
+                            income = listOf("income"),
+                        ),
                 )
             }
         }
@@ -223,8 +227,11 @@ class TransactionCardTest {
                     selected = false,
                     onClick = {},
                     modifier = Modifier.fillMaxWidth(),
-                    assetsPrefixes = listOf("assets"),
-                    incomePrefixes = listOf("income"),
+                    prefixes =
+                        AccountTypePrefixes(
+                            assets = listOf("assets"),
+                            income = listOf("income"),
+                        ),
                 )
             }
         }
@@ -261,7 +268,7 @@ class TransactionCardTest {
                     selected = false,
                     onClick = {},
                     modifier = Modifier.fillMaxWidth(),
-                    assetsPrefixes = listOf("assets"),
+                    prefixes = AccountTypePrefixes(assets = listOf("assets")),
                 )
             }
         }

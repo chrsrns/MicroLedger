@@ -56,6 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.AccountType
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
@@ -96,11 +97,7 @@ fun AccountTransactionsScreen(
     val accountTransactions by accountTransactionsViewModel.accountTransactions.observeAsState()
     val selectedAccount by accountTransactionsViewModel.selectedAccount.observeAsState()
     val decimalSeparator by accountTransactionsViewModel.decimalSeparator.observeAsState(".")
-    val assetsPrefixes by accountTransactionsViewModel.assetsPrefixes.observeAsState(emptyList())
-    val liabilitiesPrefixes by accountTransactionsViewModel.liabilitiesPrefixes.observeAsState(emptyList())
-    val equityPrefixes by accountTransactionsViewModel.equityPrefixes.observeAsState(emptyList())
-    val incomePrefixes by accountTransactionsViewModel.incomePrefixes.observeAsState(emptyList())
-    val expensesPrefixes by accountTransactionsViewModel.expensesPrefixes.observeAsState(emptyList())
+    val prefixes by accountTransactionsViewModel.prefixes.observeAsState(AccountTypePrefixes.EMPTY)
     val context = LocalContext.current
 
     val onTransactionClick = { transaction: Transaction ->
@@ -118,11 +115,7 @@ fun AccountTransactionsScreen(
         accountTransactions = accountTransactions,
         selectedAccount = selectedAccount,
         decimalSeparator = decimalSeparator,
-        assetsPrefixes = assetsPrefixes,
-        liabilitiesPrefixes = liabilitiesPrefixes,
-        equityPrefixes = equityPrefixes,
-        incomePrefixes = incomePrefixes,
-        expensesPrefixes = expensesPrefixes,
+        prefixes = prefixes,
         onBackClick = onBackClick,
         onAccountClick = accountTransactionsViewModel::selectAccount,
         onClearSelection = accountTransactionsViewModel::clearSelectedAccount,
@@ -137,11 +130,7 @@ fun AccountTransactionsScreenContent(
     accountTransactions: List<Transaction>?,
     selectedAccount: String?,
     decimalSeparator: String,
-    assetsPrefixes: List<String> = emptyList(),
-    liabilitiesPrefixes: List<String> = emptyList(),
-    equityPrefixes: List<String> = emptyList(),
-    incomePrefixes: List<String> = emptyList(),
-    expensesPrefixes: List<String> = emptyList(),
+    prefixes: AccountTypePrefixes = AccountTypePrefixes.EMPTY,
     onBackClick: () -> Unit,
     onAccountClick: (String, String) -> Unit,
     onClearSelection: () -> Unit,
@@ -205,11 +194,7 @@ fun AccountTransactionsScreenContent(
                                 transaction = transaction,
                                 selected = false,
                                 onClick = { onTransactionClick(transaction) },
-                                assetsPrefixes = assetsPrefixes,
-                                liabilitiesPrefixes = liabilitiesPrefixes,
-                                equityPrefixes = equityPrefixes,
-                                incomePrefixes = incomePrefixes,
-                                expensesPrefixes = expensesPrefixes,
+                                prefixes = prefixes,
                                 decimalSeparator = decimalSeparator,
                             )
                         }

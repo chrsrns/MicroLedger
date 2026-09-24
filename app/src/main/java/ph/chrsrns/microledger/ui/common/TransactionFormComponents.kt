@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.CostType
 import ph.chrsrns.microledger.data.Posting
@@ -135,11 +136,7 @@ fun TransactionForm(
     val currencyAmountSpacing by viewModel.currencyAmountSpacing.observeAsState(true)
     val decimalSeparator by viewModel.decimalSeparator.observeAsState("")
     val defaultCurrency by viewModel.defaultCurrency.observeAsState("")
-    val assetsPrefixes by viewModel.assetsPrefixes.observeAsState(emptyList())
-    val liabilitiesPrefixes by viewModel.liabilitiesPrefixes.observeAsState(emptyList())
-    val equityPrefixes by viewModel.equityPrefixes.observeAsState(emptyList())
-    val incomePrefixes by viewModel.incomePrefixes.observeAsState(emptyList())
-    val expensesPrefixes by viewModel.expensesPrefixes.observeAsState(emptyList())
+    val prefixes by viewModel.prefixes.observeAsState(AccountTypePrefixes.EMPTY)
 
     val postings by viewModel.postings.observeAsState()
     val accounts by viewModel.accounts.observeAsState()
@@ -206,11 +203,7 @@ fun TransactionForm(
                 decimalSeparator = decimalSeparator ?: "",
                 defaultCurrency = defaultCurrency ?: "",
                 unbalancedAmount = unbalancedAmount,
-                assetsPrefixes = assetsPrefixes ?: emptyList(),
-                liabilitiesPrefixes = liabilitiesPrefixes ?: emptyList(),
-                equityPrefixes = equityPrefixes ?: emptyList(),
-                incomePrefixes = incomePrefixes ?: emptyList(),
-                expensesPrefixes = expensesPrefixes ?: emptyList(),
+                prefixes = prefixes,
                 onPostingClick = { selectedIndex = it },
                 onRemoveClick = { viewModel.removePosting(it) },
                 onAddClick = { viewModel.addPosting() },
@@ -232,11 +225,7 @@ fun TransactionForm(
                 decimalSeparator = decimalSeparator ?: "",
                 defaultCurrency = defaultCurrency ?: "",
                 unbalancedAmount = if (isBalance) unbalancedAmount else null,
-                assetsPrefixes = assetsPrefixes ?: emptyList(),
-                liabilitiesPrefixes = liabilitiesPrefixes ?: emptyList(),
-                equityPrefixes = equityPrefixes ?: emptyList(),
-                incomePrefixes = incomePrefixes ?: emptyList(),
-                expensesPrefixes = expensesPrefixes ?: emptyList(),
+                prefixes = prefixes,
                 onDismiss = { selectedIndex = -1 },
                 onSave = { viewModel.setPosting(selectedIndex, it) },
                 onRemove = { viewModel.removePosting(selectedIndex) },

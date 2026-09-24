@@ -105,22 +105,10 @@ fun statusChipLabel(status: String?): String? {
 @Composable
 fun accountTypeColor(
     account: String?,
-    assets: List<String>,
-    liabilities: List<String>,
-    equity: List<String>,
-    income: List<String>,
-    expenses: List<String>,
+    prefixes: AccountTypePrefixes,
 ): Color? {
     val isDark = isSystemInDarkTheme()
-    val type =
-        AccountTypePrefixes(
-            assets = assets,
-            liabilities = liabilities,
-            equity = equity,
-            income = income,
-            expenses = expenses,
-        ).classify(account)
-    return when (type) {
+    return when (prefixes.classify(account)) {
         AccountType.ASSETS -> if (isDark) AccountAssetsColorDark else AccountAssetsColorLight
         AccountType.LIABILITIES -> if (isDark) AccountLiabilitiesColorDark else AccountLiabilitiesColorLight
         AccountType.EQUITY -> if (isDark) AccountEquityColorDark else AccountEquityColorLight

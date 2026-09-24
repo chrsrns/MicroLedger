@@ -80,6 +80,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
@@ -313,11 +314,7 @@ fun MainScreen(
     val selected by mainViewModel.selectedIndex.observeAsState()
     val selectedTab by mainViewModel.selectedTab.observeAsState()
     val decimalSeparator by mainViewModel.decimalSeparator.observeAsState(".")
-    val assetsPrefixes by mainViewModel.assetsPrefixes.observeAsState(emptyList())
-    val liabilitiesPrefixes by mainViewModel.liabilitiesPrefixes.observeAsState(emptyList())
-    val equityPrefixes by mainViewModel.equityPrefixes.observeAsState(emptyList())
-    val incomePrefixes by mainViewModel.incomePrefixes.observeAsState(emptyList())
-    val expensesPrefixes by mainViewModel.expensesPrefixes.observeAsState(emptyList())
+    val prefixes by mainViewModel.prefixes.observeAsState(AccountTypePrefixes.EMPTY)
 
     // Handle back button when in search mode
     BackHandler(enabled = (searching ?: false) && selectedTab == MainTab.Home) {
@@ -334,11 +331,7 @@ fun MainScreen(
         selected = selected,
         selectedTab = selectedTab ?: MainTab.Home,
         decimalSeparator = decimalSeparator,
-        assetsPrefixes = assetsPrefixes,
-        liabilitiesPrefixes = liabilitiesPrefixes,
-        equityPrefixes = equityPrefixes,
-        incomePrefixes = incomePrefixes,
-        expensesPrefixes = expensesPrefixes,
+        prefixes = prefixes,
         onRefresh = { mainViewModel.refresh() },
         onToggleSelect = { mainViewModel.toggleSelect(it) },
         onSearchClick = { mainViewModel.setSearching(true) },
@@ -379,11 +372,7 @@ fun MainScreen(
     selected: Int?,
     selectedTab: MainTab,
     decimalSeparator: String = ".",
-    assetsPrefixes: List<String> = emptyList(),
-    liabilitiesPrefixes: List<String> = emptyList(),
-    equityPrefixes: List<String> = emptyList(),
-    incomePrefixes: List<String> = emptyList(),
-    expensesPrefixes: List<String> = emptyList(),
+    prefixes: AccountTypePrefixes = AccountTypePrefixes.EMPTY,
     onRefresh: () -> Unit,
     onToggleSelect: (Int) -> Unit,
     onSearchClick: () -> Unit,
@@ -554,11 +543,7 @@ fun MainScreen(
                             onToggleSelect = onToggleSelect,
                             contentPadding = contentPadding,
                             decimalSeparator = decimalSeparator,
-                            assetsPrefixes = assetsPrefixes,
-                            liabilitiesPrefixes = liabilitiesPrefixes,
-                            equityPrefixes = equityPrefixes,
-                            incomePrefixes = incomePrefixes,
-                            expensesPrefixes = expensesPrefixes,
+                            prefixes = prefixes,
                         )
                     } else {
                         NoFileState(
@@ -934,11 +919,7 @@ fun MainContent(
     onToggleSelect: (Int) -> Unit,
     contentPadding: PaddingValues,
     decimalSeparator: String = ".",
-    assetsPrefixes: List<String> = emptyList(),
-    liabilitiesPrefixes: List<String> = emptyList(),
-    equityPrefixes: List<String> = emptyList(),
-    incomePrefixes: List<String> = emptyList(),
-    expensesPrefixes: List<String> = emptyList(),
+    prefixes: AccountTypePrefixes = AccountTypePrefixes.EMPTY,
 ) {
     val context = LocalContext.current
     PullToRefreshBox(
@@ -965,11 +946,7 @@ fun MainContent(
                                     8.dp,
                                     if (it == transactions.size - 1) 8.dp else 4.dp,
                                 ),
-                        assetsPrefixes = assetsPrefixes,
-                        liabilitiesPrefixes = liabilitiesPrefixes,
-                        equityPrefixes = equityPrefixes,
-                        incomePrefixes = incomePrefixes,
-                        expensesPrefixes = expensesPrefixes,
+                        prefixes = prefixes,
                         decimalSeparator = decimalSeparator,
                     )
                 }

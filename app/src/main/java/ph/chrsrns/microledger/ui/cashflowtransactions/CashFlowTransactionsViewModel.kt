@@ -7,6 +7,7 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
@@ -28,16 +29,8 @@ class CashFlowTransactionsViewModel
 
         val decimalSeparator: LiveData<String> =
             preferencesDataSource.reportingPreferences.map { it.decimalSeparator }
-        val assetsPrefixes: LiveData<List<String>> =
-            preferencesDataSource.reportingPreferences.map { it.prefixes.assets }
-        val liabilitiesPrefixes: LiveData<List<String>> =
-            preferencesDataSource.reportingPreferences.map { it.prefixes.liabilities }
-        val equityPrefixes: LiveData<List<String>> =
-            preferencesDataSource.reportingPreferences.map { it.prefixes.equity }
-        val incomePrefixes: LiveData<List<String>> =
-            preferencesDataSource.reportingPreferences.map { it.prefixes.income }
-        val expensesPrefixes: LiveData<List<String>> =
-            preferencesDataSource.reportingPreferences.map { it.prefixes.expenses }
+        val prefixes: LiveData<AccountTypePrefixes> =
+            preferencesDataSource.reportingPreferences.map { it.prefixes }
 
         private val _currentYear = MutableLiveData(monthProvider.current().year)
         val currentYear: LiveData<Int> = _currentYear

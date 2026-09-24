@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
@@ -47,11 +48,7 @@ fun TransactionCard(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    assetsPrefixes: List<String> = emptyList(),
-    liabilitiesPrefixes: List<String> = emptyList(),
-    equityPrefixes: List<String> = emptyList(),
-    incomePrefixes: List<String> = emptyList(),
-    expensesPrefixes: List<String> = emptyList(),
+    prefixes: AccountTypePrefixes = AccountTypePrefixes.EMPTY,
     decimalSeparator: String = ".",
 ) {
     Card(
@@ -109,11 +106,7 @@ fun TransactionCard(
                     for ((index, posting) in transaction.postings.withIndex()) {
                         TransactionPosting(
                             posting = posting,
-                            assetsPrefixes = assetsPrefixes,
-                            liabilitiesPrefixes = liabilitiesPrefixes,
-                            equityPrefixes = equityPrefixes,
-                            incomePrefixes = incomePrefixes,
-                            expensesPrefixes = expensesPrefixes,
+                            prefixes = prefixes,
                             decimalSeparator = decimalSeparator,
                         )
                         if (index != transaction.postings.lastIndex) {
@@ -192,11 +185,7 @@ private fun transactionTitle(transaction: Transaction): String {
 @Composable
 private fun TransactionPosting(
     posting: Posting,
-    assetsPrefixes: List<String>,
-    liabilitiesPrefixes: List<String>,
-    equityPrefixes: List<String>,
-    incomePrefixes: List<String>,
-    expensesPrefixes: List<String>,
+    prefixes: AccountTypePrefixes,
     decimalSeparator: String,
 ) {
     val mutedColor = LocalContentColor.current.copy(alpha = 0.6f)
@@ -218,15 +207,7 @@ private fun TransactionPosting(
                 modifier = Modifier.weight(1f),
             )
         } else {
-            val dotColor =
-                accountTypeColor(
-                    posting.account,
-                    assets = assetsPrefixes,
-                    liabilities = liabilitiesPrefixes,
-                    equity = equityPrefixes,
-                    income = incomePrefixes,
-                    expenses = expensesPrefixes,
-                )
+            val dotColor = accountTypeColor(posting.account, prefixes)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f),
@@ -312,8 +293,11 @@ fun TransactionCardPreview() {
             selected = false,
             onClick = {},
             modifier = Modifier.padding(8.dp),
-            assetsPrefixes = listOf("assets"),
-            expensesPrefixes = listOf("expenses"),
+            prefixes =
+                AccountTypePrefixes(
+                    assets = listOf("assets"),
+                    expenses = listOf("expenses"),
+                ),
         )
     }
 }
@@ -355,8 +339,11 @@ fun TransactionCardSelectedPreview() {
             selected = true,
             onClick = {},
             modifier = Modifier.padding(8.dp),
-            assetsPrefixes = listOf("assets"),
-            incomePrefixes = listOf("income"),
+            prefixes =
+                AccountTypePrefixes(
+                    assets = listOf("assets"),
+                    income = listOf("income"),
+                ),
         )
     }
 }
