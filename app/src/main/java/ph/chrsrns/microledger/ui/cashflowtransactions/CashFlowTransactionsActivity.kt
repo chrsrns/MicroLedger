@@ -64,9 +64,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.AccountType
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
+import ph.chrsrns.microledger.data.displaySign
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import ph.chrsrns.microledger.ui.common.TRANSACTION_INDEX_KEY
 import ph.chrsrns.microledger.ui.edit.EditActivity
@@ -343,9 +345,8 @@ fun CashFlowSummaryCard(
                 )
                 AmountSummaryRow(
                     label = stringResource(R.string.expenses),
-                    amount = cashFlow.totalExpenses,
+                    amount = cashFlow.totalExpenses.multiply(BigDecimal(displaySign(AccountType.EXPENSES))),
                     decimalSeparator = decimalSeparator,
-                    negate = true,
                 )
                 Spacer(Modifier.height(4.dp))
                 HorizontalDivider()
@@ -366,10 +367,9 @@ fun AmountSummaryRow(
     label: String,
     amount: BigDecimal,
     decimalSeparator: String,
-    negate: Boolean = false,
     bold: Boolean = false,
 ) {
-    val displayAmount = if (negate) amount.negate() else amount
+    val displayAmount = amount
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,

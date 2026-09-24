@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.AccountType
+import ph.chrsrns.microledger.data.displaySign
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import ph.chrsrns.microledger.data.reporting.NetWorthCalculator
@@ -203,9 +205,8 @@ fun NetWorthCard(
             )
             AmountRow(
                 label = stringResource(R.string.total_liabilities),
-                amount = netWorth.totalLiabilities,
+                amount = netWorth.totalLiabilities.multiply(BigDecimal(displaySign(AccountType.LIABILITIES))),
                 decimalSeparator = decimalSeparator,
-                negate = true,
             )
         }
     }
@@ -232,9 +233,8 @@ fun CashFlowCard(
             )
             AmountRow(
                 label = stringResource(R.string.expenses),
-                amount = cashFlow.totalExpenses,
+                amount = cashFlow.totalExpenses.multiply(BigDecimal(displaySign(AccountType.EXPENSES))),
                 decimalSeparator = decimalSeparator,
-                negate = true,
             )
             Spacer(Modifier.height(4.dp))
             HorizontalDivider()
@@ -282,10 +282,9 @@ fun AccountBalancesCard(
                 accountBalances.liabilities.forEach { balance ->
                     AmountRow(
                         label = balance.account,
-                        amount = balance.balance,
+                        amount = balance.balance.multiply(BigDecimal(displaySign(AccountType.LIABILITIES))),
                         currency = balance.currency,
                         decimalSeparator = decimalSeparator,
-                        negate = true,
                         labelStyle = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -348,12 +347,11 @@ fun AmountRow(
     label: String,
     amount: BigDecimal,
     decimalSeparator: String,
-    negate: Boolean = false,
     bold: Boolean = false,
     labelStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
     currency: String? = null,
 ) {
-    val displayAmount = if (negate) amount.negate() else amount
+    val displayAmount = amount
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,

@@ -95,4 +95,17 @@ class AccountTypeTest {
             )
         assertEquals(AccountType.ASSETS, multi.classify("Aktiva:Savings"))
     }
+
+    @Test
+    fun displaySignReturnsPositiveForDebitNormalDisplay() {
+        assertEquals(1, displaySign(AccountType.ASSETS))
+        assertEquals(1, displaySign(AccountType.INCOME))
+    }
+
+    @Test
+    fun displaySignReturnsNegativeForCreditNormalDisplay() {
+        assertEquals(-1, displaySign(AccountType.LIABILITIES))
+        assertEquals(-1, displaySign(AccountType.EQUITY))
+        assertEquals(-1, displaySign(AccountType.EXPENSES))
+    }
 }

@@ -8,6 +8,18 @@ enum class AccountType {
     EXPENSES,
 }
 
+fun displaySign(type: AccountType): Int =
+    when (type) {
+        AccountType.ASSETS,
+        AccountType.INCOME,
+        -> 1
+
+        AccountType.LIABILITIES,
+        AccountType.EQUITY,
+        AccountType.EXPENSES,
+        -> -1
+    }
+
 data class AccountTypePrefixes(
     val assets: List<String> = emptyList(),
     val liabilities: List<String> = emptyList(),

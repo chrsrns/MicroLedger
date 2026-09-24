@@ -55,9 +55,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.AccountType
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
+import ph.chrsrns.microledger.data.displaySign
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.ui.common.TRANSACTION_INDEX_KEY
 import ph.chrsrns.microledger.ui.edit.EditActivity
@@ -247,27 +249,28 @@ fun AccountTransactionsScreenContent(
                         accounts = accountBalances.liabilities,
                         onAccountClick = onAccountClick,
                         decimalSeparator = decimalSeparator,
-                        negate = true,
+                        accountType = AccountType.LIABILITIES,
                     )
                     AccountAccordionGroup(
                         title = stringResource(R.string.equity),
                         accounts = accountBalances.equity,
                         onAccountClick = onAccountClick,
                         decimalSeparator = decimalSeparator,
-                        negate = true,
+                        accountType = AccountType.EQUITY,
                     )
                     AccountAccordionGroup(
                         title = stringResource(R.string.income),
                         accounts = accountBalances.income,
                         onAccountClick = onAccountClick,
                         decimalSeparator = decimalSeparator,
-                        negate = true,
+                        accountType = AccountType.INCOME,
                     )
                     AccountAccordionGroup(
                         title = stringResource(R.string.expenses),
                         accounts = accountBalances.expenses,
                         onAccountClick = onAccountClick,
                         decimalSeparator = decimalSeparator,
+                        accountType = AccountType.EXPENSES,
                     )
                 }
             }
@@ -281,7 +284,7 @@ fun AccountAccordionGroup(
     accounts: List<AccountBalanceCalculator.AccountBalance>,
     onAccountClick: (String, String) -> Unit,
     decimalSeparator: String,
-    negate: Boolean = false,
+    accountType: AccountType = AccountType.ASSETS,
     initiallyExpanded: Boolean = false,
 ) {
     if (accounts.isEmpty()) return
@@ -329,7 +332,7 @@ fun AccountAccordionGroup(
                             account = account,
                             onAccountClick = onAccountClick,
                             decimalSeparator = decimalSeparator,
-                            negate = negate,
+                            accountType = accountType,
                         )
                         if (account != accounts.last()) {
                             HorizontalDivider()
@@ -346,7 +349,7 @@ fun AccountRow(
     account: AccountBalanceCalculator.AccountBalance,
     onAccountClick: (String, String) -> Unit,
     decimalSeparator: String,
-    negate: Boolean = false,
+    accountType: AccountType = AccountType.ASSETS,
 ) {
     Row(
         modifier =
@@ -375,14 +378,14 @@ fun AccountRow(
             }
             Text(
                 formatAmount(
-                    if (negate) account.balance.negate() else account.balance,
+                    account.balance.multiply(BigDecimal(displaySign(accountType))),
                     decimalSeparator,
                 ),
                 modifier = Modifier.widthIn(min = 80.dp),
                 textAlign = TextAlign.End,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = amountColor(if (negate) account.balance.negate() else account.balance),
+                color = amountColor(account.balance.multiply(BigDecimal(displaySign(accountType)))),
             )
         }
     }
