@@ -128,3 +128,7 @@ dependencies {
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestUtil(libs.androidx.test.orchestrator)
 }
+
+composeCompiler {
+    stabilityConfigurationFiles.add(layout.projectDirectory.file("compose-stability.conf"))
+}
