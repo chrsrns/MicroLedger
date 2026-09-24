@@ -485,7 +485,8 @@ class NetWorthCalculatorTest {
             )
 
         val result =
-            calculateSingle(inputs(
+            calculateSingle(
+                inputs(
                     transactions,
                     prefixes =
                         DEFAULT_PREFIXES.copy(
@@ -519,7 +520,8 @@ class NetWorthCalculatorTest {
             )
 
         val result =
-            calculateSingle(inputs(
+            calculateSingle(
+                inputs(
                     transactions,
                     prefixes = DEFAULT_PREFIXES.copy(assets = listOf("Assets", "Aktiva")),
                 ),
