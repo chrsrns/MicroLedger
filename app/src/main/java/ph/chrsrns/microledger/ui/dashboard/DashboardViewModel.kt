@@ -33,8 +33,8 @@ class DashboardViewModel
         val decimalSeparator: LiveData<String> =
             preferencesDataSource.reportingPreferences.map { it.decimalSeparator }
 
-        val netWorth: LiveData<NetWorthCalculator.NetWorthResult> =
-            MediatorLiveData<NetWorthCalculator.NetWorthResult>().apply {
+        val netWorth: LiveData<List<NetWorthCalculator.CurrencyNetWorth>> =
+            MediatorLiveData<List<NetWorthCalculator.CurrencyNetWorth>>().apply {
                 fun compute() {
                     val transactions = ledgerRepository.transactions.value ?: return
                     val preferences = preferencesDataSource.reportingPreferences.value ?: return

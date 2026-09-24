@@ -109,7 +109,7 @@ fun DashboardScreen(
 
 @Composable
 fun DashboardScreenContent(
-    netWorth: NetWorthCalculator.NetWorthResult?,
+    netWorth: List<NetWorthCalculator.CurrencyNetWorth>?,
     accountBalances: AccountBalanceCalculator.AccountBalancesResult?,
     cashFlow: MonthlyCashFlowCalculator.CashFlowResult?,
     decimalSeparator: String,
@@ -180,18 +180,19 @@ fun DashboardScreenContent(
 
 @Composable
 fun NetWorthCard(
-    netWorth: NetWorthCalculator.NetWorthResult?,
+    netWorth: List<NetWorthCalculator.CurrencyNetWorth>?,
     decimalSeparator: String,
 ) {
     DashboardCard(title = stringResource(R.string.net_worth)) {
-        if (netWorth == null) {
+        if (netWorth.isNullOrEmpty()) {
             NoDataText()
-        } else {
+        } else if (netWorth.size == 1) {
+            val single = netWorth.single()
             Text(
-                formatAmount(netWorth.netWorth, decimalSeparator),
+                formatAmount(single.netWorth, decimalSeparator),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = amountColor(netWorth.netWorth),
+                color = amountColor(single.netWorth),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
@@ -200,14 +201,23 @@ fun NetWorthCard(
             Spacer(Modifier.height(8.dp))
             AmountRow(
                 label = stringResource(R.string.total_assets),
-                amount = netWorth.totalAssets,
+                amount = single.totalAssets,
                 decimalSeparator = decimalSeparator,
             )
             AmountRow(
                 label = stringResource(R.string.total_liabilities),
-                amount = netWorth.totalLiabilities.multiply(BigDecimal(displaySign(AccountType.LIABILITIES))),
+                amount = single.totalLiabilities.multiply(BigDecimal(displaySign(AccountType.LIABILITIES))),
                 decimalSeparator = decimalSeparator,
             )
+        } else {
+            netWorth.forEach { entry ->
+                AmountRow(
+                    label = entry.currency.ifBlank { "—" },
+                    amount = entry.netWorth,
+                    decimalSeparator = decimalSeparator,
+                    bold = true,
+                )
+            }
         }
     }
 }
@@ -406,10 +416,13 @@ fun DashboardScreenPreview() {
     MicroLedgerTheme {
         DashboardScreenContent(
             netWorth =
-                NetWorthCalculator.NetWorthResult(
-                    netWorth = BigDecimal("8450.00"),
-                    totalAssets = BigDecimal("10000.00"),
-                    totalLiabilities = BigDecimal("1550.00"),
+                listOf(
+                    NetWorthCalculator.CurrencyNetWorth(
+                        currency = "€",
+                        netWorth = BigDecimal("8450.00"),
+                        totalAssets = BigDecimal("10000.00"),
+                        totalLiabilities = BigDecimal("1550.00"),
+                    ),
                 ),
             accountBalances =
                 AccountBalanceCalculator.AccountBalancesResult(

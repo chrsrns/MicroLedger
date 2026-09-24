@@ -107,7 +107,7 @@ import java.math.BigDecimal
 
 sealed class TabConfiguration {
     data class Dashboard(
-        val netWorth: NetWorthCalculator.NetWorthResult?,
+        val netWorth: List<NetWorthCalculator.CurrencyNetWorth>?,
         val accountBalances: AccountBalanceCalculator.AccountBalancesResult?,
         val cashFlow: MonthlyCashFlowCalculator.CashFlowResult?,
         val decimalSeparator: String,
@@ -1398,10 +1398,13 @@ fun MainScreenDashboardTabPreview() {
                         MainTab.Dashboard ->
                             TabConfiguration.Dashboard(
                                 netWorth =
-                                    NetWorthCalculator.NetWorthResult(
-                                        netWorth = BigDecimal("8450.00"),
-                                        totalAssets = BigDecimal("10000.00"),
-                                        totalLiabilities = BigDecimal("1550.00"),
+                                    listOf(
+                                        NetWorthCalculator.CurrencyNetWorth(
+                                            currency = "€",
+                                            netWorth = BigDecimal("8450.00"),
+                                            totalAssets = BigDecimal("10000.00"),
+                                            totalLiabilities = BigDecimal("1550.00"),
+                                        ),
                                     ),
                                 accountBalances =
                                     AccountBalanceCalculator.AccountBalancesResult(
