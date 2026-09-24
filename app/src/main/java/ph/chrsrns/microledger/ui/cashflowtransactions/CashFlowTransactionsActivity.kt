@@ -104,16 +104,9 @@ fun CashFlowTransactionsScreen(
 ) {
     val cashFlow by cashFlowTransactionsViewModel.currentMonthCashFlow.observeAsState()
     val monthlyHistory by cashFlowTransactionsViewModel.monthlyHistory.observeAsState()
-    val selectedYear by cashFlowTransactionsViewModel.selectedYear.observeAsState(
-        java.util.Calendar
-            .getInstance()
-            .get(java.util.Calendar.YEAR),
-    )
-    val selectedMonth by cashFlowTransactionsViewModel.selectedMonth.observeAsState(
-        java.util.Calendar
-            .getInstance()
-            .get(java.util.Calendar.MONTH) + 1,
-    )
+    val currentYear by cashFlowTransactionsViewModel.currentYear.observeAsState(0)
+    val selectedYear by cashFlowTransactionsViewModel.selectedYear.observeAsState(currentYear)
+    val selectedMonth by cashFlowTransactionsViewModel.selectedMonth.observeAsState(1)
     val decimalSeparator by cashFlowTransactionsViewModel.decimalSeparator.observeAsState(".")
     val assetsPrefixes by cashFlowTransactionsViewModel.assetsPrefixes.observeAsState(emptyList())
     val liabilitiesPrefixes by cashFlowTransactionsViewModel.liabilitiesPrefixes.observeAsState(emptyList())
@@ -137,6 +130,7 @@ fun CashFlowTransactionsScreen(
         monthlyHistory = monthlyHistory,
         selectedYear = selectedYear,
         selectedMonth = selectedMonth,
+        currentYear = currentYear,
         decimalSeparator = decimalSeparator,
         assetsPrefixes = assetsPrefixes,
         liabilitiesPrefixes = liabilitiesPrefixes,
@@ -157,6 +151,7 @@ fun CashFlowTransactionsScreenContent(
     monthlyHistory: List<MonthlyCashFlowCalculator.CashFlowResult>?,
     selectedYear: Int,
     selectedMonth: Int,
+    currentYear: Int,
     decimalSeparator: String,
     assetsPrefixes: List<String> = emptyList(),
     liabilitiesPrefixes: List<String> = emptyList(),
@@ -206,6 +201,7 @@ fun CashFlowTransactionsScreenContent(
             MonthSelector(
                 selectedYear = selectedYear,
                 selectedMonth = selectedMonth,
+                currentYear = currentYear,
                 onPreviousMonth = onPreviousMonth,
                 onNextMonth = onNextMonth,
                 onSelectMonth = onSelectMonth,
@@ -244,6 +240,7 @@ fun CashFlowTransactionsScreenContent(
 fun MonthSelector(
     selectedYear: Int,
     selectedMonth: Int,
+    currentYear: Int,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSelectMonth: (Int, Int) -> Unit,
@@ -294,10 +291,6 @@ fun MonthSelector(
                     expanded = showYearDropdown,
                     onDismissRequest = { showYearDropdown = false },
                 ) {
-                    val currentYear =
-                        java.util.Calendar
-                            .getInstance()
-                            .get(java.util.Calendar.YEAR)
                     (currentYear downTo currentYear - 10).forEach { year ->
                         DropdownMenuItem(
                             text = { Text(year.toString()) },
@@ -670,6 +663,7 @@ fun CashFlowTransactionsScreenPreview() {
             monthlyHistory = sampleHistory,
             selectedYear = 2026,
             selectedMonth = 6,
+            currentYear = 2026,
             decimalSeparator = ".",
             onBackClick = {},
             onPreviousMonth = {},

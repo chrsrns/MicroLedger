@@ -13,7 +13,7 @@ import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import ph.chrsrns.microledger.data.reporting.NetWorthCalculator
 import ph.chrsrns.microledger.data.reporting.ReportingInputs
-import java.util.Calendar
+import ph.chrsrns.microledger.di.MonthProvider
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,6 +23,7 @@ class DashboardViewModel
         application: Application,
         private val preferencesDataSource: PreferencesDataSource,
         private val ledgerRepository: LedgerRepository,
+        private val monthProvider: MonthProvider,
     ) : AndroidViewModel(application) {
         private val netWorthCalculator = NetWorthCalculator()
         private val accountBalanceCalculator = AccountBalanceCalculator()
@@ -60,12 +61,12 @@ class DashboardViewModel
                 fun compute() {
                     val transactions = ledgerRepository.transactions.value ?: return
                     val preferences = preferencesDataSource.reportingPreferences.value ?: return
-                    val today = Calendar.getInstance()
+                    val current = monthProvider.current()
                     value =
                         cashFlowCalculator.calculateForMonth(
                             ReportingInputs(transactions, preferences),
-                            today.get(Calendar.YEAR),
-                            today.get(Calendar.MONTH) + 1,
+                            current.year,
+                            current.month,
                         )
                 }
                 addSource(ledgerRepository.transactions) { compute() }

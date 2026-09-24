@@ -12,7 +12,7 @@ import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import ph.chrsrns.microledger.data.reporting.ReportingInputs
-import java.util.Calendar
+import ph.chrsrns.microledger.di.MonthProvider
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,6 +22,7 @@ class CashFlowTransactionsViewModel
         application: Application,
         private val ledgerRepository: LedgerRepository,
         private val preferencesDataSource: PreferencesDataSource,
+        private val monthProvider: MonthProvider,
     ) : AndroidViewModel(application) {
         private val cashFlowCalculator = MonthlyCashFlowCalculator()
 
@@ -38,10 +39,13 @@ class CashFlowTransactionsViewModel
         val expensesPrefixes: LiveData<List<String>> =
             preferencesDataSource.reportingPreferences.map { it.prefixes.expenses }
 
-        private val _selectedYear = MutableLiveData(Calendar.getInstance().get(Calendar.YEAR))
+        private val _currentYear = MutableLiveData(monthProvider.current().year)
+        val currentYear: LiveData<Int> = _currentYear
+
+        private val _selectedYear = MutableLiveData(monthProvider.current().year)
         val selectedYear: LiveData<Int> = _selectedYear
 
-        private val _selectedMonth = MutableLiveData(Calendar.getInstance().get(Calendar.MONTH) + 1)
+        private val _selectedMonth = MutableLiveData(monthProvider.current().month)
         val selectedMonth: LiveData<Int> = _selectedMonth
 
         val currentMonthCashFlow: LiveData<MonthlyCashFlowCalculator.CashFlowResult> =
