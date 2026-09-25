@@ -314,7 +314,7 @@ fun CashFlowSummaryCard(
             } else {
                 AmountSummaryRow(
                     label = stringResource(R.string.income),
-                    amount = cashFlow.totalIncome,
+                    amount = cashFlow.totalIncome.multiply(BigDecimal(displaySign(AccountType.INCOME))),
                     decimalSeparator = decimalSeparator,
                 )
                 AmountSummaryRow(

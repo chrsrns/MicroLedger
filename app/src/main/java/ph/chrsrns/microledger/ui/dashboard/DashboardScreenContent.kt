@@ -139,7 +139,7 @@ fun NetWorthCard(
             Spacer(Modifier.height(8.dp))
             AmountRow(
                 label = stringResource(R.string.total_assets),
-                amount = single.totalAssets,
+                amount = single.totalAssets.multiply(BigDecimal(displaySign(AccountType.ASSETS))),
                 decimalSeparator = decimalSeparator,
             )
             AmountRow(
@@ -176,7 +176,7 @@ fun CashFlowCard(
         } else {
             AmountRow(
                 label = stringResource(R.string.income),
-                amount = cashFlow.totalIncome,
+                amount = cashFlow.totalIncome.multiply(BigDecimal(displaySign(AccountType.INCOME))),
                 decimalSeparator = decimalSeparator,
             )
             AmountRow(
@@ -215,7 +215,7 @@ fun AccountBalancesCard(
                 accountBalances.assets.forEach { balance ->
                     AmountRow(
                         label = balance.account,
-                        amount = balance.balance,
+                        amount = balance.balance.multiply(BigDecimal(displaySign(AccountType.ASSETS))),
                         currency = balance.currency,
                         decimalSeparator = decimalSeparator,
                         labelStyle = MaterialTheme.typography.bodySmall,
