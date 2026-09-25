@@ -49,7 +49,7 @@ class MonthlyCashFlowCalculator {
                 continue
             }
 
-            for (posting in transaction.postings) {
+            for (posting in materializeElidedAmounts(transaction, decimalSeparator).postings) {
                 val amount = posting.amount ?: continue
                 val account = posting.account ?: continue
                 val quantity = parseQuantity(amount.quantity, decimalSeparator)

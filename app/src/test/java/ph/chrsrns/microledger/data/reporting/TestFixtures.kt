@@ -2,6 +2,7 @@ package ph.chrsrns.microledger.data.reporting
 
 import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
+import ph.chrsrns.microledger.data.Cost
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.ReportingPreferences
 import ph.chrsrns.microledger.data.Transaction
@@ -21,15 +22,18 @@ fun amount(
 /** Create a Posting with sensible defaults for common test scenarios */
 fun posting(
     account: String,
-    amount: Amount,
+    amount: Amount? = null,
+    cost: Cost? = null,
+    assertion: Amount? = null,
+    comment: String? = null,
 ): Posting =
     Posting(
         account = account,
         amount = amount,
-        cost = null,
-        assertion = null,
+        cost = cost,
+        assertion = assertion,
         assertionCost = null,
-        comment = null,
+        comment = comment,
     )
 
 /** Create a Transaction with sensible defaults */

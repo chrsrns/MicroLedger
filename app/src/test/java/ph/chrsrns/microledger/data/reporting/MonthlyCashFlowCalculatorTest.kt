@@ -1,5 +1,6 @@
 package ph.chrsrns.microledger.data.reporting
 
+import ph.chrsrns.microledger.data.Posting
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -1061,5 +1062,153 @@ class MonthlyCashFlowCalculatorTest {
             assertEquals(monthResult.netFlow, windowMonthResult.netFlow)
             assertEquals(monthResult.period, windowMonthResult.period)
         }
+    }
+
+    @Test
+    fun elidedIncomePostingShouldBeMaterialized() {
+        val tx =
+            transaction(
+                date = "2024-01-15",
+                payee = "Employer",
+                firstLine = 1,
+                lastLine = 2,
+                postings =
+                    listOf(
+                        posting("Assets:Checking", amount("5000.00")),
+                        posting("Income:Salary"),
+                    ),
+            )
+
+        val result = calculator.calculateForMonth(inputs(listOf(tx)), 2024, 1)
+
+        assertEquals(BigDecimal("5000.00"), result.totalIncome)
+        assertEquals(BigDecimal.ZERO, result.totalExpenses)
+        assertEquals(BigDecimal("5000.00"), result.netFlow)
+        assertEquals(listOf(tx), result.incomeTransactions)
+    }
+
+    @Test
+    fun elidedExpensePostingShouldBeMaterialized() {
+        val tx =
+            transaction(
+                date = "2024-01-15",
+                payee = "Groceries",
+                firstLine = 1,
+                lastLine = 2,
+                postings =
+                    listOf(
+                        posting("Assets:Checking", amount("-150.00")),
+                        posting("Expenses:Food"),
+                    ),
+            )
+
+        val result = calculator.calculateForMonth(inputs(listOf(tx)), 2024, 1)
+
+        assertEquals(BigDecimal.ZERO, result.totalIncome)
+        assertEquals(BigDecimal("150.00"), result.totalExpenses)
+        assertEquals(BigDecimal("-150.00"), result.netFlow)
+        assertEquals(listOf(tx), result.expenseTransactions)
+    }
+
+    @Test
+    fun elidedPostingWithAssertionShouldBeSkipped() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Asserted",
+                    firstLine = 1,
+                    lastLine = 2,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("5000.00")),
+                            posting("Income:Salary", assertion = amount("5000.00")),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
+
+        assertEquals(BigDecimal.ZERO, result.totalIncome)
+    }
+
+    @Test
+    fun siblingAssertionCurrencyMismatchShouldSkipElided() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Mismatch",
+                    firstLine = 1,
+                    lastLine = 2,
+                    postings =
+                        listOf(
+                            posting(
+                                "Assets:Savings",
+                                amount("100.00", "EUR"),
+                                assertion = amount("100.00", "$"),
+                            ),
+                            posting("Expenses:Food"),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
+
+        assertEquals(BigDecimal.ZERO, result.totalExpenses)
+    }
+
+    @Test
+    fun multiCurrencySiblingsShouldSkipElided() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Multi Currency",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("-50.00")),
+                            posting("Assets:Savings", amount("-20.00", "EUR")),
+                            posting("Expenses:Food"),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
+
+        assertEquals(BigDecimal.ZERO, result.totalExpenses)
+    }
+
+    @Test
+    fun virtualAndCommentPostingsShouldBeIgnoredForElidedMaterialization() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Mixed",
+                    firstLine = 1,
+                    lastLine = 4,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("-50.00")),
+                            posting("(Budget:Food)", amount("999.00")),
+                            Posting(
+                                account = null,
+                                amount = null,
+                                cost = null,
+                                assertion = null,
+                                assertionCost = null,
+                                comment = "in-journal note",
+                            ),
+                            posting("Expenses:Food"),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculateForMonth(inputs(transactions), 2024, 1)
+
+        assertEquals(BigDecimal("50.00"), result.totalExpenses)
     }
 }
