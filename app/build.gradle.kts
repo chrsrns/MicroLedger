@@ -16,8 +16,8 @@ android {
         applicationId = "ph.chrsrns.microledger"
         minSdk = 23
         targetSdk = 36
-        versionCode = 2026040501
-        versionName = "1.4.1"
+        versionCode = 2026092601
+        versionName = "1.4.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
