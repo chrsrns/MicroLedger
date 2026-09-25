@@ -148,14 +148,15 @@ class NetWorthCalculatorTest {
                                 assertionCost = null,
                                 comment = null,
                             ),
+                            posting("Liabilities:Loan"),
                         ),
                 ),
             )
 
         val result = calculator.calculate(inputs(transactions))
 
-        // Only the Expenses:Food posting with an amount should be considered
-        // Assets:Checking has no amount so it's ignored
+        // Two elided postings make the balancing amount ambiguous, so both are
+        // skipped; only the Expenses:Food amount remains, which net worth ignores
         assertEquals(0, result.size)
     }
 
@@ -530,5 +531,54 @@ class NetWorthCalculatorTest {
         assertEquals(BigDecimal("3000.00"), result.totalAssets)
         assertEquals(BigDecimal.ZERO, result.totalLiabilities)
         assertEquals(BigDecimal("3000.00"), result.netWorth)
+    }
+
+    @Test
+    fun elidedLiabilityPostingShouldBeMaterialized() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Transfer",
+                    firstLine = 1,
+                    lastLine = 2,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("5000.00")),
+                            posting("Liabilities:Credit Card"),
+                        ),
+                ),
+            )
+
+        val result = calculateSingle(inputs(transactions))
+
+        assertEquals(BigDecimal("5000.00"), result.totalAssets)
+        assertEquals(BigDecimal("5000.00"), result.totalLiabilities)
+        assertEquals(BigDecimal("0.00"), result.netWorth)
+    }
+
+    @Test
+    fun twoElidedPostingsShouldBeSkipped() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Ambiguous",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("100.00")),
+                            posting("Liabilities:Credit Card"),
+                            posting("Liabilities:Loan"),
+                        ),
+                ),
+            )
+
+        val result = calculateSingle(inputs(transactions))
+
+        assertEquals(BigDecimal("100.00"), result.totalAssets)
+        assertEquals(BigDecimal.ZERO, result.totalLiabilities)
+        assertEquals(BigDecimal("100.00"), result.netWorth)
     }
 }

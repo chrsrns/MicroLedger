@@ -1,6 +1,9 @@
 package ph.chrsrns.microledger.data.reporting
 
 import ph.chrsrns.microledger.data.AccountTypePrefixes
+import ph.chrsrns.microledger.data.Amount
+import ph.chrsrns.microledger.data.Cost
+import ph.chrsrns.microledger.data.CostType
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -322,17 +325,19 @@ class AccountBalanceCalculatorTest {
                                 assertionCost = null,
                                 comment = null,
                             ),
+                            posting("Liabilities:Loan"),
                         ),
                 ),
             )
 
         val result = calculator.calculate(inputs(transactions))
 
-        // Only Expenses:Food should have a balance
+        // Two elided postings make the balancing amount ambiguous, so neither is
+        // materialized; only Expenses:Food has a balance
         assertEquals(1, result.expenses.size)
         assertEquals(BigDecimal("50.00"), result.expenses[0].balance)
-        // Assets:Checking has no posting with amount, so it shouldn't appear
         assertTrue(result.assets.isEmpty())
+        assertTrue(result.liabilities.isEmpty())
     }
 
     @Test
@@ -659,5 +664,84 @@ class AccountBalanceCalculatorTest {
             )
 
         assertEquals(0, result.assets.size)
+    }
+
+    @Test
+    fun elidedExpensePostingShouldBeMaterialized() {
+        val tx =
+            transaction(
+                date = "2024-01-15",
+                payee = "Groceries",
+                firstLine = 1,
+                lastLine = 2,
+                postings =
+                    listOf(
+                        posting("Assets:Checking", amount("-50.00")),
+                        posting("Expenses:Food"),
+                    ),
+            )
+
+        val result = calculator.calculate(inputs(listOf(tx)))
+
+        assertEquals(1, result.expenses.size)
+        val food = result.expenses[0]
+        assertEquals("Expenses:Food", food.account)
+        assertEquals(BigDecimal("50.00"), food.balance)
+        assertEquals("$", food.currency)
+        assertEquals(listOf(tx), food.transactions)
+    }
+
+    @Test
+    fun siblingWithCostShouldSkipElidedPosting() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Stock Buy",
+                    firstLine = 1,
+                    lastLine = 2,
+                    postings =
+                        listOf(
+                            posting(
+                                "Assets:Brokerage",
+                                amount("10.00"),
+                                cost = Cost(amount("5.00"), CostType.UNIT),
+                            ),
+                            posting("Expenses:Food"),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculate(inputs(transactions))
+
+        assertEquals(0, result.expenses.size)
+        assertEquals(BigDecimal("10.00"), result.assets.single().balance)
+    }
+
+    @Test
+    fun emptyAmountPostingShouldNotBeTreatedAsElided() {
+        val transactions =
+            listOf(
+                transaction(
+                    date = "2024-01-15",
+                    payee = "Empty Amount",
+                    firstLine = 1,
+                    lastLine = 3,
+                    postings =
+                        listOf(
+                            posting("Assets:Checking", amount("-50.00")),
+                            posting("Expenses:Fees", Amount("", "", "")),
+                            posting("Expenses:Food"),
+                        ),
+                ),
+            )
+
+        val result = calculator.calculate(inputs(transactions))
+
+        // Amount("","") is not elided; its "" currency gives two distinct
+        // sibling currencies, so Expenses:Food stays unmaterialized.
+        assertEquals(1, result.expenses.size)
+        assertEquals("Expenses:Fees", result.expenses[0].account)
+        assertEquals(BigDecimal.ZERO, result.expenses[0].balance)
     }
 }
