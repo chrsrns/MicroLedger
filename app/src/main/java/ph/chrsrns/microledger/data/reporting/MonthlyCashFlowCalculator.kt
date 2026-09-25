@@ -1,5 +1,6 @@
 package ph.chrsrns.microledger.data.reporting
 
+import ph.chrsrns.microledger.data.AccountType
 import ph.chrsrns.microledger.data.Transaction
 import java.math.BigDecimal
 import java.util.Locale
@@ -25,27 +26,25 @@ class MonthlyCashFlowCalculator {
     /**
      * Calculates cash flow for a specific month.
      *
-     * @param transactions List of transactions to process
+     * @param inputs Transactions and reporting preferences to process
      * @param year The year (e.g., 2024)
      * @param month The month (1-12)
-     * @param decimalSeparator The user's decimal separator used to parse quantities
      * @return CashFlowResult for the specified month
      */
     fun calculateForMonth(
-        transactions: List<Transaction>,
+        inputs: ReportingInputs,
         year: Int,
         month: Int,
-        decimalSeparator: String,
-        incomePrefixes: List<String> = listOf("Income"),
-        expensesPrefixes: List<String> = listOf("Expenses"),
     ): CashFlowResult {
+        val decimalSeparator = inputs.preferences.decimalSeparator
+        val prefixes = inputs.preferences.prefixes
         val period = String.format(Locale.US, "%04d-%02d", year, month)
         var totalIncome = BigDecimal.ZERO
         var totalExpenses = BigDecimal.ZERO
         val incomeTransactionSet = mutableSetOf<Transaction>()
         val expenseTransactionSet = mutableSetOf<Transaction>()
 
-        for (transaction in transactions) {
+        for (transaction in inputs.transactions) {
             if (!isTransactionInMonth(transaction.date, year, month)) {
                 continue
             }
@@ -55,20 +54,22 @@ class MonthlyCashFlowCalculator {
                 val account = posting.account ?: continue
                 val quantity = parseQuantity(amount.quantity, decimalSeparator)
 
-                when {
-                    incomePrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
+                when (prefixes.classify(account)) {
+                    AccountType.INCOME -> {
                         // Income postings are credits (negative amounts in ledger)
                         // Display as positive for cash flow
                         totalIncome += quantity.negate()
                         incomeTransactionSet.add(transaction)
                     }
 
-                    expensesPrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
+                    AccountType.EXPENSES -> {
                         // Expense postings are debits (positive amounts in ledger)
                         // Keep as positive for cash flow
                         totalExpenses += quantity
                         expenseTransactionSet.add(transaction)
                     }
+
+                    else -> {}
                 }
             }
         }
@@ -86,29 +87,23 @@ class MonthlyCashFlowCalculator {
     }
 
     /**
-     * Calculates cash flow for multiple months.
+     * Calculates cash flow for a rolling window of months.
      *
-     * @param transactions List of transactions to process
-     * @param year The year
-     * @param decimalSeparator The user's decimal separator used to parse quantities
-     * @return List of CashFlowResult for each month in the year
+     * @param inputs Transactions and reporting preferences to process
+     * @param endYear The year of the last month in the window
+     * @param endMonth The last month in the window (1-12, inclusive)
+     * @param months The number of consecutive months in the window
+     * @return List of CashFlowResult, oldest first, ending at (endYear, endMonth)
      */
-    fun calculateForYear(
-        transactions: List<Transaction>,
-        year: Int,
-        decimalSeparator: String,
-        incomePrefixes: List<String> = listOf("Income"),
-        expensesPrefixes: List<String> = listOf("Expenses"),
+    fun calculateRollingWindow(
+        inputs: ReportingInputs,
+        endYear: Int,
+        endMonth: Int,
+        months: Int,
     ): List<CashFlowResult> =
-        (1..12).map { month ->
-            calculateForMonth(
-                transactions,
-                year,
-                month,
-                decimalSeparator,
-                incomePrefixes,
-                expensesPrefixes,
-            )
+        (months - 1 downTo 0).map { offset ->
+            val totalMonths = (endYear * 12 + endMonth - 1) - offset
+            calculateForMonth(inputs, totalMonths / 12, totalMonths % 12 + 1)
         }
 
     private fun isTransactionInMonth(

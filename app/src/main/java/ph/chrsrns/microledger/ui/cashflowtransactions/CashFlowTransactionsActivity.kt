@@ -64,9 +64,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.AccountType
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
+import ph.chrsrns.microledger.data.displaySign
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import ph.chrsrns.microledger.ui.common.TRANSACTION_INDEX_KEY
 import ph.chrsrns.microledger.ui.edit.EditActivity
@@ -102,22 +105,11 @@ fun CashFlowTransactionsScreen(
 ) {
     val cashFlow by cashFlowTransactionsViewModel.currentMonthCashFlow.observeAsState()
     val monthlyHistory by cashFlowTransactionsViewModel.monthlyHistory.observeAsState()
-    val selectedYear by cashFlowTransactionsViewModel.selectedYear.observeAsState(
-        java.util.Calendar
-            .getInstance()
-            .get(java.util.Calendar.YEAR),
-    )
-    val selectedMonth by cashFlowTransactionsViewModel.selectedMonth.observeAsState(
-        java.util.Calendar
-            .getInstance()
-            .get(java.util.Calendar.MONTH) + 1,
-    )
+    val currentYear by cashFlowTransactionsViewModel.currentYear.observeAsState(0)
+    val selectedYear by cashFlowTransactionsViewModel.selectedYear.observeAsState(currentYear)
+    val selectedMonth by cashFlowTransactionsViewModel.selectedMonth.observeAsState(1)
     val decimalSeparator by cashFlowTransactionsViewModel.decimalSeparator.observeAsState(".")
-    val assetsPrefixes by cashFlowTransactionsViewModel.assetsPrefixes.observeAsState(emptyList())
-    val liabilitiesPrefixes by cashFlowTransactionsViewModel.liabilitiesPrefixes.observeAsState(emptyList())
-    val equityPrefixes by cashFlowTransactionsViewModel.equityPrefixes.observeAsState(emptyList())
-    val incomePrefixes by cashFlowTransactionsViewModel.incomePrefixes.observeAsState(emptyList())
-    val expensesPrefixes by cashFlowTransactionsViewModel.expensesPrefixes.observeAsState(emptyList())
+    val prefixes by cashFlowTransactionsViewModel.prefixes.observeAsState(AccountTypePrefixes.EMPTY)
     val context = LocalContext.current
 
     val onTransactionClick = { transaction: Transaction ->
@@ -135,12 +127,9 @@ fun CashFlowTransactionsScreen(
         monthlyHistory = monthlyHistory,
         selectedYear = selectedYear,
         selectedMonth = selectedMonth,
+        currentYear = currentYear,
         decimalSeparator = decimalSeparator,
-        assetsPrefixes = assetsPrefixes,
-        liabilitiesPrefixes = liabilitiesPrefixes,
-        equityPrefixes = equityPrefixes,
-        incomePrefixes = incomePrefixes,
-        expensesPrefixes = expensesPrefixes,
+        prefixes = prefixes,
         onBackClick = onBackClick,
         onPreviousMonth = cashFlowTransactionsViewModel::previousMonth,
         onNextMonth = cashFlowTransactionsViewModel::nextMonth,
@@ -155,12 +144,9 @@ fun CashFlowTransactionsScreenContent(
     monthlyHistory: List<MonthlyCashFlowCalculator.CashFlowResult>?,
     selectedYear: Int,
     selectedMonth: Int,
+    currentYear: Int,
     decimalSeparator: String,
-    assetsPrefixes: List<String> = emptyList(),
-    liabilitiesPrefixes: List<String> = emptyList(),
-    equityPrefixes: List<String> = emptyList(),
-    incomePrefixes: List<String> = emptyList(),
-    expensesPrefixes: List<String> = emptyList(),
+    prefixes: AccountTypePrefixes = AccountTypePrefixes.EMPTY,
     onBackClick: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
@@ -204,6 +190,7 @@ fun CashFlowTransactionsScreenContent(
             MonthSelector(
                 selectedYear = selectedYear,
                 selectedMonth = selectedMonth,
+                currentYear = currentYear,
                 onPreviousMonth = onPreviousMonth,
                 onNextMonth = onNextMonth,
                 onSelectMonth = onSelectMonth,
@@ -215,11 +202,7 @@ fun CashFlowTransactionsScreenContent(
                 transactions = cashFlow?.incomeTransactions ?: emptyList(),
                 emptyMessage = stringResource(R.string.no_income_transactions),
                 onTransactionClick = onTransactionClick,
-                assetsPrefixes = assetsPrefixes,
-                liabilitiesPrefixes = liabilitiesPrefixes,
-                equityPrefixes = equityPrefixes,
-                incomePrefixes = incomePrefixes,
-                expensesPrefixes = expensesPrefixes,
+                prefixes = prefixes,
                 decimalSeparator = decimalSeparator,
             )
             RankingCard(
@@ -227,11 +210,7 @@ fun CashFlowTransactionsScreenContent(
                 transactions = cashFlow?.expenseTransactions ?: emptyList(),
                 emptyMessage = stringResource(R.string.no_expense_transactions),
                 onTransactionClick = onTransactionClick,
-                assetsPrefixes = assetsPrefixes,
-                liabilitiesPrefixes = liabilitiesPrefixes,
-                equityPrefixes = equityPrefixes,
-                incomePrefixes = incomePrefixes,
-                expensesPrefixes = expensesPrefixes,
+                prefixes = prefixes,
                 decimalSeparator = decimalSeparator,
             )
         }
@@ -242,6 +221,7 @@ fun CashFlowTransactionsScreenContent(
 fun MonthSelector(
     selectedYear: Int,
     selectedMonth: Int,
+    currentYear: Int,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSelectMonth: (Int, Int) -> Unit,
@@ -292,10 +272,6 @@ fun MonthSelector(
                     expanded = showYearDropdown,
                     onDismissRequest = { showYearDropdown = false },
                 ) {
-                    val currentYear =
-                        java.util.Calendar
-                            .getInstance()
-                            .get(java.util.Calendar.YEAR)
                     (currentYear downTo currentYear - 10).forEach { year ->
                         DropdownMenuItem(
                             text = { Text(year.toString()) },
@@ -338,14 +314,13 @@ fun CashFlowSummaryCard(
             } else {
                 AmountSummaryRow(
                     label = stringResource(R.string.income),
-                    amount = cashFlow.totalIncome,
+                    amount = cashFlow.totalIncome.multiply(BigDecimal(displaySign(AccountType.INCOME))),
                     decimalSeparator = decimalSeparator,
                 )
                 AmountSummaryRow(
                     label = stringResource(R.string.expenses),
-                    amount = cashFlow.totalExpenses,
+                    amount = cashFlow.totalExpenses.multiply(BigDecimal(displaySign(AccountType.EXPENSES))),
                     decimalSeparator = decimalSeparator,
-                    negate = true,
                 )
                 Spacer(Modifier.height(4.dp))
                 HorizontalDivider()
@@ -366,10 +341,9 @@ fun AmountSummaryRow(
     label: String,
     amount: BigDecimal,
     decimalSeparator: String,
-    negate: Boolean = false,
     bold: Boolean = false,
 ) {
-    val displayAmount = if (negate) amount.negate() else amount
+    val displayAmount = amount
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -537,11 +511,7 @@ fun RankingCard(
     transactions: List<Transaction>,
     emptyMessage: String,
     onTransactionClick: (Transaction) -> Unit = {},
-    assetsPrefixes: List<String> = emptyList(),
-    liabilitiesPrefixes: List<String> = emptyList(),
-    equityPrefixes: List<String> = emptyList(),
-    incomePrefixes: List<String> = emptyList(),
-    expensesPrefixes: List<String> = emptyList(),
+    prefixes: AccountTypePrefixes = AccountTypePrefixes.EMPTY,
     decimalSeparator: String = ".",
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -567,11 +537,7 @@ fun RankingCard(
                             transaction = transaction,
                             selected = false,
                             onClick = { onTransactionClick(transaction) },
-                            assetsPrefixes = assetsPrefixes,
-                            liabilitiesPrefixes = liabilitiesPrefixes,
-                            equityPrefixes = equityPrefixes,
-                            incomePrefixes = incomePrefixes,
-                            expensesPrefixes = expensesPrefixes,
+                            prefixes = prefixes,
                             decimalSeparator = decimalSeparator,
                         )
                     }
@@ -670,6 +636,7 @@ fun CashFlowTransactionsScreenPreview() {
             monthlyHistory = sampleHistory,
             selectedYear = 2026,
             selectedMonth = 6,
+            currentYear = 2026,
             decimalSeparator = ".",
             onBackClick = {},
             onPreviousMonth = {},

@@ -8,6 +8,7 @@ import androidx.lifecycle.map
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Cost
 import ph.chrsrns.microledger.data.CostType
@@ -196,11 +197,8 @@ abstract class TransactionFormViewModel(
         preferencesDataSource.spacingBetweenCurrencyAndAmount
     val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
     val defaultCurrency: LiveData<String> = preferencesDataSource.defaultCurrency
-    val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
-    val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
-    val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
-    val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
-    val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
+    val prefixes: LiveData<AccountTypePrefixes> =
+        preferencesDataSource.reportingPreferences.map { it.prefixes }
 
     protected fun toTransactionString(): String {
         val postingWidth = preferencesDataSource.getPostingWidth()

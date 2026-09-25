@@ -5,11 +5,14 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.map
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
+import ph.chrsrns.microledger.data.reporting.ReportingInputs
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,12 +25,10 @@ class AccountTransactionsViewModel
     ) : AndroidViewModel(application) {
         private val accountBalanceCalculator = AccountBalanceCalculator()
 
-        val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
-        val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
-        val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
-        val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
-        val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
-        val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
+        val decimalSeparator: LiveData<String> =
+            preferencesDataSource.reportingPreferences.map { it.decimalSeparator }
+        val prefixes: LiveData<AccountTypePrefixes> =
+            preferencesDataSource.reportingPreferences.map { it.prefixes }
 
         private val _selectedAccount = MutableLiveData<String?>()
         val selectedAccount: LiveData<String?> = _selectedAccount
@@ -39,23 +40,11 @@ class AccountTransactionsViewModel
             MediatorLiveData<AccountBalanceCalculator.AccountBalancesResult>().apply {
                 fun compute() {
                     val transactions = ledgerRepository.transactions.value ?: return
-                    value =
-                        accountBalanceCalculator.calculate(
-                            transactions,
-                            preferencesDataSource.getDecimalSeparator(),
-                            preferencesDataSource.getAssetsPrefixes(),
-                            preferencesDataSource.getLiabilitiesPrefixes(),
-                            preferencesDataSource.getEquityPrefixes(),
-                            preferencesDataSource.getIncomePrefixes(),
-                            preferencesDataSource.getExpensesPrefixes(),
-                        )
+                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
+                    value = accountBalanceCalculator.calculate(ReportingInputs(transactions, preferences))
                 }
                 addSource(ledgerRepository.transactions) { compute() }
-                addSource(preferencesDataSource.assetsPrefixes) { compute() }
-                addSource(preferencesDataSource.liabilitiesPrefixes) { compute() }
-                addSource(preferencesDataSource.equityPrefixes) { compute() }
-                addSource(preferencesDataSource.incomePrefixes) { compute() }
-                addSource(preferencesDataSource.expensesPrefixes) { compute() }
+                addSource(preferencesDataSource.reportingPreferences) { compute() }
             }
 
         val accountTransactions: LiveData<List<Transaction>> =

@@ -1,5 +1,6 @@
 package ph.chrsrns.microledger.data.reporting
 
+import ph.chrsrns.microledger.data.AccountType
 import ph.chrsrns.microledger.data.Transaction
 import java.math.BigDecimal
 
@@ -32,26 +33,20 @@ class AccountBalanceCalculator {
     )
 
     /**
-     * Calculates all account balances from the given transactions.
+     * Calculates all account balances from the given inputs.
      *
-     * @param transactions List of transactions to process
-     * @param decimalSeparator The user's decimal separator used to parse quantities
+     * @param inputs Transactions and reporting preferences to process
      * @return AccountBalancesResult containing balances grouped by type
      */
-    fun calculate(
-        transactions: List<Transaction>,
-        decimalSeparator: String,
-        assetsPrefixes: List<String> = listOf("Assets"),
-        liabilitiesPrefixes: List<String> = listOf("Liabilities"),
-        equityPrefixes: List<String> = listOf("Equity"),
-        incomePrefixes: List<String> = listOf("Income"),
-        expensesPrefixes: List<String> = listOf("Expenses"),
-    ): AccountBalancesResult {
+    fun calculate(inputs: ReportingInputs): AccountBalancesResult {
+        val decimalSeparator = inputs.preferences.decimalSeparator
+        val prefixes = inputs.preferences.prefixes
+
         // Map of account name -> (currency -> (balance, mutableSet of transactions))
         val accountBalances =
             mutableMapOf<String, MutableMap<String, Pair<BigDecimal, MutableSet<Transaction>>>>()
 
-        for (transaction in transactions) {
+        for (transaction in inputs.transactions) {
             for (posting in transaction.postings) {
                 val amount = posting.amount ?: continue
                 val account = posting.account ?: continue
@@ -76,30 +71,15 @@ class AccountBalanceCalculator {
         for ((account, currencyMap) in accountBalances) {
             for ((currency, pair) in currencyMap) {
                 val (rawBalance, transactionSet) = pair
+                val type = prefixes.classify(account)
                 // For display purposes, negate Liability, Equity, and Income balances so they show as positive
                 // (these are credit accounts stored as negative amounts in ledger postings)
                 val displayBalance =
-                    when {
-                        liabilitiesPrefixes.any {
-                            account.startsWith(
-                                it,
-                                ignoreCase = true,
-                            )
-                        } -> rawBalance.negate()
-
-                        equityPrefixes.any {
-                            account.startsWith(
-                                it,
-                                ignoreCase = true,
-                            )
-                        } -> rawBalance.negate()
-
-                        incomePrefixes.any {
-                            account.startsWith(
-                                it,
-                                ignoreCase = true,
-                            )
-                        } -> rawBalance.negate()
+                    when (type) {
+                        AccountType.LIABILITIES,
+                        AccountType.EQUITY,
+                        AccountType.INCOME,
+                        -> rawBalance.negate()
 
                         else -> rawBalance
                     }
@@ -112,31 +92,13 @@ class AccountBalanceCalculator {
                         transactions = transactionSet.sortedBy { it.firstLine },
                     )
 
-                when {
-                    assetsPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        assets.add(
-                            accountBalance,
-                        )
-
-                    liabilitiesPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        liabilities.add(
-                            accountBalance,
-                        )
-
-                    equityPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        equity.add(
-                            accountBalance,
-                        )
-
-                    incomePrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        income.add(
-                            accountBalance,
-                        )
-
-                    expensesPrefixes.any { account.startsWith(it, ignoreCase = true) } ->
-                        expenses.add(
-                            accountBalance,
-                        )
+                when (type) {
+                    AccountType.ASSETS -> assets.add(accountBalance)
+                    AccountType.LIABILITIES -> liabilities.add(accountBalance)
+                    AccountType.EQUITY -> equity.add(accountBalance)
+                    AccountType.INCOME -> income.add(accountBalance)
+                    AccountType.EXPENSES -> expenses.add(accountBalance)
+                    null -> {}
                 }
             }
         }

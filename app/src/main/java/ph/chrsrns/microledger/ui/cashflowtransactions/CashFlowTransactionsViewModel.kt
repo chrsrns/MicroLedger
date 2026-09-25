@@ -5,12 +5,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.map
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
-import java.util.Calendar
+import ph.chrsrns.microledger.data.reporting.ReportingInputs
+import ph.chrsrns.microledger.di.MonthProvider
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,76 +23,63 @@ class CashFlowTransactionsViewModel
         application: Application,
         private val ledgerRepository: LedgerRepository,
         private val preferencesDataSource: PreferencesDataSource,
+        private val monthProvider: MonthProvider,
     ) : AndroidViewModel(application) {
         private val cashFlowCalculator = MonthlyCashFlowCalculator()
 
-        val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
-        val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
-        val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
-        val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
-        val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
-        val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
+        val decimalSeparator: LiveData<String> =
+            preferencesDataSource.reportingPreferences.map { it.decimalSeparator }
+        val prefixes: LiveData<AccountTypePrefixes> =
+            preferencesDataSource.reportingPreferences.map { it.prefixes }
 
-        private val _selectedYear = MutableLiveData(Calendar.getInstance().get(Calendar.YEAR))
+        private val _currentYear = MutableLiveData(monthProvider.current().year)
+        val currentYear: LiveData<Int> = _currentYear
+
+        private val _selectedYear = MutableLiveData(monthProvider.current().year)
         val selectedYear: LiveData<Int> = _selectedYear
 
-        private val _selectedMonth = MutableLiveData(Calendar.getInstance().get(Calendar.MONTH) + 1)
+        private val _selectedMonth = MutableLiveData(monthProvider.current().month)
         val selectedMonth: LiveData<Int> = _selectedMonth
 
         val currentMonthCashFlow: LiveData<MonthlyCashFlowCalculator.CashFlowResult> =
             MediatorLiveData<MonthlyCashFlowCalculator.CashFlowResult>().apply {
                 fun compute() {
                     val transactions = ledgerRepository.transactions.value ?: return
+                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
                     val year = _selectedYear.value ?: return
                     val month = _selectedMonth.value ?: return
                     value =
                         cashFlowCalculator.calculateForMonth(
-                            transactions,
+                            ReportingInputs(transactions, preferences),
                             year,
                             month,
-                            preferencesDataSource.getDecimalSeparator(),
-                            preferencesDataSource.getIncomePrefixes(),
-                            preferencesDataSource.getExpensesPrefixes(),
                         )
                 }
                 addSource(ledgerRepository.transactions) { compute() }
+                addSource(preferencesDataSource.reportingPreferences) { compute() }
                 addSource(_selectedYear) { compute() }
                 addSource(_selectedMonth) { compute() }
-                addSource(preferencesDataSource.incomePrefixes) { compute() }
-                addSource(preferencesDataSource.expensesPrefixes) { compute() }
             }
 
         val monthlyHistory: LiveData<List<MonthlyCashFlowCalculator.CashFlowResult>> =
             MediatorLiveData<List<MonthlyCashFlowCalculator.CashFlowResult>>().apply {
                 fun compute() {
                     val transactions = ledgerRepository.transactions.value ?: return
+                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
                     val year = _selectedYear.value ?: return
                     val month = _selectedMonth.value ?: return
-                    val decimalSeparator = preferencesDataSource.getDecimalSeparator()
-                    val incomePrefixes = preferencesDataSource.getIncomePrefixes()
-                    val expensesPrefixes = preferencesDataSource.getExpensesPrefixes()
-                    // Build the rolling 12-month window ending at (year, month) inclusive.
                     value =
-                        (11 downTo 0).map { offset ->
-                            // Subtract offset months from the selected month.
-                            val totalMonths = (year * 12 + month - 1) - offset
-                            val windowYear = totalMonths / 12
-                            val windowMonth = totalMonths % 12 + 1
-                            cashFlowCalculator.calculateForMonth(
-                                transactions,
-                                windowYear,
-                                windowMonth,
-                                decimalSeparator,
-                                incomePrefixes,
-                                expensesPrefixes,
-                            )
-                        }
+                        cashFlowCalculator.calculateRollingWindow(
+                            ReportingInputs(transactions, preferences),
+                            year,
+                            month,
+                            12,
+                        )
                 }
                 addSource(ledgerRepository.transactions) { compute() }
+                addSource(preferencesDataSource.reportingPreferences) { compute() }
                 addSource(_selectedYear) { compute() }
                 addSource(_selectedMonth) { compute() }
-                addSource(preferencesDataSource.incomePrefixes) { compute() }
-                addSource(preferencesDataSource.expensesPrefixes) { compute() }
             }
 
         fun selectMonth(

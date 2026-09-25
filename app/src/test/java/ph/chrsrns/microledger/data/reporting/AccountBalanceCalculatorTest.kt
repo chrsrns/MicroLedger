@@ -1,5 +1,6 @@
 package ph.chrsrns.microledger.data.reporting
 
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -10,7 +11,7 @@ class AccountBalanceCalculatorTest {
 
     @Test
     fun emptyTransactionListShouldReturnEmptyBalances() {
-        val result = calculator.calculate(emptyList(), ".")
+        val result = calculator.calculate(inputs(emptyList()))
 
         assertTrue(result.assets.isEmpty())
         assertTrue(result.liabilities.isEmpty())
@@ -23,7 +24,7 @@ class AccountBalanceCalculatorTest {
     fun singleAssetAccountShouldReturnCorrectBalance() {
         val transactions = listOf(openingTransaction())
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(1, result.assets.size)
         assertEquals("Assets:Checking", result.assets[0].account)
@@ -50,7 +51,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(2, result.assets.size)
         val checkingBalance = result.assets.find { it.account == "Assets:Checking" }
@@ -78,7 +79,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(3, result.assets.size)
         assertTrue(
@@ -123,7 +124,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(1, result.assets.size)
         assertEquals("Assets:Checking", result.assets[0].account)
@@ -164,7 +165,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(1, result.assets.size)
         assertEquals("Assets:Checking", result.assets[0].account)
@@ -207,7 +208,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(2, result.assets.size)
         val usdBalance = result.assets.find { it.currency == "USD" }
@@ -240,7 +241,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(1, result.assets.size)
         assertEquals("Assets:Checking", result.assets[0].account)
@@ -283,7 +284,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // Income: Salary = 5000, Bonus = 1000 (stored as negative in postings)
         assertEquals(2, result.income.size)
@@ -325,7 +326,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // Only Expenses:Food should have a balance
         assertEquals(1, result.expenses.size)
@@ -351,7 +352,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(2, result.assets.size)
         assertEquals(
@@ -384,7 +385,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(1, result.assets.size)
         assertEquals(1, result.liabilities.size)
@@ -410,7 +411,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(1, result.assets.size)
         assertEquals("assets:bank:checking", result.assets[0].account)
@@ -441,7 +442,7 @@ class AccountBalanceCalculatorTest {
                 openingTransaction(amount = "500.00", date = "2024-01-16", firstLine = 4),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         // The malformed quantity contributes 0; only the valid 500.00 should appear
         val checkingBalance = result.assets.find { it.account == "Assets:Checking" }
@@ -469,7 +470,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(1, result.assets.size)
         assertEquals("Assets", result.assets[0].account)
@@ -502,7 +503,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(1, result.assets.size)
         assertEquals(1, result.liabilities.size)
@@ -532,7 +533,7 @@ class AccountBalanceCalculatorTest {
                 ),
             )
 
-        val result = calculator.calculate(transactions, ".")
+        val result = calculator.calculate(inputs(transactions))
 
         assertEquals(1, result.assets.size)
         assertEquals("Assets:Checking", result.assets[0].account)
@@ -566,13 +567,17 @@ class AccountBalanceCalculatorTest {
 
         val result =
             calculator.calculate(
-                transactions,
-                ".",
-                assetsPrefixes = listOf("MyAssets"),
-                liabilitiesPrefixes = listOf("MyLiabilities"),
-                equityPrefixes = listOf("MyEquity"),
-                incomePrefixes = listOf("MyIncome"),
-                expensesPrefixes = listOf("MyExpenses"),
+                inputs(
+                    transactions,
+                    prefixes =
+                        AccountTypePrefixes(
+                            assets = listOf("MyAssets"),
+                            liabilities = listOf("MyLiabilities"),
+                            equity = listOf("MyEquity"),
+                            income = listOf("MyIncome"),
+                            expenses = listOf("MyExpenses"),
+                        ),
+                ),
             )
 
         assertEquals(1, result.assets.size)
@@ -616,9 +621,10 @@ class AccountBalanceCalculatorTest {
 
         val result =
             calculator.calculate(
-                transactions,
-                ".",
-                assetsPrefixes = listOf("Assets", "Aktiva"),
+                inputs(
+                    transactions,
+                    prefixes = DEFAULT_PREFIXES.copy(assets = listOf("Assets", "Aktiva")),
+                ),
             )
 
         assertEquals(2, result.assets.size)
@@ -646,9 +652,10 @@ class AccountBalanceCalculatorTest {
 
         val result =
             calculator.calculate(
-                transactions,
-                ".",
-                assetsPrefixes = listOf("Assets"),
+                inputs(
+                    transactions,
+                    prefixes = DEFAULT_PREFIXES.copy(assets = listOf("Assets")),
+                ),
             )
 
         assertEquals(0, result.assets.size)

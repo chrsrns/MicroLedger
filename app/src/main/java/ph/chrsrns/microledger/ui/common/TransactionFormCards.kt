@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Cost
 import ph.chrsrns.microledger.data.CostType
@@ -180,11 +181,7 @@ fun PostingList(
     decimalSeparator: String,
     defaultCurrency: String,
     unbalancedAmount: String?,
-    assetsPrefixes: List<String>,
-    liabilitiesPrefixes: List<String>,
-    equityPrefixes: List<String>,
-    incomePrefixes: List<String>,
-    expensesPrefixes: List<String>,
+    prefixes: AccountTypePrefixes,
     onPostingClick: (Int) -> Unit,
     onRemoveClick: (Int) -> Unit,
     onAddClick: () -> Unit,
@@ -216,11 +213,7 @@ fun PostingList(
                     decimalSeparator = decimalSeparator,
                     defaultCurrency = defaultCurrency,
                     unbalancedAmount = unbalancedAmount,
-                    assetsPrefixes = assetsPrefixes,
-                    liabilitiesPrefixes = liabilitiesPrefixes,
-                    equityPrefixes = equityPrefixes,
-                    incomePrefixes = incomePrefixes,
-                    expensesPrefixes = expensesPrefixes,
+                    prefixes = prefixes,
                     onClick = { onPostingClick(index) },
                     onRemove = { onRemoveClick(index) },
                     showRemove = !isBalance,
@@ -246,11 +239,7 @@ fun PostingRowCompact(
     decimalSeparator: String,
     defaultCurrency: String,
     unbalancedAmount: String?,
-    assetsPrefixes: List<String>,
-    liabilitiesPrefixes: List<String>,
-    equityPrefixes: List<String>,
-    incomePrefixes: List<String>,
-    expensesPrefixes: List<String>,
+    prefixes: AccountTypePrefixes,
     onClick: () -> Unit,
     onRemove: () -> Unit,
     showRemove: Boolean,
@@ -280,21 +269,10 @@ fun PostingRowCompact(
             }
             else -> {
                 val accountColor =
-                    accountTypeColor(
-                        posting.account,
-                        assetsPrefixes,
-                        liabilitiesPrefixes,
-                        equityPrefixes,
-                        incomePrefixes,
-                        expensesPrefixes,
-                    ) ?: LocalTextStyle.current.color
+                    accountTypeColor(posting.account, prefixes) ?: LocalTextStyle.current.color
                 AccountDot(
                     account = posting.account,
-                    assetsPrefixes = assetsPrefixes,
-                    liabilitiesPrefixes = liabilitiesPrefixes,
-                    equityPrefixes = equityPrefixes,
-                    incomePrefixes = incomePrefixes,
-                    expensesPrefixes = expensesPrefixes,
+                    prefixes = prefixes,
                 )
                 Text(
                     text = posting.account ?: "",
@@ -406,21 +384,9 @@ fun BalanceRow(
 @Composable
 fun AccountDot(
     account: String?,
-    assetsPrefixes: List<String>,
-    liabilitiesPrefixes: List<String>,
-    equityPrefixes: List<String>,
-    incomePrefixes: List<String>,
-    expensesPrefixes: List<String>,
+    prefixes: AccountTypePrefixes,
 ) {
-    val color =
-        accountTypeColor(
-            account,
-            assetsPrefixes,
-            liabilitiesPrefixes,
-            equityPrefixes,
-            incomePrefixes,
-            expensesPrefixes,
-        )
+    val color = accountTypeColor(account, prefixes)
     if (color != null) {
         Box(
             modifier =
@@ -445,11 +411,7 @@ fun PostingEditBottomSheet(
     decimalSeparator: String,
     defaultCurrency: String,
     unbalancedAmount: String?,
-    assetsPrefixes: List<String>,
-    liabilitiesPrefixes: List<String>,
-    equityPrefixes: List<String>,
-    incomePrefixes: List<String>,
-    expensesPrefixes: List<String>,
+    prefixes: AccountTypePrefixes,
     onDismiss: () -> Unit,
     onSave: (Posting) -> Unit,
     onRemove: () -> Unit,

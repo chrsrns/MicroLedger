@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.ui.util.Event
@@ -80,11 +81,8 @@ class MainViewModel
         val selectedTab: LiveData<MainTab> = _selectedTab
 
         val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
-        val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
-        val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
-        val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
-        val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
-        val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
+        val prefixes: LiveData<AccountTypePrefixes> =
+            preferencesDataSource.reportingPreferences.map { it.prefixes }
 
         fun selectTab(tab: MainTab) {
             val previousTab = _selectedTab.value

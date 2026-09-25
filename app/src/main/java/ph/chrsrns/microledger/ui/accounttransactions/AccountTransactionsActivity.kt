@@ -55,9 +55,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
+import ph.chrsrns.microledger.data.displaySign
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.ui.common.TRANSACTION_INDEX_KEY
 import ph.chrsrns.microledger.ui.edit.EditActivity
@@ -94,11 +96,7 @@ fun AccountTransactionsScreen(
     val accountTransactions by accountTransactionsViewModel.accountTransactions.observeAsState()
     val selectedAccount by accountTransactionsViewModel.selectedAccount.observeAsState()
     val decimalSeparator by accountTransactionsViewModel.decimalSeparator.observeAsState(".")
-    val assetsPrefixes by accountTransactionsViewModel.assetsPrefixes.observeAsState(emptyList())
-    val liabilitiesPrefixes by accountTransactionsViewModel.liabilitiesPrefixes.observeAsState(emptyList())
-    val equityPrefixes by accountTransactionsViewModel.equityPrefixes.observeAsState(emptyList())
-    val incomePrefixes by accountTransactionsViewModel.incomePrefixes.observeAsState(emptyList())
-    val expensesPrefixes by accountTransactionsViewModel.expensesPrefixes.observeAsState(emptyList())
+    val prefixes by accountTransactionsViewModel.prefixes.observeAsState(AccountTypePrefixes.EMPTY)
     val context = LocalContext.current
 
     val onTransactionClick = { transaction: Transaction ->
@@ -116,11 +114,7 @@ fun AccountTransactionsScreen(
         accountTransactions = accountTransactions,
         selectedAccount = selectedAccount,
         decimalSeparator = decimalSeparator,
-        assetsPrefixes = assetsPrefixes,
-        liabilitiesPrefixes = liabilitiesPrefixes,
-        equityPrefixes = equityPrefixes,
-        incomePrefixes = incomePrefixes,
-        expensesPrefixes = expensesPrefixes,
+        prefixes = prefixes,
         onBackClick = onBackClick,
         onAccountClick = accountTransactionsViewModel::selectAccount,
         onClearSelection = accountTransactionsViewModel::clearSelectedAccount,
@@ -135,11 +129,7 @@ fun AccountTransactionsScreenContent(
     accountTransactions: List<Transaction>?,
     selectedAccount: String?,
     decimalSeparator: String,
-    assetsPrefixes: List<String> = emptyList(),
-    liabilitiesPrefixes: List<String> = emptyList(),
-    equityPrefixes: List<String> = emptyList(),
-    incomePrefixes: List<String> = emptyList(),
-    expensesPrefixes: List<String> = emptyList(),
+    prefixes: AccountTypePrefixes = AccountTypePrefixes.EMPTY,
     onBackClick: () -> Unit,
     onAccountClick: (String, String) -> Unit,
     onClearSelection: () -> Unit,
@@ -203,11 +193,7 @@ fun AccountTransactionsScreenContent(
                                 transaction = transaction,
                                 selected = false,
                                 onClick = { onTransactionClick(transaction) },
-                                assetsPrefixes = assetsPrefixes,
-                                liabilitiesPrefixes = liabilitiesPrefixes,
-                                equityPrefixes = equityPrefixes,
-                                incomePrefixes = incomePrefixes,
-                                expensesPrefixes = expensesPrefixes,
+                                prefixes = prefixes,
                                 decimalSeparator = decimalSeparator,
                             )
                         }
@@ -241,33 +227,35 @@ fun AccountTransactionsScreenContent(
                         onAccountClick = onAccountClick,
                         decimalSeparator = decimalSeparator,
                         initiallyExpanded = assetsTitle in expandedGroups,
+                        prefixes = prefixes,
                     )
                     AccountAccordionGroup(
                         title = stringResource(R.string.liabilities),
                         accounts = accountBalances.liabilities,
                         onAccountClick = onAccountClick,
                         decimalSeparator = decimalSeparator,
-                        negate = true,
+                        prefixes = prefixes,
                     )
                     AccountAccordionGroup(
                         title = stringResource(R.string.equity),
                         accounts = accountBalances.equity,
                         onAccountClick = onAccountClick,
                         decimalSeparator = decimalSeparator,
-                        negate = true,
+                        prefixes = prefixes,
                     )
                     AccountAccordionGroup(
                         title = stringResource(R.string.income),
                         accounts = accountBalances.income,
                         onAccountClick = onAccountClick,
                         decimalSeparator = decimalSeparator,
-                        negate = true,
+                        prefixes = prefixes,
                     )
                     AccountAccordionGroup(
                         title = stringResource(R.string.expenses),
                         accounts = accountBalances.expenses,
                         onAccountClick = onAccountClick,
                         decimalSeparator = decimalSeparator,
+                        prefixes = prefixes,
                     )
                 }
             }
@@ -281,7 +269,7 @@ fun AccountAccordionGroup(
     accounts: List<AccountBalanceCalculator.AccountBalance>,
     onAccountClick: (String, String) -> Unit,
     decimalSeparator: String,
-    negate: Boolean = false,
+    prefixes: AccountTypePrefixes = AccountTypePrefixes.EMPTY,
     initiallyExpanded: Boolean = false,
 ) {
     if (accounts.isEmpty()) return
@@ -329,7 +317,7 @@ fun AccountAccordionGroup(
                             account = account,
                             onAccountClick = onAccountClick,
                             decimalSeparator = decimalSeparator,
-                            negate = negate,
+                            prefixes = prefixes,
                         )
                         if (account != accounts.last()) {
                             HorizontalDivider()
@@ -346,7 +334,7 @@ fun AccountRow(
     account: AccountBalanceCalculator.AccountBalance,
     onAccountClick: (String, String) -> Unit,
     decimalSeparator: String,
-    negate: Boolean = false,
+    prefixes: AccountTypePrefixes = AccountTypePrefixes.EMPTY,
 ) {
     Row(
         modifier =
@@ -373,16 +361,18 @@ fun AccountRow(
                 )
                 Spacer(Modifier.width(4.dp))
             }
+            val displayBalance =
+                prefixes
+                    .classify(account.account)
+                    ?.let { account.balance.multiply(BigDecimal(displaySign(it))) }
+                    ?: account.balance
             Text(
-                formatAmount(
-                    if (negate) account.balance.negate() else account.balance,
-                    decimalSeparator,
-                ),
+                formatAmount(displayBalance, decimalSeparator),
                 modifier = Modifier.widthIn(min = 80.dp),
                 textAlign = TextAlign.End,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = amountColor(if (negate) account.balance.negate() else account.balance),
+                color = amountColor(displayBalance),
             )
         }
     }

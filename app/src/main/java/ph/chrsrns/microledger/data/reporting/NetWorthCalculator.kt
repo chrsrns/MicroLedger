@@ -1,68 +1,69 @@
 package ph.chrsrns.microledger.data.reporting
 
-import ph.chrsrns.microledger.data.Transaction
+import ph.chrsrns.microledger.data.AccountType
 import java.math.BigDecimal
 
 /**
  * Calculates net worth from a list of transactions.
  *
- * Net worth = Total Assets - Total Liabilities
- *
- * Accounts starting with "Assets" are considered assets.
- * Accounts starting with "Liabilities" are considered liabilities.
+ * Net worth = Total Assets - Total Liabilities, reported per currency.
  */
 class NetWorthCalculator {
     /**
-     * Result containing net worth information.
+     * Net worth information for a single currency.
      */
-    data class NetWorthResult(
+    data class CurrencyNetWorth(
+        val currency: String,
         val netWorth: BigDecimal,
         val totalAssets: BigDecimal,
         val totalLiabilities: BigDecimal,
     )
 
     /**
-     * Calculates net worth from the given transactions.
+     * Calculates net worth from the given inputs.
      *
-     * @param transactions List of transactions to process
-     * @param decimalSeparator The user's decimal separator used to parse quantities
-     * @return NetWorthResult containing the calculated values
+     * @param inputs Transactions and reporting preferences to process
+     * @return One entry per distinct currency among asset/liability postings,
+     *   sorted by currency; currencies are never summed across each other
      */
-    fun calculate(
-        transactions: List<Transaction>,
-        decimalSeparator: String,
-        assetsPrefixes: List<String> = listOf("Assets"),
-        liabilitiesPrefixes: List<String> = listOf("Liabilities"),
-    ): NetWorthResult {
-        var totalAssets = BigDecimal.ZERO
-        var totalLiabilities = BigDecimal.ZERO
+    fun calculate(inputs: ReportingInputs): List<CurrencyNetWorth> {
+        val decimalSeparator = inputs.preferences.decimalSeparator
+        val prefixes = inputs.preferences.prefixes
 
-        for (transaction in transactions) {
+        // currency -> (totalAssets, totalLiabilities)
+        val totals = mutableMapOf<String, Pair<BigDecimal, BigDecimal>>()
+
+        for (transaction in inputs.transactions) {
             for (posting in transaction.postings) {
                 val amount = posting.amount ?: continue
                 val account = posting.account ?: continue
                 val quantity = parseQuantity(amount.quantity, decimalSeparator)
+                val (assets, liabilities) = totals[amount.currency] ?: (BigDecimal.ZERO to BigDecimal.ZERO)
 
-                when {
-                    assetsPrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
-                        totalAssets += quantity
+                when (prefixes.classify(account)) {
+                    AccountType.ASSETS -> {
+                        totals[amount.currency] = (assets + quantity) to liabilities
                     }
 
-                    liabilitiesPrefixes.any { account.startsWith(it, ignoreCase = true) } -> {
+                    AccountType.LIABILITIES -> {
                         // Liabilities are stored as negative in postings (credits)
                         // We treat them as positive amounts for net worth calculation
-                        totalLiabilities += quantity.negate()
+                        totals[amount.currency] = assets to (liabilities + quantity.negate())
                     }
+
+                    else -> {}
                 }
             }
         }
 
-        val netWorth = totalAssets.subtract(totalLiabilities)
-
-        return NetWorthResult(
-            netWorth = netWorth,
-            totalAssets = totalAssets,
-            totalLiabilities = totalLiabilities,
-        )
+        return totals.entries.sortedBy { it.key }.map { (currency, pair) ->
+            val (totalAssets, totalLiabilities) = pair
+            CurrencyNetWorth(
+                currency = currency,
+                netWorth = totalAssets.subtract(totalLiabilities),
+                totalAssets = totalAssets,
+                totalLiabilities = totalLiabilities,
+            )
+        }
     }
 }

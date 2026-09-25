@@ -1,11 +1,5 @@
 package ph.chrsrns.microledger.ui.dashboard
 
-import android.content.Intent
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,80 +28,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.AccountType
+import ph.chrsrns.microledger.data.displaySign
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import ph.chrsrns.microledger.data.reporting.NetWorthCalculator
-import ph.chrsrns.microledger.ui.accounttransactions.AccountTransactionsActivity
-import ph.chrsrns.microledger.ui.cashflowtransactions.CashFlowTransactionsActivity
-import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
 import ph.chrsrns.microledger.ui.util.amountColor
 import ph.chrsrns.microledger.ui.util.formatAmount
 import java.math.BigDecimal
 
-@AndroidEntryPoint
-class DashboardActivity : ComponentActivity() {
-    private val dashboardViewModel: DashboardViewModel by viewModels()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            MicroLedgerTheme {
-                DashboardScreen(
-                    context = this,
-                    onBackClick = { finish() },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun DashboardScreen(
-    context: ComponentActivity,
-    dashboardViewModel: DashboardViewModel = viewModel(),
-    onBackClick: () -> Unit,
-    showTopBar: Boolean = true,
-) {
-    val netWorth by dashboardViewModel.netWorth.observeAsState()
-    val accountBalances by dashboardViewModel.accountBalances.observeAsState()
-    val cashFlow by dashboardViewModel.currentMonthCashFlow.observeAsState()
-    val decimalSeparator by dashboardViewModel.decimalSeparator.observeAsState(".")
-    val fileUri by dashboardViewModel.fileUri.observeAsState()
-
-    DashboardScreenContent(
-        netWorth = netWorth,
-        accountBalances = accountBalances,
-        cashFlow = cashFlow,
-        decimalSeparator = decimalSeparator,
-        hasFile = fileUri != null,
-        onBackClick = onBackClick,
-        onAccountClick = {
-            context.startActivity(Intent(context, AccountTransactionsActivity::class.java))
-        },
-        onCashFlowClick = {
-            context.startActivity(Intent(context, CashFlowTransactionsActivity::class.java))
-        },
-        showTopBar = showTopBar,
-    )
-}
-
 @Composable
 fun DashboardScreenContent(
-    netWorth: NetWorthCalculator.NetWorthResult?,
+    netWorth: List<NetWorthCalculator.CurrencyNetWorth>?,
     accountBalances: AccountBalanceCalculator.AccountBalancesResult?,
     cashFlow: MonthlyCashFlowCalculator.CashFlowResult?,
     decimalSeparator: String,
@@ -178,18 +118,19 @@ fun DashboardScreenContent(
 
 @Composable
 fun NetWorthCard(
-    netWorth: NetWorthCalculator.NetWorthResult?,
+    netWorth: List<NetWorthCalculator.CurrencyNetWorth>?,
     decimalSeparator: String,
 ) {
     DashboardCard(title = stringResource(R.string.net_worth)) {
-        if (netWorth == null) {
+        if (netWorth.isNullOrEmpty()) {
             NoDataText()
-        } else {
+        } else if (netWorth.size == 1) {
+            val single = netWorth.single()
             Text(
-                formatAmount(netWorth.netWorth, decimalSeparator),
+                formatAmount(single.netWorth, decimalSeparator),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = amountColor(netWorth.netWorth),
+                color = amountColor(single.netWorth),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
@@ -198,15 +139,23 @@ fun NetWorthCard(
             Spacer(Modifier.height(8.dp))
             AmountRow(
                 label = stringResource(R.string.total_assets),
-                amount = netWorth.totalAssets,
+                amount = single.totalAssets.multiply(BigDecimal(displaySign(AccountType.ASSETS))),
                 decimalSeparator = decimalSeparator,
             )
             AmountRow(
                 label = stringResource(R.string.total_liabilities),
-                amount = netWorth.totalLiabilities,
+                amount = single.totalLiabilities.multiply(BigDecimal(displaySign(AccountType.LIABILITIES))),
                 decimalSeparator = decimalSeparator,
-                negate = true,
             )
+        } else {
+            netWorth.forEach { entry ->
+                AmountRow(
+                    label = entry.currency.ifBlank { "—" },
+                    amount = entry.netWorth,
+                    decimalSeparator = decimalSeparator,
+                    bold = true,
+                )
+            }
         }
     }
 }
@@ -227,14 +176,13 @@ fun CashFlowCard(
         } else {
             AmountRow(
                 label = stringResource(R.string.income),
-                amount = cashFlow.totalIncome,
+                amount = cashFlow.totalIncome.multiply(BigDecimal(displaySign(AccountType.INCOME))),
                 decimalSeparator = decimalSeparator,
             )
             AmountRow(
                 label = stringResource(R.string.expenses),
-                amount = cashFlow.totalExpenses,
+                amount = cashFlow.totalExpenses.multiply(BigDecimal(displaySign(AccountType.EXPENSES))),
                 decimalSeparator = decimalSeparator,
-                negate = true,
             )
             Spacer(Modifier.height(4.dp))
             HorizontalDivider()
@@ -267,7 +215,7 @@ fun AccountBalancesCard(
                 accountBalances.assets.forEach { balance ->
                     AmountRow(
                         label = balance.account,
-                        amount = balance.balance,
+                        amount = balance.balance.multiply(BigDecimal(displaySign(AccountType.ASSETS))),
                         currency = balance.currency,
                         decimalSeparator = decimalSeparator,
                         labelStyle = MaterialTheme.typography.bodySmall,
@@ -282,10 +230,9 @@ fun AccountBalancesCard(
                 accountBalances.liabilities.forEach { balance ->
                     AmountRow(
                         label = balance.account,
-                        amount = balance.balance,
+                        amount = balance.balance.multiply(BigDecimal(displaySign(AccountType.LIABILITIES))),
                         currency = balance.currency,
                         decimalSeparator = decimalSeparator,
-                        negate = true,
                         labelStyle = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -348,12 +295,11 @@ fun AmountRow(
     label: String,
     amount: BigDecimal,
     decimalSeparator: String,
-    negate: Boolean = false,
     bold: Boolean = false,
     labelStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
     currency: String? = null,
 ) {
-    val displayAmount = if (negate) amount.negate() else amount
+    val displayAmount = amount
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -400,77 +346,4 @@ fun NoDataText() {
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DashboardScreenPreview() {
-    MicroLedgerTheme {
-        DashboardScreenContent(
-            netWorth =
-                NetWorthCalculator.NetWorthResult(
-                    netWorth = BigDecimal("8450.00"),
-                    totalAssets = BigDecimal("10000.00"),
-                    totalLiabilities = BigDecimal("1550.00"),
-                ),
-            accountBalances =
-                AccountBalanceCalculator.AccountBalancesResult(
-                    assets =
-                        listOf(
-                            AccountBalanceCalculator.AccountBalance(
-                                "Assets:Checking",
-                                BigDecimal("3000.00"),
-                                "PHP",
-                                emptyList(),
-                            ),
-                            AccountBalanceCalculator.AccountBalance(
-                                "Assets:Savings",
-                                BigDecimal("7000.00"),
-                                "$",
-                                emptyList(),
-                            ),
-                        ),
-                    liabilities =
-                        listOf(
-                            AccountBalanceCalculator.AccountBalance(
-                                "Liabilities:Credit Card",
-                                BigDecimal("1550.00"),
-                                "EUR",
-                                emptyList(),
-                            ),
-                        ),
-                    equity = emptyList(),
-                    income = emptyList(),
-                    expenses = emptyList(),
-                ),
-            cashFlow =
-                MonthlyCashFlowCalculator.CashFlowResult(
-                    totalIncome = BigDecimal("5000.00"),
-                    totalExpenses = BigDecimal("1635.00"),
-                    netFlow = BigDecimal("3365.00"),
-                    period = "2026-06",
-                    incomeTransactions = emptyList(),
-                    expenseTransactions = emptyList(),
-                ),
-            decimalSeparator = ".",
-            onBackClick = {},
-            onAccountClick = {},
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DashboardScreenNoFilePreview() {
-    MicroLedgerTheme {
-        DashboardScreenContent(
-            netWorth = null,
-            accountBalances = null,
-            cashFlow = null,
-            decimalSeparator = ".",
-            hasFile = false,
-            onBackClick = {},
-            onAccountClick = {},
-        )
-    }
 }

@@ -1,7 +1,9 @@
 package ph.chrsrns.microledger.data.reporting
 
+import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
+import ph.chrsrns.microledger.data.ReportingPreferences
 import ph.chrsrns.microledger.data.Transaction
 
 /*
@@ -50,6 +52,27 @@ fun transaction(
         payee = payee,
         note = note,
         postings = postings,
+    )
+
+/** Default account-type prefixes matching the app's built-in settings */
+val DEFAULT_PREFIXES =
+    AccountTypePrefixes(
+        assets = listOf("Assets"),
+        liabilities = listOf("Liabilities"),
+        equity = listOf("Equity"),
+        income = listOf("Income"),
+        expenses = listOf("Expenses"),
+    )
+
+/** Build ReportingInputs with sensible defaults for calculator tests */
+fun inputs(
+    transactions: List<Transaction>,
+    decimalSeparator: String = ".",
+    prefixes: AccountTypePrefixes = DEFAULT_PREFIXES,
+): ReportingInputs =
+    ReportingInputs(
+        transactions = transactions,
+        preferences = ReportingPreferences(decimalSeparator, prefixes),
     )
 
 /** Common account names used across tests */
