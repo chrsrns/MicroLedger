@@ -36,6 +36,7 @@
               { name = "ANDROID_SDK_ROOT"; eval = "${composed.androidsdk}/libexec/android-sdk/"; }
               { name = "BUILD_TOOLS_PATH"; eval = "$ANDROID_SDK_ROOT/build-tools/${buildToolsVersion}"; }
               { name = "APK_DIR"; eval = "$PRJ_ROOT/app/build/outputs/apk/release"; }
+              { name = "JAVA_HOME"; value = "${pkgs.jdk21.home}"; }
             ];
             devshell = {
               motd = "";
