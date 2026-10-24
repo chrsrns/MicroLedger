@@ -83,6 +83,7 @@ import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Posting
+import ph.chrsrns.microledger.data.SettingsState
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.TransactionTemplate
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
@@ -97,6 +98,7 @@ import ph.chrsrns.microledger.ui.dashboard.DashboardScreenContent
 import ph.chrsrns.microledger.ui.dashboard.DashboardViewModel
 import ph.chrsrns.microledger.ui.edit.EditActivity
 import ph.chrsrns.microledger.ui.preferences.PreferencesScreen
+import ph.chrsrns.microledger.ui.preferences.SettingsCallbacks
 import ph.chrsrns.microledger.ui.preferences.PreferencesViewModel
 import ph.chrsrns.microledger.ui.templates.EDIT_TEMPLATE_ID_KEY
 import ph.chrsrns.microledger.ui.templates.TEMPLATE_ID_KEY
@@ -129,52 +131,10 @@ sealed class TabConfiguration {
     ) : TabConfiguration()
 
     data class Settings(
+        val state: SettingsState,
+        val callbacks: SettingsCallbacks,
         val fileUri: Uri?,
         val onOpenFile: () -> Unit,
-        val transactionDefaultElements: List<Int>,
-        val transactionStatusPresentByDefault: Boolean,
-        val onTransactionStatusPresentByDefaultChange: (Boolean) -> Unit,
-        val transactionCodePresentByDefault: Boolean,
-        val onTransactionCodePresentByDefaultChange: (Boolean) -> Unit,
-        val transactionPayeePresentByDefault: Boolean,
-        val onTransactionPayeePresentByDefaultChange: (Boolean) -> Unit,
-        val transactionNotePresentByDefault: Boolean,
-        val onTransactionNotePresentByDefaultChange: (Boolean) -> Unit,
-        val transactionCurrenciesPresentByDefault: Boolean,
-        val onTransactionCurrenciesPresentByDefaultChange: (Boolean) -> Unit,
-        val postingDefaultElements: List<Int>,
-        val postingAmountPresentByDefault: Boolean,
-        val onPostingAmountPresentByDefaultChange: (Boolean) -> Unit,
-        val postingCostPresentByDefault: Boolean,
-        val onPostingCostPresentByDefaultChange: (Boolean) -> Unit,
-        val postingAssertionPresentByDefault: Boolean,
-        val onPostingAssertionPresentByDefaultChange: (Boolean) -> Unit,
-        val postingAssertionCostPresentByDefault: Boolean,
-        val onPostingAssertionCostPresentByDefaultChange: (Boolean) -> Unit,
-        val postingCommentPresentByDefault: Boolean,
-        val onPostingCommentPresentByDefaultChange: (Boolean) -> Unit,
-        val defaultCurrency: String,
-        val onDefaultCurrencyChange: (String) -> Unit,
-        val postingWidth: Int,
-        val onPostingWidthChange: (Int) -> Unit,
-        val defaultStatus: String,
-        val onDefaultStatusChange: (String) -> Unit,
-        val decimalSeparator: String,
-        val onDecimalSeparatorChange: (String) -> Unit,
-        val currencyBeforeAmount: Boolean,
-        val onCurrencyBeforeAmountChange: (Boolean) -> Unit,
-        val currencyAmountSpacing: Boolean,
-        val onCurrencyAmountSpacingChange: (Boolean) -> Unit,
-        val assetsPrefixes: List<String>,
-        val onAssetsPrefixesChange: (List<String>) -> Unit,
-        val liabilitiesPrefixes: List<String>,
-        val onLiabilitiesPrefixesChange: (List<String>) -> Unit,
-        val equityPrefixes: List<String>,
-        val onEquityPrefixesChange: (List<String>) -> Unit,
-        val incomePrefixes: List<String>,
-        val onIncomePrefixesChange: (List<String>) -> Unit,
-        val expensesPrefixes: List<String>,
-        val onExpensesPrefixesChange: (List<String>) -> Unit,
     ) : TabConfiguration()
 }
 
@@ -641,55 +601,7 @@ fun MainTabContent(
     val templates by templatesViewModel.templates.observeAsState(emptyList())
     val saving by templatesViewModel.saving.observeAsState(false)
     val fileUri by preferencesViewModel.fileUri.observeAsState()
-    val transactionDefaultElements by preferencesViewModel.transactionDefaultElements.observeAsState(
-        emptyList(),
-    )
-    val transactionStatusPresentByDefault by preferencesViewModel.transactionStatusPresentByDefault.observeAsState(
-        true,
-    )
-    val transactionCodePresentByDefault by preferencesViewModel.transactionCodePresentByDefault.observeAsState(
-        false,
-    )
-    val transactionPayeePresentByDefault by preferencesViewModel.transactionPayeePresentByDefault.observeAsState(
-        true,
-    )
-    val transactionNotePresentByDefault by preferencesViewModel.transactionNotePresentByDefault.observeAsState(
-        true,
-    )
-    val transactionCurrenciesPresentByDefault by preferencesViewModel.transactionCurrenciesPresentByDefault.observeAsState(
-        true,
-    )
-    val postingDefaultElements by preferencesViewModel.postingDefaultElements.observeAsState(
-        emptyList(),
-    )
-    val postingAmountPresentByDefault by preferencesViewModel.postingAmountPresentByDefault.observeAsState(
-        true,
-    )
-    val postingCostPresentByDefault by preferencesViewModel.postingCostPresentByDefault.observeAsState(
-        false,
-    )
-    val postingAssertionPresentByDefault by preferencesViewModel.postingAssertionPresentByDefault.observeAsState(
-        false,
-    )
-    val postingAssertionCostPresentByDefault by preferencesViewModel.postingAssertionCostPresentByDefault.observeAsState(
-        false,
-    )
-    val postingCommentPresentByDefault by preferencesViewModel.postingCommentPresentByDefault.observeAsState(
-        false,
-    )
-    val defaultCurrency by preferencesViewModel.defaultCurrency.observeAsState("€")
-    val postingWidth by preferencesViewModel.postingWidth.observeAsState(72)
-    val defaultStatus by preferencesViewModel.defaultStatus.observeAsState(" ")
-    val prefDecimalSeparator by preferencesViewModel.decimalSeparator.observeAsState(".")
-    val currencyBeforeAmount by preferencesViewModel.currencyBeforeAmount.observeAsState(true)
-    val currencyAmountSpacing by preferencesViewModel.spacingBetweenCurrencyAndAmount.observeAsState(
-        true,
-    )
-    val assetsPrefixes by preferencesViewModel.assetsPrefixes.observeAsState(listOf("Assets"))
-    val liabilitiesPrefixes by preferencesViewModel.liabilitiesPrefixes.observeAsState(listOf("Liabilities"))
-    val equityPrefixes by preferencesViewModel.equityPrefixes.observeAsState(listOf("Equity"))
-    val incomePrefixes by preferencesViewModel.incomePrefixes.observeAsState(listOf("Income"))
-    val expensesPrefixes by preferencesViewModel.expensesPrefixes.observeAsState(listOf("Expenses"))
+    val settingsState by preferencesViewModel.settingsState.observeAsState()
 
     val configuration =
         when (tab) {
@@ -718,92 +630,10 @@ fun MainTabContent(
 
             MainTab.Settings ->
                 TabConfiguration.Settings(
+                    state = settingsState ?: SettingsState(),
+                    callbacks = preferencesViewModel.settingsCallbacks,
                     fileUri = fileUri,
                     onOpenFile = onOpenFile,
-                    transactionDefaultElements = transactionDefaultElements,
-                    transactionStatusPresentByDefault = transactionStatusPresentByDefault,
-                    onTransactionStatusPresentByDefaultChange = {
-                        preferencesViewModel.storeTransactionStatusPresentByDefault(
-                            it,
-                        )
-                    },
-                    transactionCodePresentByDefault = transactionCodePresentByDefault,
-                    onTransactionCodePresentByDefaultChange = {
-                        preferencesViewModel.storeTransactionCodePresentByDefault(
-                            it,
-                        )
-                    },
-                    transactionPayeePresentByDefault = transactionPayeePresentByDefault,
-                    onTransactionPayeePresentByDefaultChange = {
-                        preferencesViewModel.storeTransactionPayeePresentByDefault(
-                            it,
-                        )
-                    },
-                    transactionNotePresentByDefault = transactionNotePresentByDefault,
-                    onTransactionNotePresentByDefaultChange = {
-                        preferencesViewModel.storeTransactionNotePresentByDefault(
-                            it,
-                        )
-                    },
-                    transactionCurrenciesPresentByDefault = transactionCurrenciesPresentByDefault,
-                    onTransactionCurrenciesPresentByDefaultChange = {
-                        preferencesViewModel.storeTransactionCurrenciesPresentByDefault(
-                            it,
-                        )
-                    },
-                    postingDefaultElements = postingDefaultElements,
-                    postingAmountPresentByDefault = postingAmountPresentByDefault,
-                    onPostingAmountPresentByDefaultChange = {
-                        preferencesViewModel.storePostingAmountPresentByDefault(
-                            it,
-                        )
-                    },
-                    postingCostPresentByDefault = postingCostPresentByDefault,
-                    onPostingCostPresentByDefaultChange = {
-                        preferencesViewModel.storePostingCostPresentByDefault(
-                            it,
-                        )
-                    },
-                    postingAssertionPresentByDefault = postingAssertionPresentByDefault,
-                    onPostingAssertionPresentByDefaultChange = {
-                        preferencesViewModel.storePostingAssertionPresentByDefault(
-                            it,
-                        )
-                    },
-                    postingAssertionCostPresentByDefault = postingAssertionCostPresentByDefault,
-                    onPostingAssertionCostPresentByDefaultChange = {
-                        preferencesViewModel.storePostingAssertionCostPresentByDefault(
-                            it,
-                        )
-                    },
-                    postingCommentPresentByDefault = postingCommentPresentByDefault,
-                    onPostingCommentPresentByDefaultChange = {
-                        preferencesViewModel.storePostingCommentPresentByDefault(
-                            it,
-                        )
-                    },
-                    defaultCurrency = defaultCurrency,
-                    onDefaultCurrencyChange = { preferencesViewModel.storeDefaultCurrency(it) },
-                    postingWidth = postingWidth,
-                    onPostingWidthChange = { preferencesViewModel.storePostingWidth(it) },
-                    defaultStatus = defaultStatus,
-                    onDefaultStatusChange = { preferencesViewModel.storeDefaultStatus(it) },
-                    decimalSeparator = prefDecimalSeparator,
-                    onDecimalSeparatorChange = { preferencesViewModel.storeDecimalSeparator(it) },
-                    currencyBeforeAmount = currencyBeforeAmount,
-                    onCurrencyBeforeAmountChange = { preferencesViewModel.storeCurrencyBeforeAmount(it) },
-                    currencyAmountSpacing = currencyAmountSpacing,
-                    onCurrencyAmountSpacingChange = { preferencesViewModel.storeCurrencyAmountSpacing(it) },
-                    assetsPrefixes = assetsPrefixes,
-                    onAssetsPrefixesChange = { preferencesViewModel.storeAssetsPrefixes(it) },
-                    liabilitiesPrefixes = liabilitiesPrefixes,
-                    onLiabilitiesPrefixesChange = { preferencesViewModel.storeLiabilitiesPrefixes(it) },
-                    equityPrefixes = equityPrefixes,
-                    onEquityPrefixesChange = { preferencesViewModel.storeEquityPrefixes(it) },
-                    incomePrefixes = incomePrefixes,
-                    onIncomePrefixesChange = { preferencesViewModel.storeIncomePrefixes(it) },
-                    expensesPrefixes = expensesPrefixes,
-                    onExpensesPrefixesChange = { preferencesViewModel.storeExpensesPrefixes(it) },
                 )
 
             MainTab.Home -> null
@@ -857,52 +687,10 @@ fun MainTabContent(
 
         is TabConfiguration.Settings ->
             PreferencesScreen(
+                state = configuration.state,
+                callbacks = configuration.callbacks,
                 fileUri = configuration.fileUri,
                 onOpenFile = configuration.onOpenFile,
-                transactionDefaultElements = configuration.transactionDefaultElements,
-                transactionStatusPresentByDefault = configuration.transactionStatusPresentByDefault,
-                onTransactionStatusPresentByDefaultChange = configuration.onTransactionStatusPresentByDefaultChange,
-                transactionCodePresentByDefault = configuration.transactionCodePresentByDefault,
-                onTransactionCodePresentByDefaultChange = configuration.onTransactionCodePresentByDefaultChange,
-                transactionPayeePresentByDefault = configuration.transactionPayeePresentByDefault,
-                onTransactionPayeePresentByDefaultChange = configuration.onTransactionPayeePresentByDefaultChange,
-                transactionNotePresentByDefault = configuration.transactionNotePresentByDefault,
-                onTransactionNotePresentByDefaultChange = configuration.onTransactionNotePresentByDefaultChange,
-                transactionCurrenciesPresentByDefault = configuration.transactionCurrenciesPresentByDefault,
-                onTransactionCurrenciesPresentByDefaultChange = configuration.onTransactionCurrenciesPresentByDefaultChange,
-                postingDefaultElements = configuration.postingDefaultElements,
-                postingAmountPresentByDefault = configuration.postingAmountPresentByDefault,
-                onPostingAmountPresentByDefaultChange = configuration.onPostingAmountPresentByDefaultChange,
-                postingCostPresentByDefault = configuration.postingCostPresentByDefault,
-                onPostingCostPresentByDefaultChange = configuration.onPostingCostPresentByDefaultChange,
-                postingAssertionPresentByDefault = configuration.postingAssertionPresentByDefault,
-                onPostingAssertionPresentByDefaultChange = configuration.onPostingAssertionPresentByDefaultChange,
-                postingAssertionCostPresentByDefault = configuration.postingAssertionCostPresentByDefault,
-                onPostingAssertionCostPresentByDefaultChange = configuration.onPostingAssertionCostPresentByDefaultChange,
-                postingCommentPresentByDefault = configuration.postingCommentPresentByDefault,
-                onPostingCommentPresentByDefaultChange = configuration.onPostingCommentPresentByDefaultChange,
-                defaultCurrency = configuration.defaultCurrency,
-                onDefaultCurrencyChange = configuration.onDefaultCurrencyChange,
-                postingWidth = configuration.postingWidth,
-                onPostingWidthChange = configuration.onPostingWidthChange,
-                defaultStatus = configuration.defaultStatus,
-                onDefaultStatusChange = configuration.onDefaultStatusChange,
-                decimalSeparator = configuration.decimalSeparator,
-                onDecimalSeparatorChange = configuration.onDecimalSeparatorChange,
-                currencyBeforeAmount = configuration.currencyBeforeAmount,
-                onCurrencyBeforeAmountChange = configuration.onCurrencyBeforeAmountChange,
-                currencyAmountSpacing = configuration.currencyAmountSpacing,
-                onCurrencyAmountSpacingChange = configuration.onCurrencyAmountSpacingChange,
-                assetsPrefixes = configuration.assetsPrefixes,
-                onAssetsPrefixesChange = configuration.onAssetsPrefixesChange,
-                liabilitiesPrefixes = configuration.liabilitiesPrefixes,
-                onLiabilitiesPrefixesChange = configuration.onLiabilitiesPrefixesChange,
-                equityPrefixes = configuration.equityPrefixes,
-                onEquityPrefixesChange = configuration.onEquityPrefixesChange,
-                incomePrefixes = configuration.incomePrefixes,
-                onIncomePrefixesChange = configuration.onIncomePrefixesChange,
-                expensesPrefixes = configuration.expensesPrefixes,
-                onExpensesPrefixesChange = configuration.onExpensesPrefixesChange,
                 showTopBar = false,
                 contentPadding = contentPadding,
             )
@@ -1442,52 +1230,10 @@ fun MainScreenDashboardTabPreview() {
 
                         MainTab.Settings ->
                             TabConfiguration.Settings(
+                                state = SettingsState(),
+                                callbacks = SettingsCallbacks(),
                                 fileUri = null,
                                 onOpenFile = {},
-                                transactionDefaultElements = listOf(R.string.status, R.string.payee),
-                                transactionStatusPresentByDefault = true,
-                                onTransactionStatusPresentByDefaultChange = {},
-                                transactionCodePresentByDefault = false,
-                                onTransactionCodePresentByDefaultChange = {},
-                                transactionPayeePresentByDefault = true,
-                                onTransactionPayeePresentByDefaultChange = {},
-                                transactionNotePresentByDefault = true,
-                                onTransactionNotePresentByDefaultChange = {},
-                                transactionCurrenciesPresentByDefault = true,
-                                onTransactionCurrenciesPresentByDefaultChange = {},
-                                postingDefaultElements = listOf(R.string.amount),
-                                postingAmountPresentByDefault = true,
-                                onPostingAmountPresentByDefaultChange = {},
-                                postingCostPresentByDefault = false,
-                                onPostingCostPresentByDefaultChange = {},
-                                postingAssertionPresentByDefault = false,
-                                onPostingAssertionPresentByDefaultChange = {},
-                                postingAssertionCostPresentByDefault = false,
-                                onPostingAssertionCostPresentByDefaultChange = {},
-                                postingCommentPresentByDefault = false,
-                                onPostingCommentPresentByDefaultChange = {},
-                                defaultCurrency = "€",
-                                onDefaultCurrencyChange = {},
-                                postingWidth = 72,
-                                onPostingWidthChange = {},
-                                defaultStatus = " ",
-                                onDefaultStatusChange = {},
-                                decimalSeparator = ".",
-                                onDecimalSeparatorChange = {},
-                                currencyBeforeAmount = true,
-                                onCurrencyBeforeAmountChange = {},
-                                currencyAmountSpacing = true,
-                                onCurrencyAmountSpacingChange = {},
-                                assetsPrefixes = listOf("Assets"),
-                                onAssetsPrefixesChange = {},
-                                liabilitiesPrefixes = listOf("Liabilities"),
-                                onLiabilitiesPrefixesChange = {},
-                                equityPrefixes = listOf("Equity"),
-                                onEquityPrefixesChange = {},
-                                incomePrefixes = listOf("Income"),
-                                onIncomePrefixesChange = {},
-                                expensesPrefixes = listOf("Expenses"),
-                                onExpensesPrefixesChange = {},
                             )
 
                         MainTab.Home -> null
@@ -1592,52 +1338,10 @@ fun MainScreenTemplatesTabPreview() {
 
                         MainTab.Settings ->
                             TabConfiguration.Settings(
+                                state = SettingsState(),
+                                callbacks = SettingsCallbacks(),
                                 fileUri = null,
                                 onOpenFile = {},
-                                transactionDefaultElements = listOf(R.string.status, R.string.payee),
-                                transactionStatusPresentByDefault = true,
-                                onTransactionStatusPresentByDefaultChange = {},
-                                transactionCodePresentByDefault = false,
-                                onTransactionCodePresentByDefaultChange = {},
-                                transactionPayeePresentByDefault = true,
-                                onTransactionPayeePresentByDefaultChange = {},
-                                transactionNotePresentByDefault = true,
-                                onTransactionNotePresentByDefaultChange = {},
-                                transactionCurrenciesPresentByDefault = true,
-                                onTransactionCurrenciesPresentByDefaultChange = {},
-                                postingDefaultElements = listOf(R.string.amount),
-                                postingAmountPresentByDefault = true,
-                                onPostingAmountPresentByDefaultChange = {},
-                                postingCostPresentByDefault = false,
-                                onPostingCostPresentByDefaultChange = {},
-                                postingAssertionPresentByDefault = false,
-                                onPostingAssertionPresentByDefaultChange = {},
-                                postingAssertionCostPresentByDefault = false,
-                                onPostingAssertionCostPresentByDefaultChange = {},
-                                postingCommentPresentByDefault = false,
-                                onPostingCommentPresentByDefaultChange = {},
-                                defaultCurrency = "€",
-                                onDefaultCurrencyChange = {},
-                                postingWidth = 72,
-                                onPostingWidthChange = {},
-                                defaultStatus = " ",
-                                onDefaultStatusChange = {},
-                                decimalSeparator = ".",
-                                onDecimalSeparatorChange = {},
-                                currencyBeforeAmount = true,
-                                onCurrencyBeforeAmountChange = {},
-                                currencyAmountSpacing = true,
-                                onCurrencyAmountSpacingChange = {},
-                                assetsPrefixes = listOf("Assets"),
-                                onAssetsPrefixesChange = {},
-                                liabilitiesPrefixes = listOf("Liabilities"),
-                                onLiabilitiesPrefixesChange = {},
-                                equityPrefixes = listOf("Equity"),
-                                onEquityPrefixesChange = {},
-                                incomePrefixes = listOf("Income"),
-                                onIncomePrefixesChange = {},
-                                expensesPrefixes = listOf("Expenses"),
-                                onExpensesPrefixesChange = {},
                             )
 
                         MainTab.Home -> null
@@ -1708,52 +1412,10 @@ fun MainScreenSettingsTabPreview() {
 
                         MainTab.Settings ->
                             TabConfiguration.Settings(
+                                state = SettingsState(),
+                                callbacks = SettingsCallbacks(),
                                 fileUri = null,
                                 onOpenFile = {},
-                                transactionDefaultElements = listOf(R.string.status, R.string.payee),
-                                transactionStatusPresentByDefault = true,
-                                onTransactionStatusPresentByDefaultChange = {},
-                                transactionCodePresentByDefault = false,
-                                onTransactionCodePresentByDefaultChange = {},
-                                transactionPayeePresentByDefault = true,
-                                onTransactionPayeePresentByDefaultChange = {},
-                                transactionNotePresentByDefault = true,
-                                onTransactionNotePresentByDefaultChange = {},
-                                transactionCurrenciesPresentByDefault = true,
-                                onTransactionCurrenciesPresentByDefaultChange = {},
-                                postingDefaultElements = listOf(R.string.amount),
-                                postingAmountPresentByDefault = true,
-                                onPostingAmountPresentByDefaultChange = {},
-                                postingCostPresentByDefault = false,
-                                onPostingCostPresentByDefaultChange = {},
-                                postingAssertionPresentByDefault = false,
-                                onPostingAssertionPresentByDefaultChange = {},
-                                postingAssertionCostPresentByDefault = false,
-                                onPostingAssertionCostPresentByDefaultChange = {},
-                                postingCommentPresentByDefault = false,
-                                onPostingCommentPresentByDefaultChange = {},
-                                defaultCurrency = "€",
-                                onDefaultCurrencyChange = {},
-                                postingWidth = 72,
-                                onPostingWidthChange = {},
-                                defaultStatus = " ",
-                                onDefaultStatusChange = {},
-                                decimalSeparator = ".",
-                                onDecimalSeparatorChange = {},
-                                currencyBeforeAmount = true,
-                                onCurrencyBeforeAmountChange = {},
-                                currencyAmountSpacing = true,
-                                onCurrencyAmountSpacingChange = {},
-                                assetsPrefixes = listOf("Assets"),
-                                onAssetsPrefixesChange = {},
-                                liabilitiesPrefixes = listOf("Liabilities"),
-                                onLiabilitiesPrefixesChange = {},
-                                equityPrefixes = listOf("Equity"),
-                                onEquityPrefixesChange = {},
-                                incomePrefixes = listOf("Income"),
-                                onIncomePrefixesChange = {},
-                                expensesPrefixes = listOf("Expenses"),
-                                onExpensesPrefixesChange = {},
                             )
 
                         MainTab.Home -> null

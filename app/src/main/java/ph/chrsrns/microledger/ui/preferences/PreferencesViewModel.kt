@@ -4,11 +4,9 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
-import androidx.lifecycle.switchMap
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.PreferencesDataSource
+import ph.chrsrns.microledger.data.SettingsState
 import javax.inject.Inject
 
 @HiltViewModel
@@ -19,74 +17,32 @@ class PreferencesViewModel
         private val preferencesDataSource: PreferencesDataSource,
     ) : AndroidViewModel(application) {
         val fileUri: LiveData<Uri?> = preferencesDataSource.fileUri
-        val decimalSeparator: LiveData<String> = preferencesDataSource.decimalSeparator
-        val defaultCurrency: LiveData<String> = preferencesDataSource.defaultCurrency
-        val defaultStatus: LiveData<String> = preferencesDataSource.defaultStatus
-        val currencyBeforeAmount: LiveData<Boolean> = preferencesDataSource.currencyBeforeAmount
-        val postingWidth: LiveData<Int> = preferencesDataSource.postingWidth
-        val spacingBetweenCurrencyAndAmount: LiveData<Boolean> =
-            preferencesDataSource.spacingBetweenCurrencyAndAmount
-        val transactionStatusPresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.transactionStatusPresentByDefault
-        val transactionCodePresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.transactionCodePresentByDefault
-        val transactionPayeePresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.transactionPayeePresentByDefault
-        val transactionNotePresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.transactionNotePresentByDefault
-        val transactionCurrenciesPresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.transactionCurrenciesPresentByDefault
-        val transactionDefaultElements: LiveData<List<Int>> =
-            transactionStatusPresentByDefault.switchMap { status ->
-                transactionCodePresentByDefault.switchMap { code ->
-                    transactionPayeePresentByDefault.switchMap { payee ->
-                        transactionNotePresentByDefault.switchMap { note ->
-                            transactionCurrenciesPresentByDefault.map { currencies ->
-                                listOf(
-                                    if (status) R.string.status else null,
-                                    if (code) R.string.code else null,
-                                    if (payee) R.string.payee else null,
-                                    if (note) R.string.note else null,
-                                    if (currencies) R.string.currencies else null,
-                                ).filter { res -> res != null }.map { res -> res!! }
-                            }
-                        }
-                    }
-                }
-            }
-        val postingAmountPresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.postingAmountPresentByDefault
-        val postingCostPresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.postingCostPresentByDefault
-        val postingAssertionPresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.postingAssertionPresentByDefault
-        val postingAssertionCostPresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.postingAssertionCostPresentByDefault
-        val postingCommentPresentByDefault: LiveData<Boolean> =
-            preferencesDataSource.postingCommentPresentByDefault
-        val assetsPrefixes: LiveData<List<String>> = preferencesDataSource.assetsPrefixes
-        val liabilitiesPrefixes: LiveData<List<String>> = preferencesDataSource.liabilitiesPrefixes
-        val equityPrefixes: LiveData<List<String>> = preferencesDataSource.equityPrefixes
-        val incomePrefixes: LiveData<List<String>> = preferencesDataSource.incomePrefixes
-        val expensesPrefixes: LiveData<List<String>> = preferencesDataSource.expensesPrefixes
-        val postingDefaultElements: LiveData<List<Int>> =
-            postingAmountPresentByDefault.switchMap { amount ->
-                postingCostPresentByDefault.switchMap { cost ->
-                    postingAssertionPresentByDefault.switchMap { assertion ->
-                        postingAssertionCostPresentByDefault.switchMap { assertionCost ->
-                            postingCommentPresentByDefault.map { comment ->
-                                listOf(
-                                    if (amount) R.string.amount else null,
-                                    if (cost) R.string.cost else null,
-                                    if (assertion) R.string.assertion else null,
-                                    if (assertionCost) R.string.assertion_cost else null,
-                                    if (comment) R.string.comment else null,
-                                ).filter { res -> res != null }.map { res -> res!! }
-                            }
-                        }
-                    }
-                }
-            }
+        val settingsState: LiveData<SettingsState> = preferencesDataSource.settingsState
+
+        val settingsCallbacks =
+            SettingsCallbacks(
+                onDecimalSeparatorChange = ::storeDecimalSeparator,
+                onDefaultCurrencyChange = ::storeDefaultCurrency,
+                onDefaultStatusChange = ::storeDefaultStatus,
+                onCurrencyBeforeAmountChange = ::storeCurrencyBeforeAmount,
+                onPostingWidthChange = ::storePostingWidth,
+                onCurrencyAmountSpacingChange = ::storeCurrencyAmountSpacing,
+                onTransactionStatusPresentByDefaultChange = ::storeTransactionStatusPresentByDefault,
+                onTransactionCodePresentByDefaultChange = ::storeTransactionCodePresentByDefault,
+                onTransactionPayeePresentByDefaultChange = ::storeTransactionPayeePresentByDefault,
+                onTransactionNotePresentByDefaultChange = ::storeTransactionNotePresentByDefault,
+                onTransactionCurrenciesPresentByDefaultChange = ::storeTransactionCurrenciesPresentByDefault,
+                onPostingAmountPresentByDefaultChange = ::storePostingAmountPresentByDefault,
+                onPostingCostPresentByDefaultChange = ::storePostingCostPresentByDefault,
+                onPostingAssertionPresentByDefaultChange = ::storePostingAssertionPresentByDefault,
+                onPostingAssertionCostPresentByDefaultChange = ::storePostingAssertionCostPresentByDefault,
+                onPostingCommentPresentByDefaultChange = ::storePostingCommentPresentByDefault,
+                onAssetsPrefixesChange = ::storeAssetsPrefixes,
+                onLiabilitiesPrefixesChange = ::storeLiabilitiesPrefixes,
+                onEquityPrefixesChange = ::storeEquityPrefixes,
+                onIncomePrefixesChange = ::storeIncomePrefixes,
+                onExpensesPrefixesChange = ::storeExpensesPrefixes,
+            )
 
         fun storeFileUri(uri: Uri) = preferencesDataSource.setFileUri(uri)
 

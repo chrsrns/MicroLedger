@@ -239,6 +239,65 @@ class PreferencesDataSource
 
         fun setExpensesPrefixes(prefixes: List<String>) = expensesPrefixesPref.write(sharedPreferences, prefixes)
 
+        val settingsState: LiveData<SettingsState> =
+            MediatorLiveData<SettingsState>().apply {
+                fun compute() {
+                    value =
+                        SettingsState(
+                            decimalSeparator = getDecimalSeparator(),
+                            defaultCurrency = getDefaultCurrency(),
+                            defaultStatus = getDefaultStatus(),
+                            currencyBeforeAmount = getCurrencyBeforeAmount(),
+                            postingWidth = getPostingWidth(),
+                            currencyAmountSpacing = getCurrencyAmountSpacing(),
+                            transactionStatusPresentByDefault = getTransactionStatusPresentByDefault(),
+                            transactionCodePresentByDefault = getTransactionCodePresentByDefault(),
+                            transactionPayeePresentByDefault = getTransactionPayeePresentByDefault(),
+                            transactionNotePresentByDefault = getTransactionNotePresentByDefault(),
+                            transactionCurrenciesPresentByDefault = getTransactionCurrenciesPresentByDefault(),
+                            postingAmountPresentByDefault = getPostingAmountPresentByDefault(),
+                            postingCostPresentByDefault = getPostingCostPresentByDefault(),
+                            postingAssertionPresentByDefault = getPostingAssertionPresentByDefault(),
+                            postingAssertionCostPresentByDefault = getPostingAssertionCostPresentByDefault(),
+                            postingCommentPresentByDefault = getPostingCommentPresentByDefault(),
+                            prefixes =
+                                AccountTypePrefixes(
+                                    assets = getAssetsPrefixes(),
+                                    liabilities = getLiabilitiesPrefixes(),
+                                    equity = getEquityPrefixes(),
+                                    income = getIncomePrefixes(),
+                                    expenses = getExpensesPrefixes(),
+                                ),
+                        )
+                }
+                compute()
+
+                fun <T> watch(source: LiveData<T>) {
+                    addSource(source) { compute() }
+                }
+                watch(decimalSeparator)
+                watch(defaultCurrency)
+                watch(defaultStatus)
+                watch(currencyBeforeAmount)
+                watch(postingWidth)
+                watch(spacingBetweenCurrencyAndAmount)
+                watch(transactionStatusPresentByDefault)
+                watch(transactionCodePresentByDefault)
+                watch(transactionPayeePresentByDefault)
+                watch(transactionNotePresentByDefault)
+                watch(transactionCurrenciesPresentByDefault)
+                watch(postingAmountPresentByDefault)
+                watch(postingCostPresentByDefault)
+                watch(postingAssertionPresentByDefault)
+                watch(postingAssertionCostPresentByDefault)
+                watch(postingCommentPresentByDefault)
+                watch(assetsPrefixes)
+                watch(liabilitiesPrefixes)
+                watch(equityPrefixes)
+                watch(incomePrefixes)
+                watch(expensesPrefixes)
+            }
+
         val reportingPreferences: LiveData<ReportingPreferences> =
             MediatorLiveData<ReportingPreferences>().apply {
                 fun compute() {

@@ -63,6 +63,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dagger.hilt.android.AndroidEntryPoint
 import ph.chrsrns.microledger.R
+import ph.chrsrns.microledger.data.SettingsState
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
 
 @AndroidEntryPoint
@@ -101,179 +102,44 @@ fun PreferencesScreen(
     contentPadding: PaddingValues = PaddingValues(),
 ) {
     val fileUri by preferencesViewModel.fileUri.observeAsState()
-    val transactionDefaultElements by preferencesViewModel.transactionDefaultElements.observeAsState(
-        emptyList(),
-    )
-    val transactionStatusPresentByDefault by preferencesViewModel.transactionStatusPresentByDefault.observeAsState(
-        true,
-    )
-    val transactionCodePresentByDefault by preferencesViewModel.transactionCodePresentByDefault.observeAsState(
-        false,
-    )
-    val transactionPayeePresentByDefault by preferencesViewModel.transactionPayeePresentByDefault.observeAsState(
-        true,
-    )
-    val transactionNotePresentByDefault by preferencesViewModel.transactionNotePresentByDefault.observeAsState(
-        true,
-    )
-    val transactionCurrenciesPresentByDefault by preferencesViewModel.transactionCurrenciesPresentByDefault.observeAsState(
-        true,
-    )
-    val postingDefaultElements by preferencesViewModel.postingDefaultElements.observeAsState(
-        emptyList(),
-    )
-    val postingAmountPresentByDefault by preferencesViewModel.postingAmountPresentByDefault.observeAsState(
-        true,
-    )
-    val postingCostPresentByDefault by preferencesViewModel.postingCostPresentByDefault.observeAsState(
-        false,
-    )
-    val postingAssertionPresentByDefault by preferencesViewModel.postingAssertionPresentByDefault.observeAsState(
-        false,
-    )
-    val postingAssertionCostPresentByDefault by preferencesViewModel.postingAssertionCostPresentByDefault.observeAsState(
-        false,
-    )
-    val postingCommentPresentByDefault by preferencesViewModel.postingCommentPresentByDefault.observeAsState(
-        false,
-    )
-    val defaultCurrency by preferencesViewModel.defaultCurrency.observeAsState("€")
-    val postingWidth by preferencesViewModel.postingWidth.observeAsState(72)
-    val defaultStatus by preferencesViewModel.defaultStatus.observeAsState(" ")
-    val decimalSeparator by preferencesViewModel.decimalSeparator.observeAsState(".")
-    val currencyBeforeAmount by preferencesViewModel.currencyBeforeAmount.observeAsState(true)
-    val currencyAmountSpacing by preferencesViewModel.spacingBetweenCurrencyAndAmount.observeAsState(
-        true,
-    )
-    val assetsPrefixes by preferencesViewModel.assetsPrefixes.observeAsState(listOf("Assets"))
-    val liabilitiesPrefixes by preferencesViewModel.liabilitiesPrefixes.observeAsState(listOf("Liabilities"))
-    val equityPrefixes by preferencesViewModel.equityPrefixes.observeAsState(listOf("Equity"))
-    val incomePrefixes by preferencesViewModel.incomePrefixes.observeAsState(listOf("Income"))
-    val expensesPrefixes by preferencesViewModel.expensesPrefixes.observeAsState(listOf("Expenses"))
-
-    PreferencesScreen(
-        fileUri = fileUri,
-        onOpenFile = onOpenFile,
-        transactionDefaultElements = transactionDefaultElements,
-        transactionStatusPresentByDefault = transactionStatusPresentByDefault,
-        onTransactionStatusPresentByDefaultChange = {
-            preferencesViewModel.storeTransactionStatusPresentByDefault(it)
-        },
-        transactionCodePresentByDefault = transactionCodePresentByDefault,
-        onTransactionCodePresentByDefaultChange = {
-            preferencesViewModel.storeTransactionCodePresentByDefault(it)
-        },
-        transactionPayeePresentByDefault = transactionPayeePresentByDefault,
-        onTransactionPayeePresentByDefaultChange = {
-            preferencesViewModel.storeTransactionPayeePresentByDefault(it)
-        },
-        transactionNotePresentByDefault = transactionNotePresentByDefault,
-        onTransactionNotePresentByDefaultChange = {
-            preferencesViewModel.storeTransactionNotePresentByDefault(it)
-        },
-        transactionCurrenciesPresentByDefault = transactionCurrenciesPresentByDefault,
-        onTransactionCurrenciesPresentByDefaultChange = {
-            preferencesViewModel.storeTransactionCurrenciesPresentByDefault(it)
-        },
-        postingDefaultElements = postingDefaultElements,
-        postingAmountPresentByDefault = postingAmountPresentByDefault,
-        onPostingAmountPresentByDefaultChange = {
-            preferencesViewModel.storePostingAmountPresentByDefault(it)
-        },
-        postingCostPresentByDefault = postingCostPresentByDefault,
-        onPostingCostPresentByDefaultChange = {
-            preferencesViewModel.storePostingCostPresentByDefault(it)
-        },
-        postingAssertionPresentByDefault = postingAssertionPresentByDefault,
-        onPostingAssertionPresentByDefaultChange = {
-            preferencesViewModel.storePostingAssertionPresentByDefault(it)
-        },
-        postingAssertionCostPresentByDefault = postingAssertionCostPresentByDefault,
-        onPostingAssertionCostPresentByDefaultChange = {
-            preferencesViewModel.storePostingAssertionCostPresentByDefault(it)
-        },
-        postingCommentPresentByDefault = postingCommentPresentByDefault,
-        onPostingCommentPresentByDefaultChange = {
-            preferencesViewModel.storePostingCommentPresentByDefault(it)
-        },
-        defaultCurrency = defaultCurrency,
-        onDefaultCurrencyChange = { preferencesViewModel.storeDefaultCurrency(it) },
-        postingWidth = postingWidth,
-        onPostingWidthChange = { preferencesViewModel.storePostingWidth(it) },
-        defaultStatus = defaultStatus,
-        onDefaultStatusChange = { preferencesViewModel.storeDefaultStatus(it) },
-        decimalSeparator = decimalSeparator,
-        onDecimalSeparatorChange = { preferencesViewModel.storeDecimalSeparator(it) },
-        currencyBeforeAmount = currencyBeforeAmount,
-        onCurrencyBeforeAmountChange = { preferencesViewModel.storeCurrencyBeforeAmount(it) },
-        currencyAmountSpacing = currencyAmountSpacing,
-        onCurrencyAmountSpacingChange = { preferencesViewModel.storeCurrencyAmountSpacing(it) },
-        assetsPrefixes = assetsPrefixes,
-        onAssetsPrefixesChange = { preferencesViewModel.storeAssetsPrefixes(it) },
-        liabilitiesPrefixes = liabilitiesPrefixes,
-        onLiabilitiesPrefixesChange = { preferencesViewModel.storeLiabilitiesPrefixes(it) },
-        equityPrefixes = equityPrefixes,
-        onEquityPrefixesChange = { preferencesViewModel.storeEquityPrefixes(it) },
-        incomePrefixes = incomePrefixes,
-        onIncomePrefixesChange = { preferencesViewModel.storeIncomePrefixes(it) },
-        expensesPrefixes = expensesPrefixes,
-        onExpensesPrefixesChange = { preferencesViewModel.storeExpensesPrefixes(it) },
-        showTopBar = showTopBar,
-        contentPadding = contentPadding,
-    )
+    val state by preferencesViewModel.settingsState.observeAsState()
+    state?.let {
+        PreferencesScreen(
+            state = it,
+            callbacks = preferencesViewModel.settingsCallbacks,
+            fileUri = fileUri,
+            onOpenFile = onOpenFile,
+            showTopBar = showTopBar,
+            contentPadding = contentPadding,
+        )
+    }
 }
 
 @Composable
 fun PreferencesScreen(
+    state: SettingsState,
+    callbacks: SettingsCallbacks,
     fileUri: Uri?,
     onOpenFile: () -> Unit,
-    transactionDefaultElements: List<Int>,
-    transactionStatusPresentByDefault: Boolean,
-    onTransactionStatusPresentByDefaultChange: (Boolean) -> Unit,
-    transactionCodePresentByDefault: Boolean,
-    onTransactionCodePresentByDefaultChange: (Boolean) -> Unit,
-    transactionPayeePresentByDefault: Boolean,
-    onTransactionPayeePresentByDefaultChange: (Boolean) -> Unit,
-    transactionNotePresentByDefault: Boolean,
-    onTransactionNotePresentByDefaultChange: (Boolean) -> Unit,
-    transactionCurrenciesPresentByDefault: Boolean,
-    onTransactionCurrenciesPresentByDefaultChange: (Boolean) -> Unit,
-    postingDefaultElements: List<Int>,
-    postingAmountPresentByDefault: Boolean,
-    onPostingAmountPresentByDefaultChange: (Boolean) -> Unit,
-    postingCostPresentByDefault: Boolean,
-    onPostingCostPresentByDefaultChange: (Boolean) -> Unit,
-    postingAssertionPresentByDefault: Boolean,
-    onPostingAssertionPresentByDefaultChange: (Boolean) -> Unit,
-    postingAssertionCostPresentByDefault: Boolean,
-    onPostingAssertionCostPresentByDefaultChange: (Boolean) -> Unit,
-    postingCommentPresentByDefault: Boolean,
-    onPostingCommentPresentByDefaultChange: (Boolean) -> Unit,
-    defaultCurrency: String,
-    onDefaultCurrencyChange: (String) -> Unit,
-    postingWidth: Int,
-    onPostingWidthChange: (Int) -> Unit,
-    defaultStatus: String,
-    onDefaultStatusChange: (String) -> Unit,
-    decimalSeparator: String,
-    onDecimalSeparatorChange: (String) -> Unit,
-    currencyBeforeAmount: Boolean,
-    onCurrencyBeforeAmountChange: (Boolean) -> Unit,
-    currencyAmountSpacing: Boolean,
-    onCurrencyAmountSpacingChange: (Boolean) -> Unit,
-    assetsPrefixes: List<String>,
-    onAssetsPrefixesChange: (List<String>) -> Unit,
-    liabilitiesPrefixes: List<String>,
-    onLiabilitiesPrefixesChange: (List<String>) -> Unit,
-    equityPrefixes: List<String>,
-    onEquityPrefixesChange: (List<String>) -> Unit,
-    incomePrefixes: List<String>,
-    onIncomePrefixesChange: (List<String>) -> Unit,
-    expensesPrefixes: List<String>,
-    onExpensesPrefixesChange: (List<String>) -> Unit,
     showTopBar: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
+    val transactionDefaultElements =
+        listOfNotNull(
+            if (state.transactionStatusPresentByDefault) R.string.status else null,
+            if (state.transactionCodePresentByDefault) R.string.code else null,
+            if (state.transactionPayeePresentByDefault) R.string.payee else null,
+            if (state.transactionNotePresentByDefault) R.string.note else null,
+            if (state.transactionCurrenciesPresentByDefault) R.string.currencies else null,
+        )
+    val postingDefaultElements =
+        listOfNotNull(
+            if (state.postingAmountPresentByDefault) R.string.amount else null,
+            if (state.postingCostPresentByDefault) R.string.cost else null,
+            if (state.postingAssertionPresentByDefault) R.string.assertion else null,
+            if (state.postingAssertionCostPresentByDefault) R.string.assertion_cost else null,
+            if (state.postingCommentPresentByDefault) R.string.comment else null,
+        )
     val statusMap =
         mapOf(
             " " to stringResource(R.string.status_unmarked),
@@ -331,7 +197,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (transactionStatusPresentByDefault) {
+                                    if (state.transactionStatusPresentByDefault) {
                                         R.string.remove_status
                                     } else {
                                         R.string.add_status
@@ -340,7 +206,7 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onTransactionStatusPresentByDefaultChange(!transactionStatusPresentByDefault)
+                            callbacks.onTransactionStatusPresentByDefaultChange(!state.transactionStatusPresentByDefault)
                             transactionDefaultElementsOpen = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -349,7 +215,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (transactionCodePresentByDefault) {
+                                    if (state.transactionCodePresentByDefault) {
                                         R.string.remove_code
                                     } else {
                                         R.string.add_code
@@ -358,7 +224,7 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onTransactionCodePresentByDefaultChange(!transactionCodePresentByDefault)
+                            callbacks.onTransactionCodePresentByDefaultChange(!state.transactionCodePresentByDefault)
                             transactionDefaultElementsOpen = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -367,7 +233,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (transactionPayeePresentByDefault) {
+                                    if (state.transactionPayeePresentByDefault) {
                                         R.string.remove_payee
                                     } else {
                                         R.string.add_payee
@@ -376,7 +242,7 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onTransactionPayeePresentByDefaultChange(!transactionPayeePresentByDefault)
+                            callbacks.onTransactionPayeePresentByDefaultChange(!state.transactionPayeePresentByDefault)
                             transactionDefaultElementsOpen = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -385,7 +251,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (transactionNotePresentByDefault) {
+                                    if (state.transactionNotePresentByDefault) {
                                         R.string.remove_note
                                     } else {
                                         R.string.add_note
@@ -394,7 +260,7 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onTransactionNotePresentByDefaultChange(!transactionNotePresentByDefault)
+                            callbacks.onTransactionNotePresentByDefaultChange(!state.transactionNotePresentByDefault)
                             transactionDefaultElementsOpen = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -403,7 +269,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (transactionCurrenciesPresentByDefault) {
+                                    if (state.transactionCurrenciesPresentByDefault) {
                                         R.string.remove_currency
                                     } else {
                                         R.string.add_currency
@@ -412,8 +278,8 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onTransactionCurrenciesPresentByDefaultChange(
-                                !transactionCurrenciesPresentByDefault,
+                            callbacks.onTransactionCurrenciesPresentByDefaultChange(
+                                !state.transactionCurrenciesPresentByDefault,
                             )
                             transactionDefaultElementsOpen = false
                         },
@@ -441,7 +307,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (postingAmountPresentByDefault) {
+                                    if (state.postingAmountPresentByDefault) {
                                         R.string.remove_amount
                                     } else {
                                         R.string.add_amount
@@ -450,7 +316,7 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onPostingAmountPresentByDefaultChange(!postingAmountPresentByDefault)
+                            callbacks.onPostingAmountPresentByDefaultChange(!state.postingAmountPresentByDefault)
                             postingDefaultElementsOpen = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -459,7 +325,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (postingCostPresentByDefault) {
+                                    if (state.postingCostPresentByDefault) {
                                         R.string.remove_cost
                                     } else {
                                         R.string.add_cost
@@ -468,7 +334,7 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onPostingCostPresentByDefaultChange(!postingCostPresentByDefault)
+                            callbacks.onPostingCostPresentByDefaultChange(!state.postingCostPresentByDefault)
                             postingDefaultElementsOpen = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -477,7 +343,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (postingAssertionPresentByDefault) {
+                                    if (state.postingAssertionPresentByDefault) {
                                         R.string.remove_assertion
                                     } else {
                                         R.string.add_assertion
@@ -486,7 +352,7 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onPostingAssertionPresentByDefaultChange(!postingAssertionPresentByDefault)
+                            callbacks.onPostingAssertionPresentByDefaultChange(!state.postingAssertionPresentByDefault)
                             postingDefaultElementsOpen = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -495,7 +361,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (postingAssertionCostPresentByDefault) {
+                                    if (state.postingAssertionCostPresentByDefault) {
                                         R.string.remove_assertion_cost
                                     } else {
                                         R.string.add_assertion_cost
@@ -504,8 +370,8 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onPostingAssertionCostPresentByDefaultChange(
-                                !postingAssertionCostPresentByDefault,
+                            callbacks.onPostingAssertionCostPresentByDefaultChange(
+                                !state.postingAssertionCostPresentByDefault,
                             )
                             postingDefaultElementsOpen = false
                         },
@@ -515,7 +381,7 @@ fun PreferencesScreen(
                         text = {
                             Text(
                                 stringResource(
-                                    if (postingCommentPresentByDefault) {
+                                    if (state.postingCommentPresentByDefault) {
                                         R.string.remove_comment
                                     } else {
                                         R.string.add_comment
@@ -524,7 +390,7 @@ fun PreferencesScreen(
                             )
                         },
                         onClick = {
-                            onPostingCommentPresentByDefaultChange(!postingCommentPresentByDefault)
+                            callbacks.onPostingCommentPresentByDefaultChange(!state.postingCommentPresentByDefault)
                             postingDefaultElementsOpen = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -532,11 +398,11 @@ fun PreferencesScreen(
                 }
             }
             HorizontalDivider()
-            var newDefaultCurrency by remember { mutableStateOf(defaultCurrency) }
+            var newDefaultCurrency by remember { mutableStateOf(state.defaultCurrency) }
             var defaultCurrencyOpen by remember { mutableStateOf(false) }
             Setting(
                 stringResource(R.string.default_currency),
-                defaultCurrency,
+                state.defaultCurrency,
             ) {
                 defaultCurrencyOpen = true
             }
@@ -544,19 +410,19 @@ fun PreferencesScreen(
                 defaultCurrencyOpen,
                 R.string.change_default_currency,
                 true,
-                { onDefaultCurrencyChange(newDefaultCurrency) },
+                { callbacks.onDefaultCurrencyChange(newDefaultCurrency) },
                 { defaultCurrencyOpen = false },
             ) {
                 OutlinedTextField(newDefaultCurrency, { newDefaultCurrency = it })
             }
             HorizontalDivider()
-            var newPostingWidth by remember { mutableStateOf("$postingWidth") }
+            var newPostingWidth by remember { mutableStateOf("${state.postingWidth}") }
             var postingWidthOpen by remember { mutableStateOf(false) }
-            Setting(stringResource(R.string.posting_width), "$postingWidth") {
+            Setting(stringResource(R.string.posting_width), "${state.postingWidth}") {
                 postingWidthOpen = true
             }
             SettingDialog(postingWidthOpen, R.string.change_posting_width, true, {
-                onPostingWidthChange(Integer.parseInt(newPostingWidth))
+                callbacks.onPostingWidthChange(Integer.parseInt(newPostingWidth))
             }, { postingWidthOpen = false }) {
                 OutlinedTextField(
                     newPostingWidth,
@@ -577,7 +443,7 @@ fun PreferencesScreen(
             ) {
                 Setting(
                     stringResource(R.string.default_status),
-                    statusMap[defaultStatus] ?: stringResource(
+                    statusMap[state.defaultStatus] ?: stringResource(
                         R.string.status_unmarked,
                     ),
                     modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
@@ -591,7 +457,7 @@ fun PreferencesScreen(
                         DropdownMenuItem(
                             text = { Text(it.value) },
                             onClick = {
-                                onDefaultStatusChange(it.key)
+                                callbacks.onDefaultStatusChange(it.key)
                                 expandedStatus = false
                             },
                             contentPadding =
@@ -609,7 +475,7 @@ fun PreferencesScreen(
             ) {
                 Setting(
                     stringResource(R.string.decimal_separator),
-                    separatorMap[decimalSeparator] ?: stringResource(
+                    separatorMap[state.decimalSeparator] ?: stringResource(
                         R.string.separator_point,
                     ),
                     modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
@@ -623,7 +489,7 @@ fun PreferencesScreen(
                         DropdownMenuItem(
                             text = { Text(it.value) },
                             onClick = {
-                                onDecimalSeparatorChange(it.key)
+                                callbacks.onDecimalSeparatorChange(it.key)
                                 expandedSeparator = false
                             },
                             contentPadding =
@@ -641,7 +507,7 @@ fun PreferencesScreen(
             ) {
                 Setting(
                     stringResource(R.string.currency_amount_order),
-                    currencyOrderMap[currencyBeforeAmount] ?: stringResource(
+                    currencyOrderMap[state.currencyBeforeAmount] ?: stringResource(
                         R.string.currency_order_before,
                     ),
                     modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
@@ -655,7 +521,7 @@ fun PreferencesScreen(
                         DropdownMenuItem(
                             text = { Text(it.value) },
                             onClick = {
-                                onCurrencyBeforeAmountChange(it.key)
+                                callbacks.onCurrencyBeforeAmountChange(it.key)
                                 expandedCurrency = false
                             },
                             contentPadding =
@@ -673,7 +539,7 @@ fun PreferencesScreen(
             ) {
                 Setting(
                     stringResource(R.string.currency_amount_spacing),
-                    currencySpacingMap[currencyAmountSpacing] ?: stringResource(
+                    currencySpacingMap[state.currencyAmountSpacing] ?: stringResource(
                         R.string.currency_amount_spacing_on,
                     ),
                     modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
@@ -687,7 +553,7 @@ fun PreferencesScreen(
                         DropdownMenuItem(
                             text = { Text(it.value) },
                             onClick = {
-                                onCurrencyAmountSpacingChange(it.key)
+                                callbacks.onCurrencyAmountSpacingChange(it.key)
                                 expandedCurrencySpacing = false
                             },
                             contentPadding =
@@ -700,65 +566,65 @@ fun PreferencesScreen(
             var assetsPrefixesOpen by remember { mutableStateOf(false) }
             Setting(
                 stringResource(R.string.assets_prefixes),
-                assetsPrefixes.joinToString(", "),
+                state.prefixes.assets.joinToString(", "),
             ) { assetsPrefixesOpen = true }
             PrefixListDialog(
                 assetsPrefixesOpen,
                 R.string.change_assets_prefixes,
-                assetsPrefixes,
-                { onAssetsPrefixesChange(it) },
+                state.prefixes.assets,
+                { callbacks.onAssetsPrefixesChange(it) },
                 { assetsPrefixesOpen = false },
             )
             HorizontalDivider()
             var liabilitiesPrefixesOpen by remember { mutableStateOf(false) }
             Setting(
                 stringResource(R.string.liabilities_prefixes),
-                liabilitiesPrefixes.joinToString(", "),
+                state.prefixes.liabilities.joinToString(", "),
             ) { liabilitiesPrefixesOpen = true }
             PrefixListDialog(
                 liabilitiesPrefixesOpen,
                 R.string.change_liabilities_prefixes,
-                liabilitiesPrefixes,
-                { onLiabilitiesPrefixesChange(it) },
+                state.prefixes.liabilities,
+                { callbacks.onLiabilitiesPrefixesChange(it) },
                 { liabilitiesPrefixesOpen = false },
             )
             HorizontalDivider()
             var equityPrefixesOpen by remember { mutableStateOf(false) }
             Setting(
                 stringResource(R.string.equity_prefixes),
-                equityPrefixes.joinToString(", "),
+                state.prefixes.equity.joinToString(", "),
             ) { equityPrefixesOpen = true }
             PrefixListDialog(
                 equityPrefixesOpen,
                 R.string.change_equity_prefixes,
-                equityPrefixes,
-                { onEquityPrefixesChange(it) },
+                state.prefixes.equity,
+                { callbacks.onEquityPrefixesChange(it) },
                 { equityPrefixesOpen = false },
             )
             HorizontalDivider()
             var incomePrefixesOpen by remember { mutableStateOf(false) }
             Setting(
                 stringResource(R.string.income_prefixes),
-                incomePrefixes.joinToString(", "),
+                state.prefixes.income.joinToString(", "),
             ) { incomePrefixesOpen = true }
             PrefixListDialog(
                 incomePrefixesOpen,
                 R.string.change_income_prefixes,
-                incomePrefixes,
-                { onIncomePrefixesChange(it) },
+                state.prefixes.income,
+                { callbacks.onIncomePrefixesChange(it) },
                 { incomePrefixesOpen = false },
             )
             HorizontalDivider()
             var expensesPrefixesOpen by remember { mutableStateOf(false) }
             Setting(
                 stringResource(R.string.expenses_prefixes),
-                expensesPrefixes.joinToString(", "),
+                state.prefixes.expenses.joinToString(", "),
             ) { expensesPrefixesOpen = true }
             PrefixListDialog(
                 expensesPrefixesOpen,
                 R.string.change_expenses_prefixes,
-                expensesPrefixes,
-                { onExpensesPrefixesChange(it) },
+                state.prefixes.expenses,
+                { callbacks.onExpensesPrefixesChange(it) },
                 { expensesPrefixesOpen = false },
             )
         }
@@ -950,52 +816,10 @@ fun PrefixListDialogContent(
 fun PreferencesScreenPreview() {
     MicroLedgerTheme {
         PreferencesScreen(
+            state = SettingsState(),
+            callbacks = SettingsCallbacks(),
             fileUri = null,
             onOpenFile = {},
-            transactionDefaultElements = listOf(R.string.status, R.string.payee),
-            transactionStatusPresentByDefault = true,
-            onTransactionStatusPresentByDefaultChange = {},
-            transactionCodePresentByDefault = false,
-            onTransactionCodePresentByDefaultChange = {},
-            transactionPayeePresentByDefault = true,
-            onTransactionPayeePresentByDefaultChange = {},
-            transactionNotePresentByDefault = true,
-            onTransactionNotePresentByDefaultChange = {},
-            transactionCurrenciesPresentByDefault = true,
-            onTransactionCurrenciesPresentByDefaultChange = {},
-            postingDefaultElements = listOf(R.string.amount),
-            postingAmountPresentByDefault = true,
-            onPostingAmountPresentByDefaultChange = {},
-            postingCostPresentByDefault = false,
-            onPostingCostPresentByDefaultChange = {},
-            postingAssertionPresentByDefault = false,
-            onPostingAssertionPresentByDefaultChange = {},
-            postingAssertionCostPresentByDefault = false,
-            onPostingAssertionCostPresentByDefaultChange = {},
-            postingCommentPresentByDefault = false,
-            onPostingCommentPresentByDefaultChange = {},
-            defaultCurrency = "€",
-            onDefaultCurrencyChange = {},
-            postingWidth = 72,
-            onPostingWidthChange = {},
-            defaultStatus = " ",
-            onDefaultStatusChange = {},
-            decimalSeparator = ".",
-            onDecimalSeparatorChange = {},
-            currencyBeforeAmount = true,
-            onCurrencyBeforeAmountChange = {},
-            currencyAmountSpacing = true,
-            onCurrencyAmountSpacingChange = {},
-            assetsPrefixes = listOf("Assets"),
-            onAssetsPrefixesChange = {},
-            liabilitiesPrefixes = listOf("Liabilities"),
-            onLiabilitiesPrefixesChange = {},
-            equityPrefixes = listOf("Equity"),
-            onEquityPrefixesChange = {},
-            incomePrefixes = listOf("Income"),
-            onIncomePrefixesChange = {},
-            expensesPrefixes = listOf("Expenses"),
-            onExpensesPrefixesChange = {},
         )
     }
 }
