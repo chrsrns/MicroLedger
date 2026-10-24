@@ -45,6 +45,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -215,21 +216,23 @@ fun TransactionForm(
             val posting = currentPostings[selectedIndex]
             val isBalance =
                 selectedIndex == currentPostings.lastIndex && posting.account.isNullOrBlank()
-            PostingEditBottomSheet(
-                posting = posting,
-                accounts = accounts ?: emptyList(),
-                isBalance = isBalance,
-                currencyEnabled = currencyEnabled,
-                currencyBeforeAmount = currencyBeforeAmount,
-                currencyAmountSpacing = currencyAmountSpacing,
-                decimalSeparator = decimalSeparator ?: "",
-                defaultCurrency = defaultCurrency ?: "",
-                unbalancedAmount = if (isBalance) unbalancedAmount else null,
-                prefixes = prefixes,
-                onDismiss = { selectedIndex = -1 },
-                onSave = { viewModel.setPosting(selectedIndex, it) },
-                onRemove = { viewModel.removePosting(selectedIndex) },
-            )
+            key(selectedIndex) {
+                PostingEditBottomSheet(
+                    posting = posting,
+                    accounts = accounts ?: emptyList(),
+                    isBalance = isBalance,
+                    currencyEnabled = currencyEnabled,
+                    currencyBeforeAmount = currencyBeforeAmount,
+                    currencyAmountSpacing = currencyAmountSpacing,
+                    decimalSeparator = decimalSeparator ?: "",
+                    defaultCurrency = defaultCurrency ?: "",
+                    unbalancedAmount = if (isBalance) unbalancedAmount else null,
+                    prefixes = prefixes,
+                    onDismiss = { selectedIndex = -1 },
+                    onSave = { viewModel.setPosting(selectedIndex, it) },
+                    onRemove = { viewModel.removePosting(selectedIndex) },
+                )
+            }
         }
     }
 }
@@ -717,47 +720,6 @@ fun PostingRow(
 }
 
 @Composable
-fun PostingRow(
-    index: Int,
-    posting: Posting,
-    showAmountHint: Boolean,
-    viewModel: TransactionFormViewModel,
-) {
-    val accounts by viewModel.accounts.observeAsState()
-    val currencyEnabled by viewModel.currencyEnabled.observeAsState(true)
-    val currencyBeforeAmount by viewModel.currencyBeforeAmount.observeAsState(true)
-    val unbalancedAmount by viewModel.unbalancedAmount.observeAsState()
-
-    PostingRow(
-        posting,
-        showAmountHint,
-        accounts ?: emptyList(),
-        currencyEnabled,
-        currencyBeforeAmount,
-        unbalancedAmount,
-        { viewModel.setComment(index, it) },
-        { viewModel.setAccount(index, it) },
-        { viewModel.removePosting(index) },
-        { viewModel.setCurrency(index, it) },
-        { viewModel.setAmount(index, it) },
-        { viewModel.setCostType(index, it) },
-        { viewModel.setCostCurrency(index, it) },
-        { viewModel.setCostAmount(index, it) },
-        { viewModel.setAssertionCurrency(index, it) },
-        { viewModel.setAssertionAmount(index, it) },
-        { viewModel.setAssertionCostType(index, it) },
-        { viewModel.setAssertionCostCurrency(index, it) },
-        { viewModel.setAssertionCostAmount(index, it) },
-        { viewModel.toggleAccount(index, it) },
-        { viewModel.toggleAmount(index, it) },
-        { viewModel.toggleCost(index, it) },
-        { viewModel.toggleAssertion(index, it) },
-        { viewModel.toggleAssertionCost(index, it) },
-        { viewModel.toggleComment(index, it) },
-    )
-}
-
-@Composable
 fun PostingFieldSelector(
     posting: Posting,
     onToggleAccount: (Boolean) -> Unit,
@@ -856,23 +818,6 @@ fun PostingFieldSelector(
             )
         }
     }
-}
-
-@Composable
-fun PostingFieldSelector(
-    viewModel: TransactionFormViewModel,
-    index: Int,
-    posting: Posting,
-) {
-    PostingFieldSelector(
-        posting,
-        { viewModel.toggleAccount(index, it) },
-        { viewModel.toggleAmount(index, it) },
-        { viewModel.toggleCost(index, it) },
-        { viewModel.toggleAssertion(index, it) },
-        { viewModel.toggleAssertionCost(index, it) },
-        { viewModel.toggleComment(index, it) },
-    )
 }
 
 @Composable

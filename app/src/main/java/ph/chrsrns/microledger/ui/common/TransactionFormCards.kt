@@ -417,7 +417,7 @@ fun PostingEditBottomSheet(
     onRemove: () -> Unit,
 ) {
     val sheetState = androidx.compose.material3.rememberModalBottomSheetState()
-    var edited by androidx.compose.runtime.remember(posting) { mutableStateOf(posting) }
+    var edited by androidx.compose.runtime.remember { mutableStateOf(posting) }
 
     androidx.compose.material3.ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -449,7 +449,8 @@ fun PostingEditBottomSheet(
                     currencyEnabled = currencyEnabled,
                     currencyBeforeAmount = currencyBeforeAmount,
                     currencyAmountSpacing = currencyAmountSpacing,
-                    onAmountChange = { edited = edited.withAmount(it) },
+                    onQuantityChange = { edited = edited.withQuantity(it) },
+                    onCurrencyChange = { edited = edited.withCurrency(it) },
                 )
             }
 
@@ -459,7 +460,9 @@ fun PostingEditBottomSheet(
                     currencyEnabled = currencyEnabled,
                     currencyBeforeAmount = currencyBeforeAmount,
                     currencyAmountSpacing = currencyAmountSpacing,
-                    onCostChange = { edited = edited.withCost(it) },
+                    onTypeChange = { edited = edited.withCostType(it) },
+                    onQuantityChange = { edited = edited.withCostQuantity(it) },
+                    onCurrencyChange = { edited = edited.withCostCurrency(it) },
                 )
             }
 
@@ -469,7 +472,8 @@ fun PostingEditBottomSheet(
                     currencyEnabled = currencyEnabled,
                     currencyBeforeAmount = currencyBeforeAmount,
                     currencyAmountSpacing = currencyAmountSpacing,
-                    onAssertionChange = { edited = edited.withAssertion(it) },
+                    onQuantityChange = { edited = edited.withAssertionQuantity(it) },
+                    onCurrencyChange = { edited = edited.withAssertionCurrency(it) },
                 )
             }
 
@@ -480,7 +484,9 @@ fun PostingEditBottomSheet(
                     currencyEnabled = currencyEnabled,
                     currencyBeforeAmount = currencyBeforeAmount,
                     currencyAmountSpacing = currencyAmountSpacing,
-                    onCostChange = { edited = edited.withAssertionCost(it) },
+                    onTypeChange = { edited = edited.withAssertionCostType(it) },
+                    onQuantityChange = { edited = edited.withAssertionCostQuantity(it) },
+                    onCurrencyChange = { edited = edited.withAssertionCostCurrency(it) },
                 )
             }
 
@@ -495,38 +501,31 @@ fun PostingEditBottomSheet(
             OptionalChips(
                 posting = edited,
                 defaultCurrency = defaultCurrency,
-                onToggleAccount = { edited = edited.withAccount(if (it) "" else null) },
+                onToggleAccount = { edited = edited.withAccountEnabled(it) },
                 onToggleAmount = {
-                    edited =
-                        edited.withAmount(
-                            if (it) Amount("", defaultCurrency, "") else null,
-                        )
+                    edited = edited.withAmountEnabled(it, Amount("", defaultCurrency, ""))
                 },
                 onToggleCost = {
-                    edited =
-                        edited.withCost(
-                            if (it) Cost(Amount("", defaultCurrency, ""), CostType.UNIT) else null,
-                        )
+                    edited = edited.withCostEnabled(it, Cost(Amount("", defaultCurrency, ""), CostType.UNIT))
                 },
                 onToggleAssertion = {
-                    edited =
-                        edited.withAssertion(
-                            if (it) Amount("", defaultCurrency, "") else null,
-                        )
+                    edited = edited.withAssertionEnabled(it, Amount("", defaultCurrency, ""))
                 },
                 onToggleAssertionCost = {
                     edited =
-                        edited.withAssertionCost(
-                            if (it) Cost(Amount("", defaultCurrency, ""), CostType.UNIT) else null,
+                        edited.withAssertionCostEnabled(
+                            it,
+                            Cost(Amount("", defaultCurrency, ""), CostType.UNIT),
                         )
                 },
-                onToggleComment = { edited = edited.withComment(if (it) "" else null) },
+                onToggleComment = { edited = edited.withCommentEnabled(it) },
             )
 
             SheetFooter(
                 canSave =
-                    !edited.account.isNullOrBlank() ||
-                        (edited.account == null && !edited.comment.isNullOrBlank()),
+                    edited.isVirtual() ||
+                        !edited.account.isNullOrBlank() ||
+                        edited.isComment(),
                 onCancel = onDismiss,
                 onSave = {
                     onSave(edited)
@@ -584,14 +583,9 @@ private fun AmountEditor(
     currencyEnabled: Boolean,
     currencyBeforeAmount: Boolean,
     currencyAmountSpacing: Boolean,
-    onAmountChange: (Amount) -> Unit,
+    onQuantityChange: (String) -> Unit,
+    onCurrencyChange: (String) -> Unit,
 ) {
-    fun update(
-        quantity: String = amount.quantity,
-        currency: String = amount.currency,
-    ) {
-        onAmountChange(Amount(quantity, currency, ""))
-    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -600,7 +594,7 @@ private fun AmountEditor(
         if (currencyEnabled && currencyBeforeAmount) {
             CurrencyField(
                 currency = amount.currency,
-                onCurrencyChange = { update(currency = it) },
+                onCurrencyChange = onCurrencyChange,
                 modifier = Modifier.padding(end = 4.dp),
             )
         }
@@ -609,14 +603,14 @@ private fun AmountEditor(
             quantity = amount.quantity,
             showAmountHint = showHint,
             unbalancedAmount = hint,
-            onAmountChange = { update(quantity = it) },
+            onAmountChange = onQuantityChange,
             modifier = Modifier.weight(1f).testTag("posting_sheet_amount"),
         )
 
         if (currencyEnabled && !currencyBeforeAmount) {
             CurrencyField(
                 currency = amount.currency,
-                onCurrencyChange = { update(currency = it) },
+                onCurrencyChange = onCurrencyChange,
                 modifier = Modifier.padding(start = 4.dp),
             )
         }
@@ -630,15 +624,10 @@ private fun CostEditor(
     currencyEnabled: Boolean,
     currencyBeforeAmount: Boolean,
     currencyAmountSpacing: Boolean,
-    onCostChange: (Cost) -> Unit,
+    onTypeChange: (CostType) -> Unit,
+    onQuantityChange: (String) -> Unit,
+    onCurrencyChange: (String) -> Unit,
 ) {
-    fun update(
-        type: CostType = cost.type,
-        quantity: String = cost.amount.quantity,
-        currency: String = cost.amount.currency,
-    ) {
-        onCostChange(Cost(Amount(quantity, currency, ""), type))
-    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -647,7 +636,7 @@ private fun CostEditor(
         if (prefix.isNotBlank()) {
             Text(prefix, modifier = Modifier.padding(horizontal = 4.dp))
         }
-        CostTypeSelector(cost.type) { update(type = it) }
+        CostTypeSelector(cost.type) { onTypeChange(it) }
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.Bottom,
@@ -655,7 +644,7 @@ private fun CostEditor(
             if (currencyEnabled && currencyBeforeAmount) {
                 CurrencyField(
                     currency = cost.amount.currency,
-                    onCurrencyChange = { update(currency = it) },
+                    onCurrencyChange = onCurrencyChange,
                     modifier = Modifier.padding(end = 4.dp),
                 )
             }
@@ -663,13 +652,13 @@ private fun CostEditor(
                 quantity = cost.amount.quantity,
                 showAmountHint = false,
                 unbalancedAmount = null,
-                onAmountChange = { update(quantity = it) },
+                onAmountChange = onQuantityChange,
                 modifier = Modifier.weight(1f),
             )
             if (currencyEnabled && !currencyBeforeAmount) {
                 CurrencyField(
                     currency = cost.amount.currency,
-                    onCurrencyChange = { update(currency = it) },
+                    onCurrencyChange = onCurrencyChange,
                     modifier = Modifier.padding(start = 4.dp),
                 )
             }
@@ -683,7 +672,8 @@ private fun AssertionEditor(
     currencyEnabled: Boolean,
     currencyBeforeAmount: Boolean,
     currencyAmountSpacing: Boolean,
-    onAssertionChange: (Amount) -> Unit,
+    onQuantityChange: (String) -> Unit,
+    onCurrencyChange: (String) -> Unit,
 ) {
     AmountEditor(
         amount = assertion,
@@ -692,7 +682,8 @@ private fun AssertionEditor(
         currencyEnabled = currencyEnabled,
         currencyBeforeAmount = currencyBeforeAmount,
         currencyAmountSpacing = currencyAmountSpacing,
-        onAmountChange = { onAssertionChange(it) },
+        onQuantityChange = onQuantityChange,
+        onCurrencyChange = onCurrencyChange,
     )
 }
 

@@ -304,13 +304,12 @@ abstract class TransactionFormViewModel(
         }
         setPostings(transaction.postings)
         _currencyEnabled.value =
-            transaction.postings
-                .map {
-                    (it.amount?.currency ?: "") != "" ||
-                        (it.cost?.amount?.currency ?: "") != "" ||
-                        (it.assertion?.currency ?: "") != "" ||
-                        (it.assertionCost?.amount?.currency ?: "") != ""
-                }.reduce { acc, bool -> acc || bool }
+            transaction.postings.any {
+                (it.amount?.currency ?: "") != "" ||
+                    (it.cost?.amount?.currency ?: "") != "" ||
+                    (it.assertion?.currency ?: "") != "" ||
+                    (it.assertionCost?.amount?.currency ?: "") != ""
+            }
     }
 
     fun setDate(dateMillis: Long) {
@@ -365,272 +364,47 @@ abstract class TransactionFormViewModel(
     }
 
     fun setPostings(newPostings: List<Posting>) {
-        _postings.value = filterPostings(newPostings)
+        _postings.value = ArrayList(withSentinel(newPostings, ::newPosting))
     }
 
     fun addPosting() {
-        val current = ArrayList(postings.value ?: listOf(newPosting()))
-        val sentinelIndex = current.indexOfLast { it == newPosting() }
-        if (sentinelIndex >= 0) {
-            current.add(sentinelIndex, Posting("", null, null, null, null, null))
-        } else {
-            current.add(Posting("", null, null, null, null, null))
-        }
-        _postings.value = filterPostings(current)
+        _postings.value =
+            ArrayList(
+                insertPosting(
+                    postings.value ?: listOf(),
+                    Posting("", null, null, null, null, null),
+                    ::newPosting,
+                ),
+            )
     }
 
     fun setPosting(
         index: Int,
         posting: Posting,
     ) {
-        val current = ArrayList(postings.value ?: emptyList())
-        if (index in current.indices) {
-            current[index] = posting
-            _postings.value = filterPostings(current)
-        }
+        updatePosting(index) { posting }
     }
 
-    fun setAccount(
+    fun updatePosting(
         index: Int,
-        newAccount: String,
+        transform: (Posting) -> Posting,
     ) {
-        val result = ArrayList(postings.value!!)
-        result[index] = result[index].withAccount(newAccount)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setCurrency(
-        index: Int,
-        newCurrency: String,
-    ) {
-        val result = ArrayList(postings.value!!)
-
-        val quantity = result[index].amount?.quantity ?: ""
-        val original = result[index].amount?.original ?: ""
-        var newAmount: Amount? = null
-
-        if (quantity != "" || original != "" || newCurrency != "") {
-            newAmount = Amount(quantity, newCurrency, original)
-        }
-
-        result[index] = result[index].withAmount(newAmount)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setAmount(
-        index: Int,
-        newAmountString: String,
-    ) {
-        val result = ArrayList(postings.value!!)
-        val currency = result[index].amount?.currency ?: ""
-        val original = result[index].amount?.original ?: ""
-        var newAmount: Amount? = null
-
-        if (newAmountString != "" || original != "" || currency != "") {
-            newAmount = Amount(newAmountString, currency, original)
-        }
-
-        result[index] = result[index].withAmount(newAmount)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setCostType(
-        index: Int,
-        newCostType: CostType,
-    ) {
-        val result = ArrayList(postings.value!!)
-        val quantity = result[index].cost?.amount?.quantity ?: ""
-        val currency = result[index].cost?.amount?.currency ?: ""
-        val newCost = Cost(Amount(quantity, currency, ""), newCostType)
-        result[index] = result[index].withCost(newCost)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setCostCurrency(
-        index: Int,
-        newCostCurrency: String,
-    ) {
-        val result = ArrayList(postings.value!!)
-        val costType = result[index].cost?.type ?: CostType.UNIT
-        val quantity = result[index].cost?.amount?.quantity ?: ""
-        val newCost = Cost(Amount(quantity, newCostCurrency, ""), costType)
-        result[index] = result[index].withCost(newCost)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setCostAmount(
-        index: Int,
-        newCostAmount: String,
-    ) {
-        val result = ArrayList(postings.value!!)
-        val costType = result[index].cost?.type ?: CostType.UNIT
-        val currency = result[index].cost?.amount?.currency ?: ""
-        val newCost = Cost(Amount(newCostAmount, currency, ""), costType)
-        result[index] = result[index].withCost(newCost)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setAssertionCurrency(
-        index: Int,
-        newCurrency: String,
-    ) {
-        val result = ArrayList(postings.value!!)
-
-        val quantity = result[index].assertion?.quantity ?: ""
-        val newAssertion = Amount(quantity, newCurrency, "")
-
-        result[index] = result[index].withAssertion(newAssertion)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setAssertionAmount(
-        index: Int,
-        newAmountString: String,
-    ) {
-        val result = ArrayList(postings.value!!)
-        val currency = result[index].assertion?.currency ?: ""
-        val newAmount = Amount(newAmountString, currency, "")
-
-        result[index] = result[index].withAssertion(newAmount)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setAssertionCostType(
-        index: Int,
-        newCostType: CostType,
-    ) {
-        val result = ArrayList(postings.value!!)
-        val quantity = result[index].assertionCost?.amount?.quantity ?: ""
-        val currency = result[index].assertionCost?.amount?.currency ?: ""
-        val newCost = Cost(Amount(quantity, currency, ""), newCostType)
-        result[index] = result[index].withAssertionCost(newCost)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setAssertionCostCurrency(
-        index: Int,
-        newCostCurrency: String,
-    ) {
-        val result = ArrayList(postings.value!!)
-        val costType = result[index].assertionCost?.type ?: CostType.UNIT
-        val quantity = result[index].assertionCost?.amount?.quantity ?: ""
-        val newCost = Cost(Amount(quantity, newCostCurrency, ""), costType)
-        result[index] = result[index].withAssertionCost(newCost)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setAssertionCostAmount(
-        index: Int,
-        newCostAmount: String,
-    ) {
-        val result = ArrayList(postings.value!!)
-        val costType = result[index].assertionCost?.type ?: CostType.UNIT
-        val currency = result[index].assertionCost?.amount?.currency ?: ""
-        val newCost = Cost(Amount(newCostAmount, currency, ""), costType)
-        result[index] = result[index].withAssertionCost(newCost)
-        _postings.value = filterPostings(result)
-    }
-
-    fun setComment(
-        index: Int,
-        newComment: String?,
-    ) {
-        val result = ArrayList(postings.value!!)
-        result[index] = result[index].withComment(newComment)
-        _postings.value = filterPostings(result)
+        val stored = postings.value ?: return
+        _postings.value = ArrayList(updatePostingAt(stored, index, ::newPosting, transform))
     }
 
     fun removePosting(index: Int) {
-        val result = ArrayList(postings.value!!)
-        result.removeAt(index)
-        _postings.value = filterPostings(result)
+        val stored = postings.value ?: return
+        _postings.value = ArrayList(removePostingAt(stored, index, ::newPosting))
     }
 
-    fun toggleAccount(
-        index: Int,
-        on: Boolean,
-    ) {
-        val result = ArrayList(postings.value!!)
-        result[index] = result[index].withAccount(if (on) "" else null)
-        if (!on) {
-            result[index] =
-                result[index]
-                    .withAmount(null)
-                    .withCost(null)
-                    .withAssertion(null)
-                    .withAssertionCost(null)
-        }
-        _postings.value = filterPostings(result)
-    }
-
-    fun toggleAmount(
-        index: Int,
-        on: Boolean,
-    ) {
-        val result = ArrayList(postings.value!!)
-        result[index] = result[index].withAmount(if (on) defaultAmount() else null)
-        _postings.value = filterPostings(result)
-    }
-
-    fun toggleCost(
-        index: Int,
-        on: Boolean,
-    ) {
-        val result = ArrayList(postings.value!!)
-        result[index] =
-            result[index].withCost(if (on) Cost(defaultAmount(), CostType.UNIT) else null)
-        _postings.value = filterPostings(result)
-    }
-
-    fun toggleAssertion(
-        index: Int,
-        on: Boolean,
-    ) {
-        val result = ArrayList(postings.value!!)
-        result[index] = result[index].withAssertion(if (on) defaultAmount() else null)
-        _postings.value = filterPostings(result)
-    }
-
-    fun toggleAssertionCost(
-        index: Int,
-        on: Boolean,
-    ) {
-        val result = ArrayList(postings.value!!)
-        result[index] =
-            result[index].withAssertionCost(if (on) Cost(defaultAmount(), CostType.UNIT) else null)
-        _postings.value = filterPostings(result)
-    }
-
-    fun toggleComment(
-        index: Int,
-        on: Boolean,
-    ) {
-        val result = ArrayList(postings.value!!)
-        result[index] = result[index].withComment(if (on) "" else null)
-        _postings.value = filterPostings(result)
-    }
-
-    fun filterPostings(postings: List<Posting>): ArrayList<Posting> {
-        val filteredResult = ArrayList<Posting>()
-        for (posting in postings) {
-            filteredResult.add(posting)
-        }
-
-        if (filteredResult.isNotEmpty() && filteredResult.last() != newPosting()) {
-            filteredResult.add(newPosting())
-        }
-        return filteredResult
-    }
+    fun filterPostings(postings: List<Posting>): ArrayList<Posting> =
+        ArrayList(withSentinel(postings, ::newPosting))
 
     protected fun templatePostings(): List<Posting> {
         val current = postings.value ?: return emptyList()
         if (current.isEmpty()) return current
-        val withoutSentinel =
-            if (current.last() == newPosting()) {
-                current.dropLast(1)
-            } else {
-                current
-            }
+        val withoutSentinel = current.dropLast(1)
         return withoutSentinel.filter {
             it.isVirtual() || it.isComment() || !it.account.isNullOrBlank()
         }
