@@ -1,40 +1,14 @@
 package ph.chrsrns.microledger.data
 
 import android.content.Context
-import android.net.Uri
 import androidx.core.content.edit
+import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.map
 import dagger.hilt.android.qualifiers.ApplicationContext
-import org.json.JSONArray
 import javax.inject.Inject
-
-const val FILE_URI_KEY = "file_uri"
-const val DECIMAL_SEPARATOR_KEY = "decimal_separator"
-const val DEFAULT_CURRENCY_KEY = "default_currency"
-const val DEFAULT_STATUS_KEY = "default_status"
-const val CURRENCY_BEFORE_AMOUNT_KEY = "currency_before_amount"
-const val POSTING_WIDTH_KEY = "posting_width"
-const val SPACING_BETWEEN_CURRENCY_AND_AMOUNT_KEY = "spacing_between_currency_and_amount"
-const val TRANSACTION_STATUS_PRESENT_BY_DEFAULT_KEY = "transaction_status_present_by_default"
-const val TRANSACTION_CODE_PRESENT_BY_DEFAULT_KEY = "transaction_code_present_by_default"
-const val TRANSACTION_PAYEE_PRESENT_BY_DEFAULT_KEY = "transaction_payee_present_by_default"
-const val TRANSACTION_NOTE_PRESENT_BY_DEFAULT_KEY = "transaction_note_present_by_default"
-const val TRANSACTION_CURRENCIES_PRESENT_BY_DEFAULT_KEY =
-    "transaction_currencies_present_by_default"
-const val POSTING_AMOUNT_PRESENT_BY_DEFAULT_KEY = "posting_amount_present_by_default"
-const val POSTING_COST_PRESENT_BY_DEFAULT_KEY = "posting_cost_present_by_default"
-const val POSTING_ASSERTION_PRESENT_BY_DEFAULT_KEY = "posting_assertion_present_by_default"
-const val POSTING_ASSERTION_COST_PRESENT_BY_DEFAULT_KEY =
-    "posting_assertion_cost_present_by_default"
-const val POSTING_COMMENT_PRESENT_BY_DEFAULT_KEY = "posting_comment_present_by_default"
-const val ASSETS_PREFIXES_KEY = "assets_prefixes"
-const val LIABILITIES_PREFIXES_KEY = "liabilities_prefixes"
-const val EQUITY_PREFIXES_KEY = "equity_prefixes"
-const val INCOME_PREFIXES_KEY = "income_prefixes"
-const val EXPENSES_PREFIXES_KEY = "expenses_prefixes"
 
 class PreferencesDataSource
     @Inject
@@ -47,284 +21,223 @@ class PreferencesDataSource
                 Context.MODE_PRIVATE,
             )
 
-        private val fileUriData = sharedPreferences.stringLiveData(FILE_URI_KEY)
-
-        val fileUri: LiveData<Uri?> = fileUriData.map { it?.toUri() }
-
-        fun getFileUri(): Uri? = sharedPreferences.getString(FILE_URI_KEY, null)?.toUri()
-
-        fun setFileUri(fileUri: Uri?) = sharedPreferences.edit { putString(FILE_URI_KEY, fileUri?.toString()) }
-
-        val defaultCurrency: LiveData<String> =
-            sharedPreferences
-                .stringLiveData(
-                    DEFAULT_CURRENCY_KEY,
-                    "€",
-                ).map { it!! }
-
-        fun getDefaultCurrency(): String = sharedPreferences.getString(DEFAULT_CURRENCY_KEY, "€")!!
-
-        fun setDefaultCurrency(currency: String) =
-            sharedPreferences.edit {
-                putString(
-                    DEFAULT_CURRENCY_KEY,
-                    currency,
-                )
-            }
-
-        val defaultStatus: LiveData<String> =
-            sharedPreferences
-                .stringLiveData(
-                    DEFAULT_STATUS_KEY,
-                    " ",
-                ).map { it!! }
-
-        fun getDefaultStatus(): String = sharedPreferences.getString(DEFAULT_STATUS_KEY, " ")!!
-
-        fun setDefaultStatus(status: String) =
-            sharedPreferences.edit {
-                putString(
-                    DEFAULT_STATUS_KEY,
-                    status,
-                )
-            }
-
-        val decimalSeparator: LiveData<String> =
-            sharedPreferences.stringLiveData(DECIMAL_SEPARATOR_KEY, ".").map { it!! }
-
-        fun getDecimalSeparator(): String = sharedPreferences.getString(DECIMAL_SEPARATOR_KEY, ".")!!
-
-        fun setDecimalSeparator(separator: String) = sharedPreferences.edit { putString(DECIMAL_SEPARATOR_KEY, separator) }
-
-        val currencyBeforeAmount: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(
-                CURRENCY_BEFORE_AMOUNT_KEY,
-                true,
+        private val fileUriPref =
+            Pref<Uri?>(
+                key = "file_uri",
+                default = null,
+                read = { k, _ -> getString(k, null)?.toUri() },
+                write = { k, v -> edit { putString(k, v?.toString()) } },
+                live = { k, _ -> stringLiveData(k, null).map { it?.toUri() } },
             )
 
-        fun getCurrencyBeforeAmount(): Boolean =
-            sharedPreferences.getBoolean(
-                CURRENCY_BEFORE_AMOUNT_KEY,
-                true,
-            )
+        val fileUri: LiveData<Uri?> = fileUriPref.liveData(sharedPreferences)
+
+        fun getFileUri(): Uri? = fileUriPref.read(sharedPreferences)
+
+        fun setFileUri(fileUri: Uri?) = fileUriPref.write(sharedPreferences, fileUri)
+
+        private val defaultCurrencyPref = stringPref("default_currency", "€")
+
+        val defaultCurrency: LiveData<String> = defaultCurrencyPref.liveData(sharedPreferences)
+
+        fun getDefaultCurrency(): String = defaultCurrencyPref.read(sharedPreferences)
+
+        fun setDefaultCurrency(currency: String) = defaultCurrencyPref.write(sharedPreferences, currency)
+
+        private val defaultStatusPref = stringPref("default_status", " ")
+
+        val defaultStatus: LiveData<String> = defaultStatusPref.liveData(sharedPreferences)
+
+        fun getDefaultStatus(): String = defaultStatusPref.read(sharedPreferences)
+
+        fun setDefaultStatus(status: String) = defaultStatusPref.write(sharedPreferences, status)
+
+        private val decimalSeparatorPref = stringPref("decimal_separator", ".")
+
+        val decimalSeparator: LiveData<String> = decimalSeparatorPref.liveData(sharedPreferences)
+
+        fun getDecimalSeparator(): String = decimalSeparatorPref.read(sharedPreferences)
+
+        fun setDecimalSeparator(separator: String) = decimalSeparatorPref.write(sharedPreferences, separator)
+
+        private val currencyBeforeAmountPref = booleanPref("currency_before_amount", true)
+
+        val currencyBeforeAmount: LiveData<Boolean> = currencyBeforeAmountPref.liveData(sharedPreferences)
+
+        fun getCurrencyBeforeAmount(): Boolean = currencyBeforeAmountPref.read(sharedPreferences)
 
         fun setCurrencyBeforeAmount(currencyBeforeAmount: Boolean) =
-            sharedPreferences.edit {
-                putBoolean(
-                    CURRENCY_BEFORE_AMOUNT_KEY,
-                    currencyBeforeAmount,
-                )
-            }
+            currencyBeforeAmountPref.write(sharedPreferences, currencyBeforeAmount)
 
-        val postingWidth: LiveData<Int> =
-            sharedPreferences.intLiveData(POSTING_WIDTH_KEY, 72).map { it }
+        private val postingWidthPref = intPref("posting_width", 72)
 
-        fun getPostingWidth(): Int = sharedPreferences.getInt(POSTING_WIDTH_KEY, 72)
+        val postingWidth: LiveData<Int> = postingWidthPref.liveData(sharedPreferences)
 
-        fun setPostingWidth(width: Int) = sharedPreferences.edit { putInt(POSTING_WIDTH_KEY, width) }
+        fun getPostingWidth(): Int = postingWidthPref.read(sharedPreferences)
+
+        fun setPostingWidth(width: Int) = postingWidthPref.write(sharedPreferences, width)
+
+        private val currencyAmountSpacingPref = booleanPref("spacing_between_currency_and_amount", true)
 
         val spacingBetweenCurrencyAndAmount: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(
-                SPACING_BETWEEN_CURRENCY_AND_AMOUNT_KEY,
-                true,
-            )
+            currencyAmountSpacingPref.liveData(sharedPreferences)
 
-        fun getCurrencyAmountSpacing(): Boolean = sharedPreferences.getBoolean(SPACING_BETWEEN_CURRENCY_AND_AMOUNT_KEY, true)
+        fun getCurrencyAmountSpacing(): Boolean = currencyAmountSpacingPref.read(sharedPreferences)
 
         fun setCurrencyAmountSpacing(spacing: Boolean) =
-            sharedPreferences.edit { putBoolean(SPACING_BETWEEN_CURRENCY_AND_AMOUNT_KEY, spacing) }
+            currencyAmountSpacingPref.write(sharedPreferences, spacing)
+
+        private val transactionStatusPresentByDefaultPref =
+            booleanPref("transaction_status_present_by_default", true)
 
         val transactionStatusPresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(TRANSACTION_STATUS_PRESENT_BY_DEFAULT_KEY, true)
+            transactionStatusPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getTransactionStatusPresentByDefault(): Boolean = sharedPreferences.getBoolean(TRANSACTION_STATUS_PRESENT_BY_DEFAULT_KEY, true)
+        fun getTransactionStatusPresentByDefault(): Boolean =
+            transactionStatusPresentByDefaultPref.read(sharedPreferences)
 
         fun setTransactionStatusPresentByDefault(status: Boolean) =
-            sharedPreferences.edit { putBoolean(TRANSACTION_STATUS_PRESENT_BY_DEFAULT_KEY, status) }
+            transactionStatusPresentByDefaultPref.write(sharedPreferences, status)
+
+        private val transactionCodePresentByDefaultPref =
+            booleanPref("transaction_code_present_by_default", false)
 
         val transactionCodePresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(TRANSACTION_CODE_PRESENT_BY_DEFAULT_KEY, false)
+            transactionCodePresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getTransactionCodePresentByDefault(): Boolean = sharedPreferences.getBoolean(TRANSACTION_CODE_PRESENT_BY_DEFAULT_KEY, false)
+        fun getTransactionCodePresentByDefault(): Boolean =
+            transactionCodePresentByDefaultPref.read(sharedPreferences)
 
         fun setTransactionCodePresentByDefault(code: Boolean) =
-            sharedPreferences.edit { putBoolean(TRANSACTION_CODE_PRESENT_BY_DEFAULT_KEY, code) }
+            transactionCodePresentByDefaultPref.write(sharedPreferences, code)
+
+        private val transactionPayeePresentByDefaultPref =
+            booleanPref("transaction_payee_present_by_default", true)
 
         val transactionPayeePresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(TRANSACTION_PAYEE_PRESENT_BY_DEFAULT_KEY, true)
+            transactionPayeePresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getTransactionPayeePresentByDefault(): Boolean = sharedPreferences.getBoolean(TRANSACTION_PAYEE_PRESENT_BY_DEFAULT_KEY, true)
+        fun getTransactionPayeePresentByDefault(): Boolean =
+            transactionPayeePresentByDefaultPref.read(sharedPreferences)
 
         fun setTransactionPayeePresentByDefault(payee: Boolean) =
-            sharedPreferences.edit { putBoolean(TRANSACTION_PAYEE_PRESENT_BY_DEFAULT_KEY, payee) }
+            transactionPayeePresentByDefaultPref.write(sharedPreferences, payee)
+
+        private val transactionNotePresentByDefaultPref =
+            booleanPref("transaction_note_present_by_default", true)
 
         val transactionNotePresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(TRANSACTION_NOTE_PRESENT_BY_DEFAULT_KEY, true)
+            transactionNotePresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getTransactionNotePresentByDefault(): Boolean = sharedPreferences.getBoolean(TRANSACTION_NOTE_PRESENT_BY_DEFAULT_KEY, true)
+        fun getTransactionNotePresentByDefault(): Boolean =
+            transactionNotePresentByDefaultPref.read(sharedPreferences)
 
         fun setTransactionNotePresentByDefault(note: Boolean) =
-            sharedPreferences.edit { putBoolean(TRANSACTION_NOTE_PRESENT_BY_DEFAULT_KEY, note) }
+            transactionNotePresentByDefaultPref.write(sharedPreferences, note)
+
+        private val transactionCurrenciesPresentByDefaultPref =
+            booleanPref("transaction_currencies_present_by_default", true)
 
         val transactionCurrenciesPresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(TRANSACTION_CURRENCIES_PRESENT_BY_DEFAULT_KEY, true)
+            transactionCurrenciesPresentByDefaultPref.liveData(sharedPreferences)
 
         fun getTransactionCurrenciesPresentByDefault(): Boolean =
-            sharedPreferences.getBoolean(TRANSACTION_CURRENCIES_PRESENT_BY_DEFAULT_KEY, true)
+            transactionCurrenciesPresentByDefaultPref.read(sharedPreferences)
 
         fun setTransactionCurrenciesPresentByDefault(currencies: Boolean) =
-            sharedPreferences.edit {
-                putBoolean(
-                    TRANSACTION_CURRENCIES_PRESENT_BY_DEFAULT_KEY,
-                    currencies,
-                )
-            }
+            transactionCurrenciesPresentByDefaultPref.write(sharedPreferences, currencies)
+
+        private val postingAmountPresentByDefaultPref =
+            booleanPref("posting_amount_present_by_default", true)
 
         val postingAmountPresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(POSTING_AMOUNT_PRESENT_BY_DEFAULT_KEY, true)
+            postingAmountPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getPostingAmountPresentByDefault(): Boolean = sharedPreferences.getBoolean(POSTING_AMOUNT_PRESENT_BY_DEFAULT_KEY, true)
+        fun getPostingAmountPresentByDefault(): Boolean =
+            postingAmountPresentByDefaultPref.read(sharedPreferences)
 
         fun setPostingAmountPresentByDefault(amount: Boolean) =
-            sharedPreferences.edit { putBoolean(POSTING_AMOUNT_PRESENT_BY_DEFAULT_KEY, amount) }
+            postingAmountPresentByDefaultPref.write(sharedPreferences, amount)
+
+        private val postingCostPresentByDefaultPref =
+            booleanPref("posting_cost_present_by_default", false)
 
         val postingCostPresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(POSTING_COST_PRESENT_BY_DEFAULT_KEY, false)
+            postingCostPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getPostingCostPresentByDefault(): Boolean = sharedPreferences.getBoolean(POSTING_COST_PRESENT_BY_DEFAULT_KEY, false)
+        fun getPostingCostPresentByDefault(): Boolean =
+            postingCostPresentByDefaultPref.read(sharedPreferences)
 
-        fun setPostingCostPresentByDefault(cost: Boolean) = sharedPreferences.edit { putBoolean(POSTING_COST_PRESENT_BY_DEFAULT_KEY, cost) }
+        fun setPostingCostPresentByDefault(cost: Boolean) =
+            postingCostPresentByDefaultPref.write(sharedPreferences, cost)
+
+        private val postingAssertionPresentByDefaultPref =
+            booleanPref("posting_assertion_present_by_default", false)
 
         val postingAssertionPresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(POSTING_ASSERTION_PRESENT_BY_DEFAULT_KEY, false)
+            postingAssertionPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getPostingAssertionPresentByDefault(): Boolean = sharedPreferences.getBoolean(POSTING_ASSERTION_PRESENT_BY_DEFAULT_KEY, false)
+        fun getPostingAssertionPresentByDefault(): Boolean =
+            postingAssertionPresentByDefaultPref.read(sharedPreferences)
 
         fun setPostingAssertionPresentByDefault(assertion: Boolean) =
-            sharedPreferences.edit { putBoolean(POSTING_ASSERTION_PRESENT_BY_DEFAULT_KEY, assertion) }
+            postingAssertionPresentByDefaultPref.write(sharedPreferences, assertion)
+
+        private val postingAssertionCostPresentByDefaultPref =
+            booleanPref("posting_assertion_cost_present_by_default", false)
 
         val postingAssertionCostPresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(POSTING_ASSERTION_COST_PRESENT_BY_DEFAULT_KEY, false)
+            postingAssertionCostPresentByDefaultPref.liveData(sharedPreferences)
 
         fun getPostingAssertionCostPresentByDefault(): Boolean =
-            sharedPreferences.getBoolean(POSTING_ASSERTION_COST_PRESENT_BY_DEFAULT_KEY, false)
+            postingAssertionCostPresentByDefaultPref.read(sharedPreferences)
 
         fun setPostingAssertionCostPresentByDefault(assertionCost: Boolean) =
-            sharedPreferences.edit {
-                putBoolean(
-                    POSTING_ASSERTION_COST_PRESENT_BY_DEFAULT_KEY,
-                    assertionCost,
-                )
-            }
+            postingAssertionCostPresentByDefaultPref.write(sharedPreferences, assertionCost)
+
+        private val postingCommentPresentByDefaultPref =
+            booleanPref("posting_comment_present_by_default", false)
 
         val postingCommentPresentByDefault: LiveData<Boolean> =
-            sharedPreferences.booleanLiveData(POSTING_COMMENT_PRESENT_BY_DEFAULT_KEY, false)
+            postingCommentPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getPostingCommentPresentByDefault(): Boolean = sharedPreferences.getBoolean(POSTING_COMMENT_PRESENT_BY_DEFAULT_KEY, false)
+        fun getPostingCommentPresentByDefault(): Boolean =
+            postingCommentPresentByDefaultPref.read(sharedPreferences)
 
         fun setPostingCommentPresentByDefault(comment: Boolean) =
-            sharedPreferences.edit { putBoolean(POSTING_COMMENT_PRESENT_BY_DEFAULT_KEY, comment) }
+            postingCommentPresentByDefaultPref.write(sharedPreferences, comment)
 
-        private fun parseJsonStringList(json: String): List<String> {
-            val array = JSONArray(json)
-            return (0 until array.length()).map { array.getString(it) }
-        }
+        private val assetsPrefixesPref = stringListPref("assets_prefixes", listOf("Assets"))
+        private val liabilitiesPrefixesPref = stringListPref("liabilities_prefixes", listOf("Liabilities"))
+        private val equityPrefixesPref = stringListPref("equity_prefixes", listOf("Equity"))
+        private val incomePrefixesPref = stringListPref("income_prefixes", listOf("Income"))
+        private val expensesPrefixesPref = stringListPref("expenses_prefixes", listOf("Expenses"))
 
-        private fun serializeStringList(list: List<String>): String {
-            val array = JSONArray()
-            list.forEach { array.put(it) }
-            return array.toString()
-        }
+        val assetsPrefixes: LiveData<List<String>> = assetsPrefixesPref.liveData(sharedPreferences)
+        val liabilitiesPrefixes: LiveData<List<String>> = liabilitiesPrefixesPref.liveData(sharedPreferences)
+        val equityPrefixes: LiveData<List<String>> = equityPrefixesPref.liveData(sharedPreferences)
+        val incomePrefixes: LiveData<List<String>> = incomePrefixesPref.liveData(sharedPreferences)
+        val expensesPrefixes: LiveData<List<String>> = expensesPrefixesPref.liveData(sharedPreferences)
 
-        private fun defaultPrefixesJson(default: String) = serializeStringList(listOf(default))
+        fun getAssetsPrefixes(): List<String> = assetsPrefixesPref.read(sharedPreferences)
 
-        val assetsPrefixes: LiveData<List<String>> =
-            sharedPreferences
-                .stringLiveData(
-                    ASSETS_PREFIXES_KEY,
-                    defaultPrefixesJson("Assets"),
-                ).map { parseJsonStringList(it!!) }
+        fun setAssetsPrefixes(prefixes: List<String>) = assetsPrefixesPref.write(sharedPreferences, prefixes)
 
-        fun getAssetsPrefixes(): List<String> =
-            parseJsonStringList(
-                sharedPreferences.getString(ASSETS_PREFIXES_KEY, defaultPrefixesJson("Assets"))!!,
-            )
+        fun getLiabilitiesPrefixes(): List<String> = liabilitiesPrefixesPref.read(sharedPreferences)
 
-        fun setAssetsPrefixes(prefixes: List<String>) =
-            sharedPreferences.edit {
-                putString(ASSETS_PREFIXES_KEY, serializeStringList(prefixes))
-            }
+        fun setLiabilitiesPrefixes(prefixes: List<String>) = liabilitiesPrefixesPref.write(sharedPreferences, prefixes)
 
-        val liabilitiesPrefixes: LiveData<List<String>> =
-            sharedPreferences
-                .stringLiveData(
-                    LIABILITIES_PREFIXES_KEY,
-                    defaultPrefixesJson("Liabilities"),
-                ).map { parseJsonStringList(it!!) }
+        fun getEquityPrefixes(): List<String> = equityPrefixesPref.read(sharedPreferences)
 
-        fun getLiabilitiesPrefixes(): List<String> =
-            parseJsonStringList(
-                sharedPreferences.getString(
-                    LIABILITIES_PREFIXES_KEY,
-                    defaultPrefixesJson("Liabilities"),
-                )!!,
-            )
+        fun setEquityPrefixes(prefixes: List<String>) = equityPrefixesPref.write(sharedPreferences, prefixes)
 
-        fun setLiabilitiesPrefixes(prefixes: List<String>) =
-            sharedPreferences.edit {
-                putString(LIABILITIES_PREFIXES_KEY, serializeStringList(prefixes))
-            }
+        fun getIncomePrefixes(): List<String> = incomePrefixesPref.read(sharedPreferences)
 
-        val equityPrefixes: LiveData<List<String>> =
-            sharedPreferences
-                .stringLiveData(
-                    EQUITY_PREFIXES_KEY,
-                    defaultPrefixesJson("Equity"),
-                ).map { parseJsonStringList(it!!) }
+        fun setIncomePrefixes(prefixes: List<String>) = incomePrefixesPref.write(sharedPreferences, prefixes)
 
-        fun getEquityPrefixes(): List<String> =
-            parseJsonStringList(
-                sharedPreferences.getString(EQUITY_PREFIXES_KEY, defaultPrefixesJson("Equity"))!!,
-            )
+        fun getExpensesPrefixes(): List<String> = expensesPrefixesPref.read(sharedPreferences)
 
-        fun setEquityPrefixes(prefixes: List<String>) =
-            sharedPreferences.edit {
-                putString(EQUITY_PREFIXES_KEY, serializeStringList(prefixes))
-            }
-
-        val incomePrefixes: LiveData<List<String>> =
-            sharedPreferences
-                .stringLiveData(
-                    INCOME_PREFIXES_KEY,
-                    defaultPrefixesJson("Income"),
-                ).map { parseJsonStringList(it!!) }
-
-        fun getIncomePrefixes(): List<String> =
-            parseJsonStringList(
-                sharedPreferences.getString(INCOME_PREFIXES_KEY, defaultPrefixesJson("Income"))!!,
-            )
-
-        fun setIncomePrefixes(prefixes: List<String>) =
-            sharedPreferences.edit {
-                putString(INCOME_PREFIXES_KEY, serializeStringList(prefixes))
-            }
-
-        val expensesPrefixes: LiveData<List<String>> =
-            sharedPreferences
-                .stringLiveData(
-                    EXPENSES_PREFIXES_KEY,
-                    defaultPrefixesJson("Expenses"),
-                ).map { parseJsonStringList(it!!) }
-
-        fun getExpensesPrefixes(): List<String> =
-            parseJsonStringList(
-                sharedPreferences.getString(EXPENSES_PREFIXES_KEY, defaultPrefixesJson("Expenses"))!!,
-            )
-
-        fun setExpensesPrefixes(prefixes: List<String>) =
-            sharedPreferences.edit {
-                putString(EXPENSES_PREFIXES_KEY, serializeStringList(prefixes))
-            }
+        fun setExpensesPrefixes(prefixes: List<String>) = expensesPrefixesPref.write(sharedPreferences, prefixes)
 
         val reportingPreferences: LiveData<ReportingPreferences> =
             MediatorLiveData<ReportingPreferences>().apply {
