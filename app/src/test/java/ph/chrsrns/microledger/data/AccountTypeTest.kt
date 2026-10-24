@@ -5,6 +5,19 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class AccountTypeTest {
+    @Test
+    fun normalBalanceSignDebitNormal() {
+        assertEquals(1, normalBalanceSign(AccountType.ASSETS))
+        assertEquals(1, normalBalanceSign(AccountType.EXPENSES))
+    }
+
+    @Test
+    fun normalBalanceSignCreditNormal() {
+        assertEquals(-1, normalBalanceSign(AccountType.LIABILITIES))
+        assertEquals(-1, normalBalanceSign(AccountType.EQUITY))
+        assertEquals(-1, normalBalanceSign(AccountType.INCOME))
+    }
+
     private val prefixes =
         AccountTypePrefixes(
             assets = listOf("Assets"),
