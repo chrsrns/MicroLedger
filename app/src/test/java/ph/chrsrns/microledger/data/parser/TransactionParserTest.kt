@@ -534,4 +534,27 @@ class TransactionParserTest {
         assertEquals("", amount.quantity)
         assertEquals("", amount.currency)
     }
+
+    @Test
+    fun strictAmountRejectsCurrencyOnly() {
+        val amount = extractAmount("EUR")
+        assertEquals("EUR", amount.original)
+        assertEquals("", amount.quantity)
+        assertEquals("", amount.currency)
+    }
+
+    @Test
+    fun lenientAmountAcceptsCurrencyOnly() {
+        val amount = extractAmount("EUR", lenient = true)
+        assertEquals("EUR", amount.original)
+        assertEquals("", amount.quantity)
+        assertEquals("EUR", amount.currency)
+    }
+
+    @Test
+    fun lenientAmountStillParsesQuantities() {
+        val amount = extractAmount("10.00 EUR", lenient = true)
+        assertEquals("10.00", amount.quantity)
+        assertEquals("EUR", amount.currency)
+    }
 }
