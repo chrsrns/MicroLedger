@@ -13,6 +13,7 @@ import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.data.reporting.ReportingInputs
+import ph.chrsrns.microledger.ui.util.reportingLiveData
 import javax.inject.Inject
 
 @HiltViewModel
@@ -37,15 +38,10 @@ class AccountTransactionsViewModel
         val selectedCurrency: LiveData<String?> = _selectedCurrency
 
         val accountBalances: LiveData<AccountBalanceCalculator.AccountBalancesResult> =
-            MediatorLiveData<AccountBalanceCalculator.AccountBalancesResult>().apply {
-                fun compute() {
-                    val transactions = ledgerRepository.transactions.value ?: return
-                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
-                    value = accountBalanceCalculator.calculate(ReportingInputs(transactions, preferences))
-                }
-                addSource(ledgerRepository.transactions) { compute() }
-                addSource(preferencesDataSource.reportingPreferences) { compute() }
-            }
+            reportingLiveData(
+                ledgerRepository.transactions,
+                preferencesDataSource.reportingPreferences,
+            ) { accountBalanceCalculator.calculate(it) }
 
         val accountTransactions: LiveData<List<Transaction>> =
             MediatorLiveData<List<Transaction>>().apply {
