@@ -3,6 +3,7 @@ package ph.chrsrns.microledger.ui.common
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
 import androidx.lifecycle.switchMap
@@ -111,39 +112,52 @@ abstract class TransactionFormViewModel(
     val postings: LiveData<List<Posting>> = _postings
     val accounts: LiveData<List<String>> = ledgerRepository.accounts.map { it.sorted() }
     val unbalancedAmount: LiveData<String> =
-        postings.map { ps ->
-            val relevantPostings =
-                ps.filter { p ->
-                    !p.isVirtual() && !p.isComment() && !p.account.isNullOrBlank()
-                }
-            if (relevantPostings.any { it.assertion != null && it.amount == null }) return@map ""
-            if (relevantPostings.any { it.cost != null }) return@map ""
-            if (relevantPostings
-                    .mapNotNull { p -> p.amount }
-                    .map { it.currency }
-                    .distinct()
-                    .count() > 1
-            ) {
-                return@map ""
-            }
-
-            relevantPostings
-                .mapNotNull { p -> p.amount }
-                .map { p -> p.quantity }
-                .map { quantity ->
-                    parseQuantity(quantity, preferencesDataSource.getDecimalSeparator())
-                }.fold(BigDecimal.ZERO) { l, r -> l + r }
-                .negate()
-                .let { num ->
-                    if (num == BigDecimal.ZERO.setScale(num.scale())) {
-                        ""
-                    } else {
-                        num.toString().replace(
-                            ".",
-                            preferencesDataSource.getDecimalSeparator(),
-                        )
+        MediatorLiveData<String>().apply {
+            fun compute() {
+                val ps = postings.value ?: return
+                val relevantPostings =
+                    ps.filter { p ->
+                        !p.isVirtual() && !p.isComment() && !p.account.isNullOrBlank()
                     }
+                if (relevantPostings.any { it.assertion != null && it.amount == null }) {
+                    value = ""
+                    return
                 }
+                if (relevantPostings.any { it.cost != null }) {
+                    value = ""
+                    return
+                }
+                if (relevantPostings
+                        .mapNotNull { p -> p.amount }
+                        .map { it.currency }
+                        .distinct()
+                        .count() > 1
+                ) {
+                    value = ""
+                    return
+                }
+
+                value =
+                    relevantPostings
+                        .mapNotNull { p -> p.amount }
+                        .map { p -> p.quantity }
+                        .map { quantity ->
+                            parseQuantity(quantity, preferencesDataSource.getDecimalSeparator())
+                        }.fold(BigDecimal.ZERO) { l, r -> l + r }
+                        .negate()
+                        .let { num ->
+                            if (num == BigDecimal.ZERO.setScale(num.scale())) {
+                                ""
+                            } else {
+                                num.toString().replace(
+                                    ".",
+                                    preferencesDataSource.getDecimalSeparator(),
+                                )
+                            }
+                        }
+            }
+            addSource(postings) { compute() }
+            addSource(preferencesDataSource.decimalSeparator) { compute() }
         }
 
     val valid: LiveData<Boolean> =
