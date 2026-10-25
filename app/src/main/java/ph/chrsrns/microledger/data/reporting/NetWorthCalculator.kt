@@ -27,32 +27,16 @@ class NetWorthCalculator {
      *   sorted by currency; currencies are never summed across each other
      */
     fun calculate(inputs: ReportingInputs): List<CurrencyNetWorth> {
-        val decimalSeparator = inputs.preferences.decimalSeparator
-        val prefixes = inputs.preferences.prefixes
-
         // currency -> (totalAssets, totalLiabilities)
         val totals = mutableMapOf<String, Pair<BigDecimal, BigDecimal>>()
 
-        for (transaction in inputs.transactions) {
-            for (posting in materializeElidedAmounts(transaction, decimalSeparator).postings) {
-                val amount = posting.amount ?: continue
-                val account = posting.account ?: continue
-                val quantity = parseQuantity(amount.quantity, decimalSeparator)
-                val (assets, liabilities) = totals[amount.currency] ?: (BigDecimal.ZERO to BigDecimal.ZERO)
-
-                when (prefixes.classify(account)) {
-                    AccountType.ASSETS -> {
-                        totals[amount.currency] = (assets + quantity) to liabilities
-                    }
-
-                    AccountType.LIABILITIES -> {
-                        // Liabilities are stored as negative in postings (credits)
-                        // We treat them as positive amounts for net worth calculation
-                        totals[amount.currency] = assets to (liabilities + quantity.negate())
-                    }
-
-                    else -> {}
-                }
+        forEachClassifiedAmount(inputs) { _, posting, type, quantity ->
+            val currency = posting.amount?.currency ?: return@forEachClassifiedAmount
+            val (assets, liabilities) = totals[currency] ?: (BigDecimal.ZERO to BigDecimal.ZERO)
+            when (type) {
+                AccountType.ASSETS -> totals[currency] = (assets + quantity) to liabilities
+                AccountType.LIABILITIES -> totals[currency] = assets to (liabilities + quantity)
+                else -> {}
             }
         }
 

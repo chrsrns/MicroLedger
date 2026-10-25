@@ -36,41 +36,28 @@ class MonthlyCashFlowCalculator {
         year: Int,
         month: Int,
     ): CashFlowResult {
-        val decimalSeparator = inputs.preferences.decimalSeparator
-        val prefixes = inputs.preferences.prefixes
         val period = String.format(Locale.US, "%04d-%02d", year, month)
         var totalIncome = BigDecimal.ZERO
         var totalExpenses = BigDecimal.ZERO
         val incomeTransactionSet = mutableSetOf<Transaction>()
         val expenseTransactionSet = mutableSetOf<Transaction>()
 
-        for (transaction in inputs.transactions) {
+        forEachClassifiedAmount(inputs) { transaction, _, type, quantity ->
             if (!isTransactionInMonth(transaction.date, year, month)) {
-                continue
+                return@forEachClassifiedAmount
             }
-
-            for (posting in materializeElidedAmounts(transaction, decimalSeparator).postings) {
-                val amount = posting.amount ?: continue
-                val account = posting.account ?: continue
-                val quantity = parseQuantity(amount.quantity, decimalSeparator)
-
-                when (prefixes.classify(account)) {
-                    AccountType.INCOME -> {
-                        // Income postings are credits (negative amounts in ledger)
-                        // Display as positive for cash flow
-                        totalIncome += quantity.negate()
-                        incomeTransactionSet.add(transaction)
-                    }
-
-                    AccountType.EXPENSES -> {
-                        // Expense postings are debits (positive amounts in ledger)
-                        // Keep as positive for cash flow
-                        totalExpenses += quantity
-                        expenseTransactionSet.add(transaction)
-                    }
-
-                    else -> {}
+            when (type) {
+                AccountType.INCOME -> {
+                    totalIncome += quantity
+                    incomeTransactionSet.add(transaction)
                 }
+
+                AccountType.EXPENSES -> {
+                    totalExpenses += quantity
+                    expenseTransactionSet.add(transaction)
+                }
+
+                else -> {}
             }
         }
 

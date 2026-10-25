@@ -64,6 +64,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.R
 import ph.chrsrns.microledger.data.Amount
+import ph.chrsrns.microledger.data.Cost
 import ph.chrsrns.microledger.data.CostType
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.ui.common.CodeField
@@ -71,6 +72,22 @@ import ph.chrsrns.microledger.ui.common.NoteSelector
 import ph.chrsrns.microledger.ui.common.PayeeSelector
 import ph.chrsrns.microledger.ui.common.PostingRow
 import ph.chrsrns.microledger.ui.common.StatusSelector
+import ph.chrsrns.microledger.ui.common.withAccountEnabled
+import ph.chrsrns.microledger.ui.common.withAmountEnabled
+import ph.chrsrns.microledger.ui.common.withAssertionCostCurrency
+import ph.chrsrns.microledger.ui.common.withAssertionCostEnabled
+import ph.chrsrns.microledger.ui.common.withAssertionCostQuantity
+import ph.chrsrns.microledger.ui.common.withAssertionCostType
+import ph.chrsrns.microledger.ui.common.withAssertionCurrency
+import ph.chrsrns.microledger.ui.common.withAssertionEnabled
+import ph.chrsrns.microledger.ui.common.withAssertionQuantity
+import ph.chrsrns.microledger.ui.common.withCommentEnabled
+import ph.chrsrns.microledger.ui.common.withCostCurrency
+import ph.chrsrns.microledger.ui.common.withCostEnabled
+import ph.chrsrns.microledger.ui.common.withCostQuantity
+import ph.chrsrns.microledger.ui.common.withCostType
+import ph.chrsrns.microledger.ui.common.withCurrency
+import ph.chrsrns.microledger.ui.common.withQuantity
 import ph.chrsrns.microledger.ui.theme.MicroLedgerTheme
 
 const val EDIT_TEMPLATE_ID_KEY = "edit_template_id"
@@ -262,30 +279,37 @@ fun TemplateForm(
         currencyEnabled = currencyEnabled,
         currencyBeforeAmount = currencyBeforeAmount,
         unbalancedAmount = unbalancedAmount,
-        onPostingCommentChange = { i, it -> viewModel.setComment(i, it) },
-        onPostingAccountChange = { i, it -> viewModel.setAccount(i, it) },
+        onPostingCommentChange = { i, it -> viewModel.updatePosting(i) { p -> p.withComment(it) } },
+        onPostingAccountChange = { i, it -> viewModel.updatePosting(i) { p -> p.withAccount(it) } },
         onRemovePosting = { viewModel.removePosting(it) },
-        onPostingCurrencyChange = { i, it -> viewModel.setCurrency(i, it) },
-        onPostingAmountChange = { i, it -> viewModel.setAmount(i, it) },
-        onPostingCostTypeChange = { i, it -> viewModel.setCostType(i, it) },
-        onPostingCostCurrencyChange = { i, it -> viewModel.setCostCurrency(i, it) },
-        onPostingCostAmountChange = { i, it -> viewModel.setCostAmount(i, it) },
-        onPostingAssertionCurrencyChange = { i, it -> viewModel.setAssertionCurrency(i, it) },
-        onPostingAssertionAmountChange = { i, it -> viewModel.setAssertionAmount(i, it) },
-        onPostingAssertionCostTypeChange = { i, it -> viewModel.setAssertionCostType(i, it) },
+        onPostingCurrencyChange = { i, it -> viewModel.updatePosting(i) { p -> p.withCurrency(it) } },
+        onPostingAmountChange = { i, it -> viewModel.updatePosting(i) { p -> p.withQuantity(it) } },
+        onPostingCostTypeChange = { i, it -> viewModel.updatePosting(i) { p -> p.withCostType(it) } },
+        onPostingCostCurrencyChange = { i, it -> viewModel.updatePosting(i) { p -> p.withCostCurrency(it) } },
+        onPostingCostAmountChange = { i, it -> viewModel.updatePosting(i) { p -> p.withCostQuantity(it) } },
+        onPostingAssertionCurrencyChange = { i, it -> viewModel.updatePosting(i) { p -> p.withAssertionCurrency(it) } },
+        onPostingAssertionAmountChange = { i, it -> viewModel.updatePosting(i) { p -> p.withAssertionQuantity(it) } },
+        onPostingAssertionCostTypeChange = { i, it -> viewModel.updatePosting(i) { p -> p.withAssertionCostType(it) } },
         onPostingAssertionCostCurrencyChange = { i, it ->
-            viewModel.setAssertionCostCurrency(
-                i,
-                it,
-            )
+            viewModel.updatePosting(i) { p -> p.withAssertionCostCurrency(it) }
         },
-        onPostingAssertionCostAmountChange = { i, it -> viewModel.setAssertionCostAmount(i, it) },
-        onPostingToggleAccount = { i, it -> viewModel.toggleAccount(i, it) },
-        onPostingToggleAmount = { i, it -> viewModel.toggleAmount(i, it) },
-        onPostingToggleCost = { i, it -> viewModel.toggleCost(i, it) },
-        onPostingToggleAssertion = { i, it -> viewModel.toggleAssertion(i, it) },
-        onPostingToggleAssertionCost = { i, it -> viewModel.toggleAssertionCost(i, it) },
-        onPostingToggleComment = { i, it -> viewModel.toggleComment(i, it) },
+        onPostingAssertionCostAmountChange = { i, it -> viewModel.updatePosting(i) { p -> p.withAssertionCostQuantity(it) } },
+        onPostingToggleAccount = { i, it -> viewModel.updatePosting(i) { p -> p.withAccountEnabled(it) } },
+        onPostingToggleAmount = { i, it ->
+            viewModel.updatePosting(i) { p -> p.withAmountEnabled(it, viewModel.defaultAmount()) }
+        },
+        onPostingToggleCost = { i, it ->
+            viewModel.updatePosting(i) { p -> p.withCostEnabled(it, Cost(viewModel.defaultAmount(), CostType.UNIT)) }
+        },
+        onPostingToggleAssertion = { i, it ->
+            viewModel.updatePosting(i) { p -> p.withAssertionEnabled(it, viewModel.defaultAmount()) }
+        },
+        onPostingToggleAssertionCost = { i, it ->
+            viewModel.updatePosting(i) { p ->
+                p.withAssertionCostEnabled(it, Cost(viewModel.defaultAmount(), CostType.UNIT))
+            }
+        },
+        onPostingToggleComment = { i, it -> viewModel.updatePosting(i) { p -> p.withCommentEnabled(it) } },
         templateName = templateName,
         onTemplateNameChange = onTemplateNameChange,
         contentPadding = contentPadding,

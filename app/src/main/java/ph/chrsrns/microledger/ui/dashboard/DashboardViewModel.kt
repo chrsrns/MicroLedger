@@ -4,7 +4,6 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ph.chrsrns.microledger.data.LedgerRepository
@@ -12,8 +11,8 @@ import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import ph.chrsrns.microledger.data.reporting.NetWorthCalculator
-import ph.chrsrns.microledger.data.reporting.ReportingInputs
 import ph.chrsrns.microledger.di.MonthProvider
+import ph.chrsrns.microledger.ui.util.reportingLiveData
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,41 +34,23 @@ class DashboardViewModel
             preferencesDataSource.reportingPreferences.map { it.decimalSeparator }
 
         val netWorth: LiveData<List<NetWorthCalculator.CurrencyNetWorth>> =
-            MediatorLiveData<List<NetWorthCalculator.CurrencyNetWorth>>().apply {
-                fun compute() {
-                    val transactions = ledgerRepository.transactions.value ?: return
-                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
-                    value = netWorthCalculator.calculate(ReportingInputs(transactions, preferences))
-                }
-                addSource(ledgerRepository.transactions) { compute() }
-                addSource(preferencesDataSource.reportingPreferences) { compute() }
-            }
+            reportingLiveData(
+                ledgerRepository.transactions,
+                preferencesDataSource.reportingPreferences,
+            ) { netWorthCalculator.calculate(it) }
 
         val accountBalances: LiveData<AccountBalanceCalculator.AccountBalancesResult> =
-            MediatorLiveData<AccountBalanceCalculator.AccountBalancesResult>().apply {
-                fun compute() {
-                    val transactions = ledgerRepository.transactions.value ?: return
-                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
-                    value = accountBalanceCalculator.calculate(ReportingInputs(transactions, preferences))
-                }
-                addSource(ledgerRepository.transactions) { compute() }
-                addSource(preferencesDataSource.reportingPreferences) { compute() }
-            }
+            reportingLiveData(
+                ledgerRepository.transactions,
+                preferencesDataSource.reportingPreferences,
+            ) { accountBalanceCalculator.calculate(it) }
 
         val currentMonthCashFlow: LiveData<MonthlyCashFlowCalculator.CashFlowResult> =
-            MediatorLiveData<MonthlyCashFlowCalculator.CashFlowResult>().apply {
-                fun compute() {
-                    val transactions = ledgerRepository.transactions.value ?: return
-                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
-                    val current = monthProvider.current()
-                    value =
-                        cashFlowCalculator.calculateForMonth(
-                            ReportingInputs(transactions, preferences),
-                            current.year,
-                            current.month,
-                        )
-                }
-                addSource(ledgerRepository.transactions) { compute() }
-                addSource(preferencesDataSource.reportingPreferences) { compute() }
+            reportingLiveData(
+                ledgerRepository.transactions,
+                preferencesDataSource.reportingPreferences,
+            ) {
+                val current = monthProvider.current()
+                cashFlowCalculator.calculateForMonth(it, current.year, current.month)
             }
     }

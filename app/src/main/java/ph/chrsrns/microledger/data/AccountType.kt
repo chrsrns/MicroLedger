@@ -8,6 +8,21 @@ enum class AccountType {
     EXPENSES,
 }
 
+// V116 orientation: debit-normal accounts keep raw posting sign,
+// credit-normal negate. Applies inside forEachClassifiedAmount;
+// distinct from displaySign (oriented -> display).
+fun normalBalanceSign(type: AccountType): Int =
+    when (type) {
+        AccountType.ASSETS,
+        AccountType.EXPENSES,
+        -> 1
+
+        AccountType.LIABILITIES,
+        AccountType.EQUITY,
+        AccountType.INCOME,
+        -> -1
+    }
+
 fun displaySign(type: AccountType): Int =
     when (type) {
         AccountType.ASSETS,

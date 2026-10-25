@@ -3,7 +3,6 @@ package ph.chrsrns.microledger.ui.cashflowtransactions
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,8 +11,8 @@ import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
-import ph.chrsrns.microledger.data.reporting.ReportingInputs
 import ph.chrsrns.microledger.di.MonthProvider
+import ph.chrsrns.microledger.ui.util.reportingLiveData
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,44 +41,27 @@ class CashFlowTransactionsViewModel
         val selectedMonth: LiveData<Int> = _selectedMonth
 
         val currentMonthCashFlow: LiveData<MonthlyCashFlowCalculator.CashFlowResult> =
-            MediatorLiveData<MonthlyCashFlowCalculator.CashFlowResult>().apply {
-                fun compute() {
-                    val transactions = ledgerRepository.transactions.value ?: return
-                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
-                    val year = _selectedYear.value ?: return
-                    val month = _selectedMonth.value ?: return
-                    value =
-                        cashFlowCalculator.calculateForMonth(
-                            ReportingInputs(transactions, preferences),
-                            year,
-                            month,
-                        )
-                }
-                addSource(ledgerRepository.transactions) { compute() }
-                addSource(preferencesDataSource.reportingPreferences) { compute() }
-                addSource(_selectedYear) { compute() }
-                addSource(_selectedMonth) { compute() }
+            reportingLiveData(
+                ledgerRepository.transactions,
+                preferencesDataSource.reportingPreferences,
+                _selectedYear,
+                _selectedMonth,
+            ) { inputs ->
+                val year = _selectedYear.value ?: return@reportingLiveData null
+                val month = _selectedMonth.value ?: return@reportingLiveData null
+                cashFlowCalculator.calculateForMonth(inputs, year, month)
             }
 
         val monthlyHistory: LiveData<List<MonthlyCashFlowCalculator.CashFlowResult>> =
-            MediatorLiveData<List<MonthlyCashFlowCalculator.CashFlowResult>>().apply {
-                fun compute() {
-                    val transactions = ledgerRepository.transactions.value ?: return
-                    val preferences = preferencesDataSource.reportingPreferences.value ?: return
-                    val year = _selectedYear.value ?: return
-                    val month = _selectedMonth.value ?: return
-                    value =
-                        cashFlowCalculator.calculateRollingWindow(
-                            ReportingInputs(transactions, preferences),
-                            year,
-                            month,
-                            12,
-                        )
-                }
-                addSource(ledgerRepository.transactions) { compute() }
-                addSource(preferencesDataSource.reportingPreferences) { compute() }
-                addSource(_selectedYear) { compute() }
-                addSource(_selectedMonth) { compute() }
+            reportingLiveData(
+                ledgerRepository.transactions,
+                preferencesDataSource.reportingPreferences,
+                _selectedYear,
+                _selectedMonth,
+            ) { inputs ->
+                val year = _selectedYear.value ?: return@reportingLiveData null
+                val month = _selectedMonth.value ?: return@reportingLiveData null
+                cashFlowCalculator.calculateRollingWindow(inputs, year, month, 12)
             }
 
         fun selectMonth(

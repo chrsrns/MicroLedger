@@ -70,33 +70,14 @@ class LedgerRepository
             onMismatch: suspend () -> Unit,
             onWriteError: suspend (IOException) -> Unit,
             onReadError: suspend (IOException) -> Unit,
-        ) {
-            try {
-                if (!matches(fileUri)) {
-                    onMismatch()
-                } else {
-                    context.contentResolver
-                        .openOutputStream(fileUri, "wt")
-                        ?.let { OutputStreamWriter(it) }
-                        ?.use {
-                            fileContents.value!!.forEachIndexed { i, line ->
-                                if (i >= transaction.firstLine && i <= transaction.lastLine) {
-                                    return@forEachIndexed
-                                }
-                                // If the line after the transaction is empty, consider it a
-                                // divider for the next transaction and skip it as well
-                                if (i == transaction.lastLine + 1 && line == "") {
-                                    return@forEachIndexed
-                                }
-                                it.write("${line}\n")
-                            }
-                        }
-                    readFrom(fileUri, onFinish, onReadError)
-                }
-            } catch (e: IOException) {
-                onWriteError(e)
-            }
-        }
+        ) = writeTransformed(
+            fileUri,
+            emit = { emitDeleteTransaction(it, transaction.firstLine, transaction.lastLine) },
+            onFinish,
+            onMismatch,
+            onWriteError,
+            onReadError,
+        )
 
         suspend fun replaceTransaction(
             fileUri: Uri,
@@ -106,45 +87,36 @@ class LedgerRepository
             onMismatch: suspend () -> Unit,
             onWriteError: suspend (IOException) -> Unit,
             onReadError: suspend (IOException) -> Unit,
-        ) {
-            try {
-                if (!matches(fileUri)) {
-                    onMismatch()
-                } else {
-                    context.contentResolver
-                        .openOutputStream(fileUri, "wt")
-                        ?.let { OutputStreamWriter(it) }
-                        ?.use {
-                            fileContents.value!!.forEachIndexed { i, line ->
-                                // If we encounter the first line of the transaction, write out the replacement
-                                if (i == transaction.firstLine) {
-                                    it.write(text)
-                                    return@forEachIndexed
-                                }
-
-                                // Just skip all the next lines
-                                if (i > transaction.firstLine && i <= transaction.lastLine) {
-                                    return@forEachIndexed
-                                }
-
-                                // If the line after the transaction is empty, consider it a
-                                // divider for the next transaction and skip it as well
-                                if (i == transaction.lastLine + 1 && line == "") {
-                                    return@forEachIndexed
-                                }
-                                it.write("${line}\n")
-                            }
-                        }
-                    readFrom(fileUri, onFinish, onReadError)
-                }
-            } catch (e: IOException) {
-                onWriteError(e)
-            }
-        }
+        ) = writeTransformed(
+            fileUri,
+            emit = {
+                emitReplaceTransaction(it, transaction.firstLine, transaction.lastLine, text)
+            },
+            onFinish,
+            onMismatch,
+            onWriteError,
+            onReadError,
+        )
 
         suspend fun appendTo(
             fileUri: Uri,
             text: String,
+            onFinish: suspend () -> Unit,
+            onMismatch: suspend () -> Unit,
+            onWriteError: suspend (IOException) -> Unit,
+            onReadError: suspend (IOException) -> Unit,
+        ) = writeTransformed(
+            fileUri,
+            emit = { emitAppend(it, text) },
+            onFinish,
+            onMismatch,
+            onWriteError,
+            onReadError,
+        )
+
+        private suspend fun writeTransformed(
+            fileUri: Uri,
+            emit: (List<String>) -> String,
             onFinish: suspend () -> Unit,
             onMismatch: suspend () -> Unit,
             onWriteError: suspend (IOException) -> Unit,
@@ -157,15 +129,7 @@ class LedgerRepository
                     context.contentResolver
                         .openOutputStream(fileUri, "wt")
                         ?.let { OutputStreamWriter(it) }
-                        ?.use {
-                            fileContents.value!!.forEach { line ->
-                                it.write("${line}\n")
-                            }
-                            if (!fileContents.value!!.isEmpty() && fileContents.value!!.last() != "") {
-                                it.write("\n")
-                            }
-                            it.write(text)
-                        }
+                        ?.use { it.write(emit(fileContents.value!!)) }
                     readFrom(fileUri, onFinish, onReadError)
                 }
             } catch (e: IOException) {
@@ -208,77 +172,20 @@ class LedgerRepository
             onMismatch: suspend () -> Unit,
             onWriteError: suspend (IOException) -> Unit,
             onReadError: suspend (IOException) -> Unit,
-        ) {
-            try {
-                if (!matches(fileUri)) {
-                    onMismatch()
-                } else {
-                    var newTemplateIndex = 0 // Index to place template
-                    var addSeparator = true
-                    var prepend = true
-
-                    // If a transaction exists, insert new template to the comment before that transaction
-                    if (transactions.value!!.isNotEmpty()) {
-                        for (i in transactions.value!![0].firstLine downTo 1) {
-                            val fileContentLine = fileContents.value!![i]
-
-                            if (fileContentLine.isBlank()) addSeparator = false
-
-                            if (fileContentLine.startsWith("; ")) {
-                                newTemplateIndex = i + 1
-                                break
-                            }
-                        }
-                    } else {
-                        // If no transactions yet, search for the last comment line
-                        for (i in fileContents.value!!.size - 1 downTo 0) {
-                            val fileContentLine = fileContents.value!![i]
-
-                            if (fileContentLine.isBlank()) addSeparator = false
-
-                            if (fileContentLine.startsWith("; ")) {
-                                newTemplateIndex = i
-                                prepend = false
-                                break
-                            }
-                        }
-                    }
-
-                    val text = template.toCommentLines().joinToString("\n")
-
-                    context.contentResolver
-                        .openOutputStream(fileUri, "wt")
-                        ?.let { OutputStreamWriter(it) }
-                        ?.use {
-                            fileContents.value!!.forEachIndexed { i, line ->
-                                // If we encounter the first line of the transaction,
-                                // append the template after the original line
-                                if (i == newTemplateIndex) {
-                                    if (prepend) {
-                                        it.write("${text}\n")
-                                        // Enforce a blank line separator
-                                        if (addSeparator) it.write("\n")
-
-                                        it.write("${line}\n")
-                                    } else {
-                                        it.write("${line}\n")
-                                        it.write("${text}\n")
-
-                                        // Enforce a blank line separator
-                                        if (addSeparator) it.write("\n")
-                                    }
-                                    return@forEachIndexed
-                                }
-
-                                it.write("${line}\n")
-                            }
-                        }
-                    readFrom(fileUri, onFinish, onReadError)
-                }
-            } catch (e: IOException) {
-                onWriteError(e)
-            }
-        }
+        ) = writeTransformed(
+            fileUri,
+            emit = {
+                emitAddTemplate(
+                    it,
+                    transactions.value?.firstOrNull()?.firstLine,
+                    template.toCommentLines().joinToString("\n"),
+                )
+            },
+            onFinish,
+            onMismatch,
+            onWriteError,
+            onReadError,
+        )
 
         suspend fun updateTemplate(
             fileUri: Uri,
@@ -293,35 +200,21 @@ class LedgerRepository
                 onFinish()
                 return
             }
-            try {
-                if (!matches(fileUri)) {
-                    onMismatch()
-                } else {
-                    val text = template.toCommentLines().joinToString("\n")
-                    context.contentResolver
-                        .openOutputStream(fileUri, "wt")
-                        ?.let { OutputStreamWriter(it) }
-                        ?.use {
-                            fileContents.value!!.forEachIndexed { i, line ->
-                                // If we encounter the first line of the template, write out the replacement
-                                if (i == existing.firstLine) {
-                                    it.write("${text}\n")
-                                    return@forEachIndexed
-                                }
-
-                                // Skip the remaining lines of the old template
-                                if (i > existing.firstLine && i <= existing.lastLine) {
-                                    return@forEachIndexed
-                                }
-
-                                it.write("${line}\n")
-                            }
-                        }
-                    readFrom(fileUri, onFinish, onReadError)
-                }
-            } catch (e: IOException) {
-                onWriteError(e)
-            }
+            writeTransformed(
+                fileUri,
+                emit = {
+                    emitUpdateTemplate(
+                        it,
+                        existing.firstLine,
+                        existing.lastLine,
+                        template.toCommentLines().joinToString("\n"),
+                    )
+                },
+                onFinish,
+                onMismatch,
+                onWriteError,
+                onReadError,
+            )
         }
 
         suspend fun deleteTemplate(
@@ -337,25 +230,13 @@ class LedgerRepository
                 onFinish()
                 return
             }
-            try {
-                if (!matches(fileUri)) {
-                    onMismatch()
-                } else {
-                    context.contentResolver
-                        .openOutputStream(fileUri, "wt")
-                        ?.let { OutputStreamWriter(it) }
-                        ?.use {
-                            fileContents.value!!.forEachIndexed { i, line ->
-                                if (i >= existing.firstLine && i <= existing.lastLine) {
-                                    return@forEachIndexed
-                                }
-                                it.write("${line}\n")
-                            }
-                        }
-                    readFrom(fileUri, onFinish, onReadError)
-                }
-            } catch (e: IOException) {
-                onWriteError(e)
-            }
+            writeTransformed(
+                fileUri,
+                emit = { emitDeleteTemplate(it, existing.firstLine, existing.lastLine) },
+                onFinish,
+                onMismatch,
+                onWriteError,
+                onReadError,
+            )
         }
     }

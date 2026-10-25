@@ -39,26 +39,21 @@ class AccountBalanceCalculator {
      * @return AccountBalancesResult containing balances grouped by type
      */
     fun calculate(inputs: ReportingInputs): AccountBalancesResult {
-        val decimalSeparator = inputs.preferences.decimalSeparator
         val prefixes = inputs.preferences.prefixes
 
         // Map of account name -> (currency -> (balance, mutableSet of transactions))
         val accountBalances =
             mutableMapOf<String, MutableMap<String, Pair<BigDecimal, MutableSet<Transaction>>>>()
 
-        for (transaction in inputs.transactions) {
-            for (posting in materializeElidedAmounts(transaction, decimalSeparator).postings) {
-                val amount = posting.amount ?: continue
-                val account = posting.account ?: continue
-                val quantity = parseQuantity(amount.quantity, decimalSeparator)
-                val currency = amount.currency
+        forEachClassifiedAmount(inputs) { transaction, posting, _, quantity ->
+            val account = posting.account ?: return@forEachClassifiedAmount
+            val currency = posting.amount?.currency ?: return@forEachClassifiedAmount
 
-                val currencyMap = accountBalances.getOrPut(account) { mutableMapOf() }
-                val (existingBalance, existingTransactions) =
-                    currencyMap[currency] ?: Pair(BigDecimal.ZERO, mutableSetOf())
-                existingTransactions.add(transaction)
-                currencyMap[currency] = Pair(existingBalance + quantity, existingTransactions)
-            }
+            val currencyMap = accountBalances.getOrPut(account) { mutableMapOf() }
+            val (existingBalance, existingTransactions) =
+                currencyMap[currency] ?: Pair(BigDecimal.ZERO, mutableSetOf())
+            existingTransactions.add(transaction)
+            currencyMap[currency] = Pair(existingBalance + quantity, existingTransactions)
         }
 
         // Split by account type
@@ -70,24 +65,12 @@ class AccountBalanceCalculator {
 
         for ((account, currencyMap) in accountBalances) {
             for ((currency, pair) in currencyMap) {
-                val (rawBalance, transactionSet) = pair
+                val (balance, transactionSet) = pair
                 val type = prefixes.classify(account)
-                // For display purposes, negate Liability, Equity, and Income balances so they show as positive
-                // (these are credit accounts stored as negative amounts in ledger postings)
-                val displayBalance =
-                    when (type) {
-                        AccountType.LIABILITIES,
-                        AccountType.EQUITY,
-                        AccountType.INCOME,
-                        -> rawBalance.negate()
-
-                        else -> rawBalance
-                    }
-
                 val accountBalance =
                     AccountBalance(
                         account = account,
-                        balance = displayBalance,
+                        balance = balance,
                         currency = currency,
                         transactions = transactionSet.sortedBy { it.firstLine },
                     )

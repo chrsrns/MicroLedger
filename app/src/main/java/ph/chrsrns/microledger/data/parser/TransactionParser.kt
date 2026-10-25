@@ -42,7 +42,10 @@ fun extractTransactions(lines: List<String>): List<Transaction> {
 val COMMENT_REGEX = Regex("[ \\t]*;.*$")
 val POSTING_SPLIT_REGEX = Regex("[ \\t]{2,}")
 
-fun extractPosting(line: String): Posting {
+fun extractPosting(
+    line: String,
+    lenient: Boolean = false,
+): Posting {
     var account: String? = null
     var amount: Amount? = null
     var cost: Cost? = null
@@ -68,14 +71,14 @@ fun extractPosting(line: String): Posting {
             val fullAmountString = components[1].trim()
             if (fullAmountString.contains('=')) {
                 val amountComponents = fullAmountString.split('=', limit = 2)
-                val baseRes = extractAmountAndCost(amountComponents[0].trim())
+                val baseRes = extractAmountAndCost(amountComponents[0].trim(), lenient)
                 amount = baseRes.first
                 cost = baseRes.second
-                val assertionRes = extractAmountAndCost(amountComponents[1].trim())
+                val assertionRes = extractAmountAndCost(amountComponents[1].trim(), lenient)
                 assertion = assertionRes.first
                 assertionCost = assertionRes.second
             } else {
-                val res = extractAmountAndCost(fullAmountString)
+                val res = extractAmountAndCost(fullAmountString, lenient)
                 amount = res.first
                 cost = res.second
             }
@@ -90,7 +93,10 @@ val QUANTITY_AT_END_REGEX = Regex("(-? *[0-9][0-9,.]*)$")
 
 val COST_SPLIT_REGEX = Regex("@@?")
 
-fun extractAmountAndCost(string: String): Pair<Amount?, Cost?> {
+fun extractAmountAndCost(
+    string: String,
+    lenient: Boolean = false,
+): Pair<Amount?, Cost?> {
     if (string.isEmpty()) {
         return Pair(null, null)
     }
@@ -104,15 +110,18 @@ fun extractAmountAndCost(string: String): Pair<Amount?, Cost?> {
 
         val (amountString, costString) = string.split(COST_SPLIT_REGEX, limit = 2)
         return Pair(
-            extractAmount(amountString.trim()),
-            Cost(extractAmount(costString.trim()), costType),
+            extractAmount(amountString.trim(), lenient),
+            Cost(extractAmount(costString.trim(), lenient), costType),
         )
     } else {
-        return Pair(extractAmount(string), null)
+        return Pair(extractAmount(string, lenient), null)
     }
 }
 
-fun extractAmount(string: String): Amount {
+fun extractAmount(
+    string: String,
+    lenient: Boolean = false,
+): Amount {
     val stripped = string.trim()
 
     if (stripped.isEmpty()) {
@@ -131,6 +140,11 @@ fun extractAmount(string: String): Amount {
         val quantity = matchForEnd.value.trim()
         val currency = stripped.replace(QUANTITY_AT_END_REGEX, "").trim()
         return Amount(quantity, currency, string)
+    }
+
+    // If no quantity found, check if the entire string is a valid commodity (currency-only)
+    if (lenient && stripped.isNotEmpty() && !stripped.contains(Regex("[0-9]"))) {
+        return Amount("", stripped, string)
     }
 
     return Amount("", "", string)
