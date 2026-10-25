@@ -11,8 +11,8 @@ import kotlin.test.assertSame
 
 class PostingFieldEditsTest {
     private val sentinel = Posting("", null, null, null, null, null)
-    private fun real(n: Int) =
-        Posting("Expenses:Food:$n", Amount("1.00", "€", "1.00 €"), null, null, null, null)
+
+    private fun real(n: Int) = Posting("Expenses:Food:$n", Amount("1.00", "€", "1.00 €"), null, null, null, null)
 
     @Test
     fun withQuantityPreservesOriginalAndCurrency() {

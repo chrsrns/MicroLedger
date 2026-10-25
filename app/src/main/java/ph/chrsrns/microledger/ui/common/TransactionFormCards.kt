@@ -586,7 +586,6 @@ private fun AmountEditor(
     onQuantityChange: (String) -> Unit,
     onCurrencyChange: (String) -> Unit,
 ) {
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom,
@@ -628,7 +627,6 @@ private fun CostEditor(
     onQuantityChange: (String) -> Unit,
     onCurrencyChange: (String) -> Unit,
 ) {
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom,

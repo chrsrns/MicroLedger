@@ -1,8 +1,8 @@
 package ph.chrsrns.microledger.data
 
 import android.content.Context
-import androidx.core.content.edit
 import android.net.Uri
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -66,8 +66,7 @@ class PreferencesDataSource
 
         fun getCurrencyBeforeAmount(): Boolean = currencyBeforeAmountPref.read(sharedPreferences)
 
-        fun setCurrencyBeforeAmount(currencyBeforeAmount: Boolean) =
-            currencyBeforeAmountPref.write(sharedPreferences, currencyBeforeAmount)
+        fun setCurrencyBeforeAmount(currencyBeforeAmount: Boolean) = currencyBeforeAmountPref.write(sharedPreferences, currencyBeforeAmount)
 
         private val postingWidthPref = intPref("posting_width", 72)
 
@@ -84,8 +83,7 @@ class PreferencesDataSource
 
         fun getCurrencyAmountSpacing(): Boolean = currencyAmountSpacingPref.read(sharedPreferences)
 
-        fun setCurrencyAmountSpacing(spacing: Boolean) =
-            currencyAmountSpacingPref.write(sharedPreferences, spacing)
+        fun setCurrencyAmountSpacing(spacing: Boolean) = currencyAmountSpacingPref.write(sharedPreferences, spacing)
 
         private val transactionStatusPresentByDefaultPref =
             booleanPref("transaction_status_present_by_default", true)
@@ -93,11 +91,9 @@ class PreferencesDataSource
         val transactionStatusPresentByDefault: LiveData<Boolean> =
             transactionStatusPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getTransactionStatusPresentByDefault(): Boolean =
-            transactionStatusPresentByDefaultPref.read(sharedPreferences)
+        fun getTransactionStatusPresentByDefault(): Boolean = transactionStatusPresentByDefaultPref.read(sharedPreferences)
 
-        fun setTransactionStatusPresentByDefault(status: Boolean) =
-            transactionStatusPresentByDefaultPref.write(sharedPreferences, status)
+        fun setTransactionStatusPresentByDefault(status: Boolean) = transactionStatusPresentByDefaultPref.write(sharedPreferences, status)
 
         private val transactionCodePresentByDefaultPref =
             booleanPref("transaction_code_present_by_default", false)
@@ -105,11 +101,9 @@ class PreferencesDataSource
         val transactionCodePresentByDefault: LiveData<Boolean> =
             transactionCodePresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getTransactionCodePresentByDefault(): Boolean =
-            transactionCodePresentByDefaultPref.read(sharedPreferences)
+        fun getTransactionCodePresentByDefault(): Boolean = transactionCodePresentByDefaultPref.read(sharedPreferences)
 
-        fun setTransactionCodePresentByDefault(code: Boolean) =
-            transactionCodePresentByDefaultPref.write(sharedPreferences, code)
+        fun setTransactionCodePresentByDefault(code: Boolean) = transactionCodePresentByDefaultPref.write(sharedPreferences, code)
 
         private val transactionPayeePresentByDefaultPref =
             booleanPref("transaction_payee_present_by_default", true)
@@ -117,11 +111,9 @@ class PreferencesDataSource
         val transactionPayeePresentByDefault: LiveData<Boolean> =
             transactionPayeePresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getTransactionPayeePresentByDefault(): Boolean =
-            transactionPayeePresentByDefaultPref.read(sharedPreferences)
+        fun getTransactionPayeePresentByDefault(): Boolean = transactionPayeePresentByDefaultPref.read(sharedPreferences)
 
-        fun setTransactionPayeePresentByDefault(payee: Boolean) =
-            transactionPayeePresentByDefaultPref.write(sharedPreferences, payee)
+        fun setTransactionPayeePresentByDefault(payee: Boolean) = transactionPayeePresentByDefaultPref.write(sharedPreferences, payee)
 
         private val transactionNotePresentByDefaultPref =
             booleanPref("transaction_note_present_by_default", true)
@@ -129,11 +121,9 @@ class PreferencesDataSource
         val transactionNotePresentByDefault: LiveData<Boolean> =
             transactionNotePresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getTransactionNotePresentByDefault(): Boolean =
-            transactionNotePresentByDefaultPref.read(sharedPreferences)
+        fun getTransactionNotePresentByDefault(): Boolean = transactionNotePresentByDefaultPref.read(sharedPreferences)
 
-        fun setTransactionNotePresentByDefault(note: Boolean) =
-            transactionNotePresentByDefaultPref.write(sharedPreferences, note)
+        fun setTransactionNotePresentByDefault(note: Boolean) = transactionNotePresentByDefaultPref.write(sharedPreferences, note)
 
         private val transactionCurrenciesPresentByDefaultPref =
             booleanPref("transaction_currencies_present_by_default", true)
@@ -141,8 +131,7 @@ class PreferencesDataSource
         val transactionCurrenciesPresentByDefault: LiveData<Boolean> =
             transactionCurrenciesPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getTransactionCurrenciesPresentByDefault(): Boolean =
-            transactionCurrenciesPresentByDefaultPref.read(sharedPreferences)
+        fun getTransactionCurrenciesPresentByDefault(): Boolean = transactionCurrenciesPresentByDefaultPref.read(sharedPreferences)
 
         fun setTransactionCurrenciesPresentByDefault(currencies: Boolean) =
             transactionCurrenciesPresentByDefaultPref.write(sharedPreferences, currencies)
@@ -153,11 +142,9 @@ class PreferencesDataSource
         val postingAmountPresentByDefault: LiveData<Boolean> =
             postingAmountPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getPostingAmountPresentByDefault(): Boolean =
-            postingAmountPresentByDefaultPref.read(sharedPreferences)
+        fun getPostingAmountPresentByDefault(): Boolean = postingAmountPresentByDefaultPref.read(sharedPreferences)
 
-        fun setPostingAmountPresentByDefault(amount: Boolean) =
-            postingAmountPresentByDefaultPref.write(sharedPreferences, amount)
+        fun setPostingAmountPresentByDefault(amount: Boolean) = postingAmountPresentByDefaultPref.write(sharedPreferences, amount)
 
         private val postingCostPresentByDefaultPref =
             booleanPref("posting_cost_present_by_default", false)
@@ -165,11 +152,9 @@ class PreferencesDataSource
         val postingCostPresentByDefault: LiveData<Boolean> =
             postingCostPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getPostingCostPresentByDefault(): Boolean =
-            postingCostPresentByDefaultPref.read(sharedPreferences)
+        fun getPostingCostPresentByDefault(): Boolean = postingCostPresentByDefaultPref.read(sharedPreferences)
 
-        fun setPostingCostPresentByDefault(cost: Boolean) =
-            postingCostPresentByDefaultPref.write(sharedPreferences, cost)
+        fun setPostingCostPresentByDefault(cost: Boolean) = postingCostPresentByDefaultPref.write(sharedPreferences, cost)
 
         private val postingAssertionPresentByDefaultPref =
             booleanPref("posting_assertion_present_by_default", false)
@@ -177,8 +162,7 @@ class PreferencesDataSource
         val postingAssertionPresentByDefault: LiveData<Boolean> =
             postingAssertionPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getPostingAssertionPresentByDefault(): Boolean =
-            postingAssertionPresentByDefaultPref.read(sharedPreferences)
+        fun getPostingAssertionPresentByDefault(): Boolean = postingAssertionPresentByDefaultPref.read(sharedPreferences)
 
         fun setPostingAssertionPresentByDefault(assertion: Boolean) =
             postingAssertionPresentByDefaultPref.write(sharedPreferences, assertion)
@@ -189,8 +173,7 @@ class PreferencesDataSource
         val postingAssertionCostPresentByDefault: LiveData<Boolean> =
             postingAssertionCostPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getPostingAssertionCostPresentByDefault(): Boolean =
-            postingAssertionCostPresentByDefaultPref.read(sharedPreferences)
+        fun getPostingAssertionCostPresentByDefault(): Boolean = postingAssertionCostPresentByDefaultPref.read(sharedPreferences)
 
         fun setPostingAssertionCostPresentByDefault(assertionCost: Boolean) =
             postingAssertionCostPresentByDefaultPref.write(sharedPreferences, assertionCost)
@@ -201,11 +184,9 @@ class PreferencesDataSource
         val postingCommentPresentByDefault: LiveData<Boolean> =
             postingCommentPresentByDefaultPref.liveData(sharedPreferences)
 
-        fun getPostingCommentPresentByDefault(): Boolean =
-            postingCommentPresentByDefaultPref.read(sharedPreferences)
+        fun getPostingCommentPresentByDefault(): Boolean = postingCommentPresentByDefaultPref.read(sharedPreferences)
 
-        fun setPostingCommentPresentByDefault(comment: Boolean) =
-            postingCommentPresentByDefaultPref.write(sharedPreferences, comment)
+        fun setPostingCommentPresentByDefault(comment: Boolean) = postingCommentPresentByDefaultPref.write(sharedPreferences, comment)
 
         private val assetsPrefixesPref = stringListPref("assets_prefixes", listOf("Assets"))
         private val liabilitiesPrefixesPref = stringListPref("liabilities_prefixes", listOf("Liabilities"))

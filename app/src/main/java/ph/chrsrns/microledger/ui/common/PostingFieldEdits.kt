@@ -42,11 +42,9 @@ fun Posting.withCostQuantity(quantity: String): Posting =
 fun Posting.withCostCurrency(currency: String): Posting =
     withCost(Cost(Amount(cost?.amount?.quantity ?: "", currency, ""), cost?.type ?: CostType.UNIT))
 
-fun Posting.withAssertionQuantity(quantity: String): Posting =
-    withAssertion(Amount(quantity, assertion?.currency ?: "", ""))
+fun Posting.withAssertionQuantity(quantity: String): Posting = withAssertion(Amount(quantity, assertion?.currency ?: "", ""))
 
-fun Posting.withAssertionCurrency(currency: String): Posting =
-    withAssertion(Amount(assertion?.quantity ?: "", currency, ""))
+fun Posting.withAssertionCurrency(currency: String): Posting = withAssertion(Amount(assertion?.quantity ?: "", currency, ""))
 
 fun Posting.withAssertionCostType(type: CostType): Posting =
     withAssertionCost(

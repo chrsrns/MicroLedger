@@ -305,8 +305,8 @@ fun TemplateForm(
             viewModel.updatePosting(i) { p -> p.withAssertionEnabled(it, viewModel.defaultAmount()) }
         },
         onPostingToggleAssertionCost = { i, it ->
-            viewModel.updatePosting(i) {
-                p -> p.withAssertionCostEnabled(it, Cost(viewModel.defaultAmount(), CostType.UNIT))
+            viewModel.updatePosting(i) { p ->
+                p.withAssertionCostEnabled(it, Cost(viewModel.defaultAmount(), CostType.UNIT))
             }
         },
         onPostingToggleComment = { i, it -> viewModel.updatePosting(i) { p -> p.withCommentEnabled(it) } },

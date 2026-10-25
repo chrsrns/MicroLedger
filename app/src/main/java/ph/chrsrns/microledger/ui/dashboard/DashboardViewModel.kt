@@ -11,9 +11,8 @@ import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
 import ph.chrsrns.microledger.data.reporting.MonthlyCashFlowCalculator
 import ph.chrsrns.microledger.data.reporting.NetWorthCalculator
-import ph.chrsrns.microledger.data.reporting.ReportingInputs
-import ph.chrsrns.microledger.ui.util.reportingLiveData
 import ph.chrsrns.microledger.di.MonthProvider
+import ph.chrsrns.microledger.ui.util.reportingLiveData
 import javax.inject.Inject
 
 @HiltViewModel

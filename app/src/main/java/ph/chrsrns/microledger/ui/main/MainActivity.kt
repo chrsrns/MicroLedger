@@ -98,8 +98,8 @@ import ph.chrsrns.microledger.ui.dashboard.DashboardScreenContent
 import ph.chrsrns.microledger.ui.dashboard.DashboardViewModel
 import ph.chrsrns.microledger.ui.edit.EditActivity
 import ph.chrsrns.microledger.ui.preferences.PreferencesScreen
-import ph.chrsrns.microledger.ui.preferences.SettingsCallbacks
 import ph.chrsrns.microledger.ui.preferences.PreferencesViewModel
+import ph.chrsrns.microledger.ui.preferences.SettingsCallbacks
 import ph.chrsrns.microledger.ui.templates.EDIT_TEMPLATE_ID_KEY
 import ph.chrsrns.microledger.ui.templates.TEMPLATE_ID_KEY
 import ph.chrsrns.microledger.ui.templates.TemplateFormActivity

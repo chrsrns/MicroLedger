@@ -12,7 +12,6 @@ import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.AccountBalanceCalculator
-import ph.chrsrns.microledger.data.reporting.ReportingInputs
 import ph.chrsrns.microledger.ui.util.reportingLiveData
 import javax.inject.Inject
 

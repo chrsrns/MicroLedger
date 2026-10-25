@@ -2,9 +2,9 @@ package ph.chrsrns.microledger.ui.util
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
+import ph.chrsrns.microledger.data.ReportingPreferences
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.reporting.ReportingInputs
-import ph.chrsrns.microledger.data.ReportingPreferences
 
 // Single owner of the two-source MediatorLiveData wiring for reporting
 // LiveData (V343/I231). Emits only when transactions and

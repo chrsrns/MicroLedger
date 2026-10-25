@@ -412,8 +412,7 @@ abstract class TransactionFormViewModel(
         _postings.value = ArrayList(removePostingAt(stored, index, ::newPosting))
     }
 
-    fun filterPostings(postings: List<Posting>): ArrayList<Posting> =
-        ArrayList(withSentinel(postings, ::newPosting))
+    fun filterPostings(postings: List<Posting>): ArrayList<Posting> = ArrayList(withSentinel(postings, ::newPosting))
 
     protected fun templatePostings(): List<Posting> {
         val current = postings.value ?: return emptyList()
