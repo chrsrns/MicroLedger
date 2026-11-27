@@ -73,30 +73,23 @@ abstract class TransactionFormViewModel(
     val note: LiveData<String?> = _note
 
     val possiblePayees: LiveData<List<String>> =
-        ledgerRepository.payees.switchMap { payees ->
-            ledgerRepository.notes.switchMap { notes ->
-                note.switchMap { note ->
-                    val listToSearch: Set<String> = if (note == null) payees + notes else payees
-                    payee.map { search ->
-                        listToSearch
-                            .filter {
-                                it.contains(
-                                    (search ?: ""),
-                                    ignoreCase = true,
-                                )
-                            }.sorted()
-                    }
-                }
-            }
-        }
+        suggestionsFor(ledgerRepository.payees, ledgerRepository.notes, note, payee)
 
     val possibleNotes: LiveData<List<String>> =
-        ledgerRepository.notes.switchMap { notes ->
-            ledgerRepository.payees.switchMap { payees ->
-                payee.switchMap { payee ->
-                    val listToSearch: Set<String> = if (payee == null) notes + payees else notes
-                    note.map { search ->
-                        listToSearch
+        suggestionsFor(ledgerRepository.notes, ledgerRepository.payees, payee, note)
+
+    private fun suggestionsFor(
+        own: LiveData<Set<String>>,
+        other: LiveData<Set<String>>,
+        otherField: LiveData<String?>,
+        query: LiveData<String?>,
+    ): LiveData<List<String>> =
+        own.switchMap { ownSet ->
+            other.switchMap { otherSet ->
+                otherField.switchMap { fieldValue ->
+                    val pool: Set<String> = if (fieldValue == null) ownSet + otherSet else ownSet
+                    query.map { search ->
+                        pool
                             .filter {
                                 it.contains(
                                     (search ?: ""),
