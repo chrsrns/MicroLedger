@@ -425,7 +425,7 @@ fun PostingEditBottomSheet(
                 AccountSelector(
                     value = account,
                     options = accounts,
-                    onAccountChange = { edited = edited.withAccount(it) },
+                    onAccountChange = { edited = edited.copy(account = it) },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -482,7 +482,7 @@ fun PostingEditBottomSheet(
             edited.comment?.let { comment ->
                 CommentField(
                     comment = comment,
-                    onCommentChange = { edited = edited.withComment(it) },
+                    onCommentChange = { edited = edited.copy(comment = it) },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

@@ -12,95 +12,98 @@ import ph.chrsrns.microledger.data.Posting
 fun Posting.withQuantity(quantity: String): Posting {
     val currency = amount?.currency ?: ""
     val original = amount?.original ?: ""
-    return withAmount(
-        if (quantity != "" || original != "" || currency != "") {
-            Amount(quantity, currency, original)
-        } else {
-            null
-        },
+    return copy(
+        amount =
+            if (quantity != "" || original != "" || currency != "") {
+                Amount(quantity, currency, original)
+            } else {
+                null
+            },
     )
 }
 
 fun Posting.withCurrency(currency: String): Posting {
     val quantity = amount?.quantity ?: ""
     val original = amount?.original ?: ""
-    return withAmount(
-        if (quantity != "" || original != "" || currency != "") {
-            Amount(quantity, currency, original)
-        } else {
-            null
-        },
+    return copy(
+        amount =
+            if (quantity != "" || original != "" || currency != "") {
+                Amount(quantity, currency, original)
+            } else {
+                null
+            },
     )
 }
 
 fun Posting.withCostType(type: CostType): Posting =
-    withCost(Cost(Amount(cost?.amount?.quantity ?: "", cost?.amount?.currency ?: "", ""), type))
+    copy(cost = Cost(Amount(cost?.amount?.quantity ?: "", cost?.amount?.currency ?: "", ""), type))
 
 fun Posting.withCostQuantity(quantity: String): Posting =
-    withCost(Cost(Amount(quantity, cost?.amount?.currency ?: "", ""), cost?.type ?: CostType.UNIT))
+    copy(cost = Cost(Amount(quantity, cost?.amount?.currency ?: "", ""), cost?.type ?: CostType.UNIT))
 
 fun Posting.withCostCurrency(currency: String): Posting =
-    withCost(Cost(Amount(cost?.amount?.quantity ?: "", currency, ""), cost?.type ?: CostType.UNIT))
+    copy(cost = Cost(Amount(cost?.amount?.quantity ?: "", currency, ""), cost?.type ?: CostType.UNIT))
 
-fun Posting.withAssertionQuantity(quantity: String): Posting = withAssertion(Amount(quantity, assertion?.currency ?: "", ""))
+fun Posting.withAssertionQuantity(quantity: String): Posting = copy(assertion = Amount(quantity, assertion?.currency ?: "", ""))
 
-fun Posting.withAssertionCurrency(currency: String): Posting = withAssertion(Amount(assertion?.quantity ?: "", currency, ""))
+fun Posting.withAssertionCurrency(currency: String): Posting = copy(assertion = Amount(assertion?.quantity ?: "", currency, ""))
 
 fun Posting.withAssertionCostType(type: CostType): Posting =
-    withAssertionCost(
-        Cost(
-            Amount(assertionCost?.amount?.quantity ?: "", assertionCost?.amount?.currency ?: "", ""),
-            type,
-        ),
+    copy(
+        assertionCost =
+            Cost(
+                Amount(assertionCost?.amount?.quantity ?: "", assertionCost?.amount?.currency ?: "", ""),
+                type,
+            ),
     )
 
 fun Posting.withAssertionCostQuantity(quantity: String): Posting =
-    withAssertionCost(
-        Cost(Amount(quantity, assertionCost?.amount?.currency ?: "", ""), assertionCost?.type ?: CostType.UNIT),
+    copy(
+        assertionCost = Cost(Amount(quantity, assertionCost?.amount?.currency ?: "", ""), assertionCost?.type ?: CostType.UNIT),
     )
 
 fun Posting.withAssertionCostCurrency(currency: String): Posting =
-    withAssertionCost(
-        Cost(Amount(assertionCost?.amount?.quantity ?: "", currency, ""), assertionCost?.type ?: CostType.UNIT),
+    copy(
+        assertionCost = Cost(Amount(assertionCost?.amount?.quantity ?: "", currency, ""), assertionCost?.type ?: CostType.UNIT),
     )
 
 // Presence toggles. `onValue` supplied by caller (V353): helpers never
 // read PreferencesDataSource. Account-off cascades (V332).
 
 fun Posting.withAccountEnabled(on: Boolean): Posting {
-    val result = withAccount(if (on) "" else null)
+    val result = copy(account = if (on) "" else null)
     return if (on) {
         result
     } else {
         result
-            .withAmount(null)
-            .withCost(null)
-            .withAssertion(null)
-            .withAssertionCost(null)
+            .copy(amount = null)
+            .copy(cost = null)
+            .copy(assertion = null)
+            .copy(assertionCost = null)
     }
 }
 
 fun Posting.withAmountEnabled(
     on: Boolean,
     onValue: Amount,
-): Posting = withAmount(if (on) onValue else null)
+): Posting = copy(amount = if (on) onValue else null)
 
 fun Posting.withCostEnabled(
     on: Boolean,
     onValue: Cost,
-): Posting = withCost(if (on) onValue else null)
+): Posting = copy(cost = if (on) onValue else null)
 
 fun Posting.withAssertionEnabled(
     on: Boolean,
     onValue: Amount,
-): Posting = withAssertion(if (on) onValue else null)
+): Posting = copy(assertion = if (on) onValue else null)
 
 fun Posting.withAssertionCostEnabled(
     on: Boolean,
     onValue: Cost,
-): Posting = withAssertionCost(if (on) onValue else null)
+): Posting = copy(assertionCost = if (on) onValue else null)
 
-fun Posting.withCommentEnabled(on: Boolean): Posting = withComment(if (on) "" else null)
+fun Posting.withCommentEnabled(on: Boolean): Posting = copy(comment = if (on) "" else null)
 
 // Posting-list ops. The stored `postings` list always ends with one
 // sentinel (V124); ops index the stored list including the sentinel

@@ -42,13 +42,14 @@ class AddViewModel
 
             val postingsWithEmptyAmounts =
                 template.postings.map { posting ->
-                    posting.withAmount(
-                        if (posting.amount != null) {
-                            ph.chrsrns.microledger.data
-                                .Amount("", posting.amount.currency, "")
-                        } else {
-                            null
-                        },
+                    posting.copy(
+                        amount =
+                            if (posting.amount != null) {
+                                ph.chrsrns.microledger.data
+                                    .Amount("", posting.amount.currency, "")
+                            } else {
+                                null
+                            },
                     )
                 }
             setPostings(postingsWithEmptyAmounts)
