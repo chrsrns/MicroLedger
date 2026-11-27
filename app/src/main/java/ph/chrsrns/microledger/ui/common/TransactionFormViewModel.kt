@@ -18,6 +18,7 @@ import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.TransactionTemplate
+import ph.chrsrns.microledger.data.reporting.balancingAmount
 import ph.chrsrns.microledger.data.reporting.parseQuantity
 import ph.chrsrns.microledger.ui.util.Event
 import java.io.IOException
@@ -111,50 +112,21 @@ abstract class TransactionFormViewModel(
     private val _postings = MutableLiveData(listOf(newPosting()))
     val postings: LiveData<List<Posting>> = _postings
     val accounts: LiveData<List<String>> = ledgerRepository.accounts.map { it.sorted() }
-    val unbalancedAmount: LiveData<String> =
-        MediatorLiveData<String>().apply {
+    val unbalancedAmount: LiveData<Amount?> =
+        MediatorLiveData<Amount?>().apply {
             fun compute() {
                 val ps = postings.value ?: return
-                val relevantPostings =
-                    ps.filter { p ->
-                        p.isQualifying()
-                    }
-                if (relevantPostings.any { it.assertion != null && it.amount == null }) {
-                    value = ""
-                    return
-                }
-                if (relevantPostings.any { it.cost != null }) {
-                    value = ""
-                    return
-                }
-                if (relevantPostings
-                        .mapNotNull { p -> p.amount }
-                        .map { it.currency }
-                        .distinct()
-                        .count() > 1
+                val result = balancingAmount(ps, preferencesDataSource.getDecimalSeparator())
+                if (result == null ||
+                    parseQuantity(result.quantity, preferencesDataSource.getDecimalSeparator())
+                        .compareTo(BigDecimal.ZERO) == 0
                 ) {
-                    value = ""
+                    value = null
                     return
                 }
-
-                value =
-                    relevantPostings
-                        .mapNotNull { p -> p.amount }
-                        .map { p -> p.quantity }
-                        .map { quantity ->
-                            parseQuantity(quantity, preferencesDataSource.getDecimalSeparator())
-                        }.fold(BigDecimal.ZERO) { l, r -> l + r }
-                        .negate()
-                        .let { num ->
-                            if (num == BigDecimal.ZERO.setScale(num.scale())) {
-                                ""
-                            } else {
-                                num.toString().replace(
-                                    ".",
-                                    preferencesDataSource.getDecimalSeparator(),
-                                )
-                            }
-                        }
+                val quantity =
+                    result.quantity.replace(".", preferencesDataSource.getDecimalSeparator())
+                value = result.copy(quantity = quantity, original = "$quantity ${result.currency}".trim())
             }
             addSource(postings) { compute() }
             addSource(preferencesDataSource.decimalSeparator) { compute() }
@@ -174,7 +146,7 @@ abstract class TransactionFormViewModel(
                 }
                 val nonComment = withoutSentinel.filter { !it.isComment() }
                 // If there is an unbalanced amount, and there are no postings with an empty amount, it's invalid
-                if (unbalancedAmount != "" &&
+                if (unbalancedAmount != null &&
                     nonComment.all { (it.amount?.quantity ?: "") != "" }
                 ) {
                     return@map false
