@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.data.LedgerRepository
+import ph.chrsrns.microledger.data.LedgerWriteResult
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.ui.common.TransactionFormViewModel
@@ -32,23 +33,17 @@ class EditViewModel
             if (uri != null) {
                 setSaving(true)
                 viewModelScope.launch(IO) {
-                    ledgerRepository.replaceTransaction(
-                        uri,
-                        sourceTransaction,
-                        toTransactionString(),
-                        {
-                            postSaving(false)
-                            onFinish()
-                        },
-                        {
-                            postSaving(false)
-                            postMismatch(Event(1))
-                        },
-                        {
-                            postSaving(false)
-                            postError(Event(it))
-                        },
-                        {
+                    when (
+                        val result =
+                            ledgerRepository.replaceTransaction(
+                                uri,
+                                sourceTransaction,
+                                toTransactionString(),
+                            )
+                    ) {
+                        is LedgerWriteResult.Success,
+                        is LedgerWriteResult.RefreshError,
+                        -> {
                             // We ignore a read error, the write went through so the
                             // only thing the user will experience is the
                             // transaction not being in the transaction
@@ -56,8 +51,16 @@ class EditViewModel
                             // either.
                             postSaving(false)
                             onFinish()
-                        },
-                    )
+                        }
+                        is LedgerWriteResult.Mismatch -> {
+                            postSaving(false)
+                            postMismatch(Event(1))
+                        }
+                        is LedgerWriteResult.WriteError -> {
+                            postSaving(false)
+                            postError(Event(result.e))
+                        }
+                    }
                 }
             }
         }

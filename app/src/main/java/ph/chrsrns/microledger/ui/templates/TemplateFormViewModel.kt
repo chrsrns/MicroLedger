@@ -8,11 +8,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.data.LedgerRepository
+import ph.chrsrns.microledger.data.LedgerWriteResult
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.TransactionTemplate
 import ph.chrsrns.microledger.ui.common.TransactionFormViewModel
 import ph.chrsrns.microledger.ui.util.Event
-import java.io.IOException
 import javax.inject.Inject
 
 // Note: UUID and IO are used by updateTemplate method
@@ -68,29 +68,27 @@ class TemplateFormViewModel
                         code = code.value,
                         postings = templatePostings(),
                     )
-                ledgerRepository.updateTemplate(
-                    uri,
-                    template,
-                    onFinish = {
+                when (val result = ledgerRepository.updateTemplate(uri, template)) {
+                    is LedgerWriteResult.Success -> {
                         postSaving(false)
                         viewModelScope.launch { onFinish() }
-                    },
-                    onMismatch = {
+                    }
+                    is LedgerWriteResult.Mismatch -> {
                         postSaving(false)
                         postMismatch(Event(0))
                         viewModelScope.launch { onFinish() }
-                    },
-                    onWriteError = { e: IOException ->
+                    }
+                    is LedgerWriteResult.WriteError -> {
                         postSaving(false)
-                        postError(Event(e))
+                        postError(Event(result.e))
                         viewModelScope.launch { onFinish() }
-                    },
-                    onReadError = { e: IOException ->
+                    }
+                    is LedgerWriteResult.RefreshError -> {
                         postSaving(false)
-                        postError(Event(e))
+                        postError(Event(result.e))
                         viewModelScope.launch { onFinish() }
-                    },
-                )
+                    }
+                }
             }
         }
 

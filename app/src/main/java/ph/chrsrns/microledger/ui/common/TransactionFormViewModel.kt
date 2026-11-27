@@ -14,6 +14,7 @@ import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Cost
 import ph.chrsrns.microledger.data.CostType
 import ph.chrsrns.microledger.data.LedgerRepository
+import ph.chrsrns.microledger.data.LedgerWriteResult
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
@@ -238,29 +239,27 @@ abstract class TransactionFormViewModel(
                     code = code.value,
                     postings = templatePostings(),
                 )
-            ledgerRepository.addTemplate(
-                uri,
-                template,
-                onFinish = {
+            when (val result = ledgerRepository.addTemplate(uri, template)) {
+                is LedgerWriteResult.Success -> {
                     postSaving(false)
                     viewModelScope.launch { onFinish(templateId) }
-                },
-                onMismatch = {
+                }
+                is LedgerWriteResult.Mismatch -> {
                     postSaving(false)
                     postMismatch(Event(0))
                     viewModelScope.launch { onFinish(null) }
-                },
-                onWriteError = { e: IOException ->
+                }
+                is LedgerWriteResult.WriteError -> {
                     postSaving(false)
-                    postError(Event(e))
+                    postError(Event(result.e))
                     viewModelScope.launch { onFinish(null) }
-                },
-                onReadError = { e: IOException ->
+                }
+                is LedgerWriteResult.RefreshError -> {
                     postSaving(false)
-                    postError(Event(e))
+                    postError(Event(result.e))
                     viewModelScope.launch { onFinish(null) }
-                },
-            )
+                }
+            }
         }
     }
 
