@@ -28,7 +28,7 @@ internal fun materializeElidedAmounts(
 ): Transaction {
     val siblings =
         transaction.postings.filter { p ->
-            !p.isVirtual() && !p.isComment() && !p.account.isNullOrBlank()
+            p.isQualifying()
         }
     val elided = siblings.filter { it.amount == null }
     if (elided.size != 1) return transaction

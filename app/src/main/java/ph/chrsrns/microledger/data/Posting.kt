@@ -222,6 +222,10 @@ data class Posting(
 
     fun isVirtual() = account?.let { it.startsWith("(") && it.endsWith(")") } ?: false
 
+    fun isQualifying() = !isVirtual() && !isComment() && !account.isNullOrBlank()
+
+    fun isStub() = !isVirtual() && !isComment() && account.isNullOrBlank()
+
     fun withAccount(account: String?) = Posting(account, amount, cost, assertion, assertionCost, comment)
 
     fun withAmount(amount: Amount?) = Posting(account, amount, cost, assertion, assertionCost, comment)

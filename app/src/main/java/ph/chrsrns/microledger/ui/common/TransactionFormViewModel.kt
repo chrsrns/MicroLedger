@@ -117,7 +117,7 @@ abstract class TransactionFormViewModel(
                 val ps = postings.value ?: return
                 val relevantPostings =
                     ps.filter { p ->
-                        !p.isVirtual() && !p.isComment() && !p.account.isNullOrBlank()
+                        p.isQualifying()
                     }
                 if (relevantPostings.any { it.assertion != null && it.amount == null }) {
                     value = ""
@@ -169,7 +169,7 @@ abstract class TransactionFormViewModel(
                 if (realPostings.size < 2) {
                     return@map false
                 }
-                if (realPostings.any { it.account.isNullOrBlank() }) {
+                if (realPostings.any { it.isStub() }) {
                     return@map false
                 }
                 val nonComment = withoutSentinel.filter { !it.isComment() }
@@ -230,7 +230,7 @@ abstract class TransactionFormViewModel(
                 note.value,
                 postings.value!!
                     .dropLast(1)
-                    .filter { it.isVirtual() || it.isComment() || !it.account.isNullOrBlank() },
+                    .filter { !it.isStub() },
             )
         return transaction.format(
             postingWidth,
@@ -418,9 +418,7 @@ abstract class TransactionFormViewModel(
         val current = postings.value ?: return emptyList()
         if (current.isEmpty()) return current
         val withoutSentinel = current.dropLast(1)
-        return withoutSentinel.filter {
-            it.isVirtual() || it.isComment() || !it.account.isNullOrBlank()
-        }
+        return withoutSentinel.filter { !it.isStub() }
     }
 
     fun defaultAmount() = Amount("", preferencesDataSource.getDefaultCurrency(), "")

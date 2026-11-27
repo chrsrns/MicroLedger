@@ -522,10 +522,7 @@ fun PostingEditBottomSheet(
             )
 
             SheetFooter(
-                canSave =
-                    edited.isVirtual() ||
-                        !edited.account.isNullOrBlank() ||
-                        edited.isComment(),
+                canSave = !edited.isStub(),
                 onCancel = onDismiss,
                 onSave = {
                     onSave(edited)
