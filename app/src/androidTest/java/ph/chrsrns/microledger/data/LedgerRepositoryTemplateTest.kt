@@ -82,9 +82,8 @@ class LedgerRepositoryTemplateTest {
         val uri = Uri.fromFile(journalFile)
         journalFile.writeText(content)
 
-        var readFinished = false
-        repository.readFrom(uri, onFinish = { readFinished = true }, onReadError = { readFinished = false })
-        assert(readFinished)
+        val readError = repository.readFrom(uri)
+        assert(readError == null)
 
         // Wait until repository.templates is initialized OR about 15 seconds have elapsed
         withTimeoutOrNull(15000L) {
@@ -140,16 +139,12 @@ class LedgerRepositoryTemplateTest {
         uri: Uri,
         template: TransactionTemplate,
     ) {
-        var finished = false
-        repository.addTemplate(
-            uri,
-            template,
-            onFinish = { finished = true },
-            onMismatch = { error("Mismatch") },
-            onWriteError = { throw it },
-            onReadError = { throw it },
-        )
-        assert(finished)
+        when (val result = repository.addTemplate(uri, template)) {
+            is LedgerWriteResult.Success -> {}
+            is LedgerWriteResult.Mismatch -> error("Mismatch")
+            is LedgerWriteResult.WriteError -> throw result.e
+            is LedgerWriteResult.RefreshError -> throw result.e
+        }
     }
 
     @Test
@@ -176,8 +171,8 @@ class LedgerRepositoryTemplateTest {
 
             val expectedFileOutput =
                 """
-            $startingTemplatePortion
             |${newTemplate.toCommentLines().joinToString("\n")}
+            $startingTemplatePortion
             |
             $startingTransactionsPortion
                 """.trimMargin()
@@ -198,7 +193,6 @@ class LedgerRepositoryTemplateTest {
             val expectedFileOutput =
                 """
             |${newTemplate.toCommentLines().joinToString("\n")}
-            |
             $startingTransactionsPortion
                 """.trimMargin()
             assertEquals(
@@ -217,9 +211,8 @@ class LedgerRepositoryTemplateTest {
 
             val expectedFileOutput =
                 """
-            |; Test Comment
             |${newTemplate.toCommentLines().joinToString("\n")}
-            |
+            |; Test Comment
                 """.trimMargin()
             assertEquals(
                 expectedFileOutput,
@@ -231,16 +224,12 @@ class LedgerRepositoryTemplateTest {
         uri: Uri,
         template: TransactionTemplate,
     ) {
-        var finished = false
-        repository.updateTemplate(
-            uri,
-            template,
-            onFinish = { finished = true },
-            onMismatch = { error("Mismatch") },
-            onWriteError = { throw it },
-            onReadError = { throw it },
-        )
-        assert(finished)
+        when (val result = repository.updateTemplate(uri, template)) {
+            is LedgerWriteResult.Success -> {}
+            is LedgerWriteResult.Mismatch -> error("Mismatch")
+            is LedgerWriteResult.WriteError -> throw result.e
+            is LedgerWriteResult.RefreshError -> throw result.e
+        }
     }
 
     @Test
@@ -376,33 +365,22 @@ class LedgerRepositoryTemplateTest {
             // Modify file externally
             journalFile.writeText("Corrupted content")
 
-            var mismatchTriggered = false
             val originalTemplate = repository.templates.value!![0]
-            repository.updateTemplate(
-                uri,
-                originalTemplate.copy(name = "Should Fail"),
-                onFinish = { error("Should have mismatched") },
-                onMismatch = { mismatchTriggered = true },
-                onWriteError = { throw it },
-                onReadError = { throw it },
-            )
-            assert(mismatchTriggered)
+            val result =
+                repository.updateTemplate(uri, originalTemplate.copy(name = "Should Fail"))
+            assert(result is LedgerWriteResult.Mismatch)
         }
 
     private suspend fun deleteTemplate(
         uri: Uri,
         templateId: String,
     ) {
-        var finished = false
-        repository.deleteTemplate(
-            uri,
-            templateId,
-            onFinish = { finished = true },
-            onMismatch = { error("Mismatch") },
-            onWriteError = { throw it },
-            onReadError = { throw it },
-        )
-        assert(finished)
+        when (val result = repository.deleteTemplate(uri, templateId)) {
+            is LedgerWriteResult.Success -> {}
+            is LedgerWriteResult.Mismatch -> error("Mismatch")
+            is LedgerWriteResult.WriteError -> throw result.e
+            is LedgerWriteResult.RefreshError -> throw result.e
+        }
     }
 
     @Test
@@ -487,16 +465,9 @@ class LedgerRepositoryTemplateTest {
             // Modify file externally
             journalFile.writeText("Corrupted content")
 
-            var mismatchTriggered = false
-            repository.deleteTemplate(
-                uri,
-                "770e8400-e29b-41d4-a716-446655440002",
-                onFinish = { error("Should have mismatched") },
-                onMismatch = { mismatchTriggered = true },
-                onWriteError = { throw it },
-                onReadError = { throw it },
-            )
-            assert(mismatchTriggered)
+            val result =
+                repository.deleteTemplate(uri, "770e8400-e29b-41d4-a716-446655440002")
+            assert(result is LedgerWriteResult.Mismatch)
         }
 
     @Test
@@ -508,16 +479,8 @@ class LedgerRepositoryTemplateTest {
             // Modify file externally
             journalFile.writeText("Corrupted content")
 
-            var mismatchTriggered = false
-            repository.addTemplate(
-                uri,
-                createTestTemplate("new-id"),
-                onFinish = { error("Should have mismatched") },
-                onMismatch = { mismatchTriggered = true },
-                onWriteError = { throw it },
-                onReadError = { throw it },
-            )
-            assert(mismatchTriggered)
+            val result = repository.addTemplate(uri, createTestTemplate("new-id"))
+            assert(result is LedgerWriteResult.Mismatch)
         }
 
     @Test
@@ -532,16 +495,7 @@ class LedgerRepositoryTemplateTest {
 
             // 2. Update the new template
             val updatedTemplate = newTemplate.copy(name = "Updated Workflow Name")
-            var finished = false
-            repository.updateTemplate(
-                uri,
-                updatedTemplate,
-                onFinish = { finished = true },
-                onMismatch = { error("Mismatch") },
-                onWriteError = { throw it },
-                onReadError = { throw it },
-            )
-            assert(finished)
+            assert(repository.updateTemplate(uri, updatedTemplate) is LedgerWriteResult.Success)
             assertEquals(
                 "Updated Workflow Name",
                 repository.templates.value!!
@@ -550,16 +504,10 @@ class LedgerRepositoryTemplateTest {
             )
 
             // 3. Delete the original template
-            finished = false
-            repository.deleteTemplate(
-                uri,
-                "770e8400-e29b-41d4-a716-446655440002",
-                onFinish = { finished = true },
-                onMismatch = { error("Mismatch") },
-                onWriteError = { throw it },
-                onReadError = { throw it },
+            assert(
+                repository.deleteTemplate(uri, "770e8400-e29b-41d4-a716-446655440002")
+                    is LedgerWriteResult.Success,
             )
-            assert(finished)
             assertEquals(1, repository.templates.value?.size)
             assertEquals("new-id-1", repository.templates.value!![0].id)
         }

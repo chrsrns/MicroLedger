@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.data.LedgerRepository
+import ph.chrsrns.microledger.data.LedgerWriteResult
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.TransactionTemplate
 import ph.chrsrns.microledger.ui.util.Event
@@ -48,29 +49,27 @@ class TemplatesViewModel
             if (uri != null) {
                 _saving.value = true
                 viewModelScope.launch(IO) {
-                    ledgerRepository.deleteTemplate(
-                        uri,
-                        templateId,
-                        {
+                    when (val result = ledgerRepository.deleteTemplate(uri, templateId)) {
+                        is LedgerWriteResult.Success -> {
                             _saving.postValue(false)
                             onFinish()
-                        },
-                        {
+                        }
+                        is LedgerWriteResult.Mismatch -> {
                             _saving.postValue(false)
                             _latestMismatch.postValue(Event(0))
                             onFinish()
-                        },
-                        { error ->
+                        }
+                        is LedgerWriteResult.WriteError -> {
                             _saving.postValue(false)
-                            _latestError.postValue(Event(error))
+                            _latestError.postValue(Event(result.e))
                             onFinish()
-                        },
-                        { error ->
+                        }
+                        is LedgerWriteResult.RefreshError -> {
                             _saving.postValue(false)
-                            _latestReadError.postValue(Event(error))
+                            _latestReadError.postValue(Event(result.e))
                             onFinish()
-                        },
-                    )
+                        }
+                    }
                 }
             }
         }
@@ -79,13 +78,9 @@ class TemplatesViewModel
             val uri = preferencesDataSource.getFileUri()
             if (uri != null) {
                 viewModelScope.launch(IO) {
-                    ledgerRepository.readFrom(
-                        uri,
-                        {},
-                        { error ->
-                            _latestReadError.postValue(Event(error))
-                        },
-                    )
+                    ledgerRepository.readFrom(uri)?.let { error ->
+                        _latestReadError.postValue(Event(error))
+                    }
                 }
             }
         }

@@ -1,14 +1,10 @@
 package ph.chrsrns.microledger.ui.add
 
 import android.app.Application
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.data.LedgerRepository
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.ui.common.TransactionFormViewModel
-import ph.chrsrns.microledger.ui.util.Event
 import java.util.Date
 import javax.inject.Inject
 
@@ -46,49 +42,19 @@ class AddViewModel
 
             val postingsWithEmptyAmounts =
                 template.postings.map { posting ->
-                    posting.withAmount(
-                        if (posting.amount != null) {
-                            ph.chrsrns.microledger.data
-                                .Amount("", posting.amount.currency, "")
-                        } else {
-                            null
-                        },
+                    posting.copy(
+                        amount =
+                            if (posting.amount != null) {
+                                ph.chrsrns.microledger.data
+                                    .Amount("", posting.amount.currency, "")
+                            } else {
+                                null
+                            },
                     )
                 }
             setPostings(postingsWithEmptyAmounts)
         }
 
-        override fun save(onFinish: suspend () -> Unit) {
-            val uri = preferencesDataSource.getFileUri()
-            if (uri != null) {
-                setSaving(true)
-                viewModelScope.launch(IO) {
-                    ledgerRepository.appendTo(
-                        uri,
-                        toTransactionString(),
-                        {
-                            postSaving(false)
-                            onFinish()
-                        },
-                        {
-                            postSaving(false)
-                            postMismatch(Event(1))
-                        },
-                        {
-                            postSaving(false)
-                            postError(Event(it))
-                        },
-                        {
-                            // We ignore a read error, the write went through so the
-                            // only thing the user will experience is the
-                            // transaction not being in the transaction
-                            // overview. Which isn't optimal, but not a big problem
-                            // either.
-                            postSaving(false)
-                            onFinish()
-                        },
-                    )
-                }
-            }
-        }
+        override fun save(onFinish: suspend () -> Unit) =
+            saveWith({ uri -> ledgerRepository.appendTo(uri, toTransactionString()) }, onFinish)
     }

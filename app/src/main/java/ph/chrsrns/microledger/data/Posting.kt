@@ -31,25 +31,7 @@ data class Posting(
         return false
     }
 
-    fun isComment(): Boolean {
-        if (account != null) {
-            return false
-        }
-        if (amount != null) {
-            return false
-        }
-        if (cost != null) {
-            return false
-        }
-        if (assertion != null) {
-            return false
-        }
-        if (assertionCost != null) {
-            return false
-        }
-
-        return comment != null
-    }
+    fun isComment() = comment != null && listOf(account, amount, cost, assertion, assertionCost).all { it == null }
 
     fun fullAmountDisplayString(): String {
         var result = ""
@@ -74,53 +56,7 @@ data class Posting(
         currencyBeforeAmount: Boolean,
         currencyAmountSpacing: Boolean,
         currencyEnabled: Boolean,
-    ): String {
-        var fullAmountString = ""
-        if ((amount?.quantity ?: "") != "") {
-            fullAmountString +=
-                amount!!.format(
-                    currencyBeforeAmount,
-                    currencyAmountSpacing,
-                    currencyEnabled,
-                )
-        }
-        if ((cost?.amount?.quantity ?: "") != "") {
-            fullAmountString += ' ' +
-                cost!!.format(
-                    currencyBeforeAmount,
-                    currencyAmountSpacing,
-                    currencyEnabled,
-                )
-        }
-        if ((assertion?.quantity ?: "") != "") {
-            fullAmountString += " = " +
-                assertion!!.format(
-                    currencyBeforeAmount,
-                    currencyAmountSpacing,
-                    currencyEnabled,
-                )
-        }
-        if ((assertionCost?.amount?.quantity ?: "") != "") {
-            fullAmountString += ' ' +
-                assertionCost!!.format(
-                    currencyBeforeAmount,
-                    currencyAmountSpacing,
-                    currencyEnabled,
-                )
-        }
-        fullAmountString = fullAmountString.trim()
-        val fillWidth =
-            (width - fullAmountString.length - (account ?: "").length - 4).coerceAtLeast(2)
-        val spaces = " ".repeat(fillWidth)
-        if (isComment()) {
-            return "    ; $comment"
-        }
-        var result = "    ${account ?: ""}$spaces$fullAmountString"
-        if ((comment ?: "") != "") {
-            result += "  ; $comment"
-        }
-        return result.trimEnd()
-    }
+    ) = formatCore(width, currencyBeforeAmount, currencyAmountSpacing, currencyEnabled, lenient = false)
 
     /**
      * Formats this posting with support for currency-only amounts (no quantity).
@@ -143,18 +79,29 @@ data class Posting(
         currencyBeforeAmount: Boolean,
         currencyAmountSpacing: Boolean,
         currencyEnabled: Boolean,
+    ) = formatCore(width, currencyBeforeAmount, currencyAmountSpacing, currencyEnabled, lenient = true)
+
+    private fun formatCore(
+        width: Int,
+        currencyBeforeAmount: Boolean,
+        currencyAmountSpacing: Boolean,
+        currencyEnabled: Boolean,
+        lenient: Boolean,
     ): String {
+        fun include(amount: Amount?) = (amount?.quantity ?: "") != "" || (lenient && (amount?.currency ?: "") != "")
+
+        val formatAmount: (Amount) -> String =
+            if (lenient) {
+                { it.formatLenient(currencyBeforeAmount, currencyAmountSpacing, currencyEnabled) }
+            } else {
+                { it.format(currencyBeforeAmount, currencyAmountSpacing, currencyEnabled) }
+            }
+
         var fullAmountString = ""
-        // Support amount with quantity, currency-only, or both
-        if ((amount?.quantity ?: "") != "" || (amount?.currency ?: "") != "") {
-            fullAmountString +=
-                amount!!.formatLenient(
-                    currencyBeforeAmount,
-                    currencyAmountSpacing,
-                    currencyEnabled,
-                )
+        if (include(amount)) {
+            fullAmountString += formatAmount(amount!!)
         }
-        if ((cost?.amount?.quantity ?: "") != "" || (cost?.amount?.currency ?: "") != "") {
+        if (include(cost?.amount)) {
             fullAmountString += ' ' +
                 cost!!.format(
                     currencyBeforeAmount,
@@ -162,20 +109,10 @@ data class Posting(
                     currencyEnabled,
                 )
         }
-        if ((assertion?.quantity ?: "") != "" || (assertion?.currency ?: "") != "") {
-            fullAmountString += " = " +
-                assertion!!.formatLenient(
-                    currencyBeforeAmount,
-                    currencyAmountSpacing,
-                    currencyEnabled,
-                )
+        if (include(assertion)) {
+            fullAmountString += " = " + formatAmount(assertion!!)
         }
-        if ((assertionCost?.amount?.quantity ?: "") != "" ||
-            (
-                assertionCost?.amount?.currency
-                    ?: ""
-            ) != ""
-        ) {
+        if (include(assertionCost?.amount)) {
             fullAmountString += ' ' +
                 assertionCost!!.format(
                     currencyBeforeAmount,
@@ -197,40 +134,19 @@ data class Posting(
         return result.trimEnd()
     }
 
-    fun isEmpty(): Boolean {
-        if ((account ?: "") != "") {
-            return false
-        }
-        if ((amount?.quantity ?: "") != "") {
-            return false
-        }
-        if ((cost?.amount?.quantity ?: "") != "") {
-            return false
-        }
-        if ((assertion?.quantity ?: "") != "") {
-            return false
-        }
-        if ((assertionCost?.amount?.quantity ?: "") != "") {
-            return false
-        }
-        if ((comment ?: "") != "") {
-            return false
-        }
-
-        return true
-    }
+    fun isEmpty() =
+        listOf(
+            account,
+            amount?.quantity,
+            cost?.amount?.quantity,
+            assertion?.quantity,
+            assertionCost?.amount?.quantity,
+            comment,
+        ).all { (it ?: "") == "" }
 
     fun isVirtual() = account?.let { it.startsWith("(") && it.endsWith(")") } ?: false
 
-    fun withAccount(account: String?) = Posting(account, amount, cost, assertion, assertionCost, comment)
+    fun isQualifying() = !isVirtual() && !isComment() && !account.isNullOrBlank()
 
-    fun withAmount(amount: Amount?) = Posting(account, amount, cost, assertion, assertionCost, comment)
-
-    fun withCost(cost: Cost?) = Posting(account, amount, cost, assertion, assertionCost, comment)
-
-    fun withAssertion(assertion: Amount?) = Posting(account, amount, cost, assertion, assertionCost, comment)
-
-    fun withAssertionCost(assertionCost: Cost?) = Posting(account, amount, cost, assertion, assertionCost, comment)
-
-    fun withComment(comment: String?) = Posting(account, amount, cost, assertion, assertionCost, comment)
+    fun isStub() = !isVirtual() && !isComment() && account.isNullOrBlank()
 }

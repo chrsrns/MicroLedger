@@ -202,7 +202,6 @@ fun TransactionForm(
                 currencyBeforeAmount = currencyBeforeAmount,
                 currencyAmountSpacing = currencyAmountSpacing,
                 decimalSeparator = decimalSeparator ?: "",
-                defaultCurrency = defaultCurrency ?: "",
                 unbalancedAmount = unbalancedAmount,
                 prefixes = prefixes,
                 onPostingClick = { selectedIndex = it },
@@ -566,7 +565,7 @@ fun PostingRow(
     accounts: List<String>,
     currencyEnabled: Boolean,
     currencyBeforeAmount: Boolean,
-    unbalancedAmount: String?,
+    unbalancedAmount: Amount?,
     onCommentChange: (String) -> Unit,
     onAccountChange: (String) -> Unit,
     onRemovePosting: () -> Unit,
@@ -893,7 +892,7 @@ fun CurrencyAndAmountFields(
     currencyEnabled: Boolean,
     currencyBeforeAmount: Boolean,
     showAmountHint: Boolean,
-    unbalancedAmount: String?,
+    unbalancedAmount: Amount?,
     onCurrencyChange: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     modifier: Modifier,
@@ -945,7 +944,7 @@ fun CurrencyField(
 fun AmountField(
     quantity: String,
     showAmountHint: Boolean,
-    unbalancedAmount: String?,
+    unbalancedAmount: Amount?,
     onAmountChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -959,9 +958,9 @@ fun AmountField(
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
             ),
         label = {
-            if (showAmountHint && (unbalancedAmount ?: "") != "") {
+            if (showAmountHint && unbalancedAmount != null) {
                 Text(
-                    unbalancedAmount!!,
+                    "${unbalancedAmount.quantity} ${unbalancedAmount.currency}".trim(),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 1,
@@ -1119,7 +1118,7 @@ fun PostingRowPreview() {
             accounts = listOf("assets:checking", "expenses:food"),
             currencyEnabled = true,
             currencyBeforeAmount = true,
-            unbalancedAmount = "0.00 EUR",
+            unbalancedAmount = Amount("0.00", "EUR", "0.00 EUR"),
             onCommentChange = {},
             onAccountChange = {},
             onRemovePosting = {},

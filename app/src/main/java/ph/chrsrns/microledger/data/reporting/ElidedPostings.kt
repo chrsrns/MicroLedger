@@ -1,66 +1,80 @@
 package ph.chrsrns.microledger.data.reporting
 
 import ph.chrsrns.microledger.data.Amount
+import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.Transaction
 import java.math.BigDecimal
 
 /**
- * Materializes the amount of a single elided (balancing) posting in a transaction.
+ * Computes the amount that would balance a set of postings, or `null` when the
+ * balancing amount is ambiguous.
  *
- * A posting is elided when it is non-virtual, non-comment, has a non-blank
- * account, and has no amount — ledger syntax treats it as balancing the rest of
- * the transaction. Materialization happens only when the sibling postings make
- * the missing amount unambiguous:
+ * Only qualifying postings (non-virtual, non-comment, non-blank account) are
+ * considered. The result is `null` when:
  *
- * - exactly one elided posting exists
- * - no sibling has a cost
- * - no sibling has an assertion without an amount
- * - no sibling has an assertion currency that differs from its amount currency
- * - at most one distinct currency across siblings that have an amount
+ * - any qualifying posting has a cost
+ * - any qualifying posting has an assertion without an amount
+ * - any qualifying posting has an assertion currency that differs from its
+ *   amount currency
+ * - more than one distinct currency occurs across amount-carrying postings
  *
- * When these hold, the elided posting receives the negated sum of the sibling
- * quantities in the single sibling currency. Otherwise the transaction is
- * returned unchanged and the elided posting is skipped by the calculators.
+ * Otherwise the result is the negated sum of the sibling quantities in the
+ * single sibling currency (empty string when there is none).
  */
-internal fun materializeElidedAmounts(
-    transaction: Transaction,
+internal fun balancingAmount(
+    postings: List<Posting>,
     decimalSeparator: String,
-): Transaction {
-    val siblings =
-        transaction.postings.filter { p ->
-            !p.isVirtual() && !p.isComment() && !p.account.isNullOrBlank()
-        }
-    val elided = siblings.filter { it.amount == null }
-    if (elided.size != 1) return transaction
+): Amount? {
+    val qualifying = postings.filter { it.isQualifying() }
 
-    if (siblings.any { it.cost != null }) return transaction
-    if (siblings.any { it.assertion != null && it.amount == null }) return transaction
-    if (siblings.any {
+    if (qualifying.any { it.cost != null }) return null
+    if (qualifying.any { it.assertion != null && it.amount == null }) return null
+    if (qualifying.any {
             it.assertion != null &&
                 it.assertion.currency.isNotEmpty() &&
                 it.assertion.currency != it.amount?.currency
         }
     ) {
-        return transaction
+        return null
     }
 
-    val currencies = siblings.mapNotNull { it.amount?.currency }.distinct()
-    if (currencies.size > 1) return transaction
+    val currencies = qualifying.mapNotNull { it.amount?.currency }.distinct()
+    if (currencies.size > 1) return null
 
     val quantity =
-        siblings
+        qualifying
             .mapNotNull { it.amount }
             .fold(BigDecimal.ZERO) { acc, a ->
                 acc + parseQuantity(a.quantity, decimalSeparator)
             }.negate()
             .toPlainString()
     val currency = currencies.singleOrNull() ?: ""
-    val materialized = Amount(quantity, currency, "$quantity $currency".trim())
+
+    return Amount(quantity, currency, "$quantity $currency".trim())
+}
+
+/**
+ * Materializes the amount of a single elided (balancing) posting in a transaction.
+ *
+ * A posting is elided when it is qualifying and has no amount — ledger syntax
+ * treats it as balancing the rest of the transaction. Materialization happens
+ * only when exactly one elided posting exists and [balancingAmount] produces a
+ * result for the sibling postings. Otherwise the transaction is returned
+ * unchanged and the elided posting is skipped by the calculators.
+ */
+internal fun materializeElidedAmounts(
+    transaction: Transaction,
+    decimalSeparator: String,
+): Transaction {
+    val elided = transaction.postings.filter { it.isQualifying() && it.amount == null }
+    if (elided.size != 1) return transaction
+
+    val materialized = balancingAmount(transaction.postings, decimalSeparator) ?: return transaction
 
     return transaction.copy(
         postings =
             transaction.postings.map { p ->
-                if (p === elided[0]) p.withAmount(materialized) else p
+                if (p === elided[0]) p.copy(amount = materialized) else p
             },
     )
 }

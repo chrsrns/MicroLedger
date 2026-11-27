@@ -25,16 +25,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,14 +46,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dagger.hilt.android.AndroidEntryPoint
@@ -175,457 +168,187 @@ fun PreferencesScreen(
                 onOpenFile()
             }
             HorizontalDivider()
-            var transactionDefaultElementsOpen by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = transactionDefaultElementsOpen,
-                onExpandedChange = {
-                    transactionDefaultElementsOpen = !transactionDefaultElementsOpen
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Setting(
-                    stringResource(R.string.default_transaction_fields),
-                    transactionDefaultElements.map { stringResource(it) }.joinToString(", "),
-                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
-                ) { transactionDefaultElementsOpen = true }
-                ExposedDropdownMenu(
-                    expanded = transactionDefaultElementsOpen,
-                    onDismissRequest = { transactionDefaultElementsOpen = false },
-                    modifier = Modifier.exposedDropdownSize(true),
-                ) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.transactionStatusPresentByDefault) {
-                                        R.string.remove_status
-                                    } else {
-                                        R.string.add_status
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onTransactionStatusPresentByDefaultChange(!state.transactionStatusPresentByDefault)
-                            transactionDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.transactionCodePresentByDefault) {
-                                        R.string.remove_code
-                                    } else {
-                                        R.string.add_code
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onTransactionCodePresentByDefaultChange(!state.transactionCodePresentByDefault)
-                            transactionDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.transactionPayeePresentByDefault) {
-                                        R.string.remove_payee
-                                    } else {
-                                        R.string.add_payee
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onTransactionPayeePresentByDefaultChange(!state.transactionPayeePresentByDefault)
-                            transactionDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.transactionNotePresentByDefault) {
-                                        R.string.remove_note
-                                    } else {
-                                        R.string.add_note
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onTransactionNotePresentByDefaultChange(!state.transactionNotePresentByDefault)
-                            transactionDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.transactionCurrenciesPresentByDefault) {
-                                        R.string.remove_currency
-                                    } else {
-                                        R.string.add_currency
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onTransactionCurrenciesPresentByDefaultChange(
-                                !state.transactionCurrenciesPresentByDefault,
-                            )
-                            transactionDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                }
-            }
-            HorizontalDivider()
-            var postingDefaultElementsOpen by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = postingDefaultElementsOpen,
-                onExpandedChange = { postingDefaultElementsOpen = !postingDefaultElementsOpen },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Setting(
-                    stringResource(R.string.default_posting_fields),
-                    postingDefaultElements.map { stringResource(it) }.joinToString(", "),
-                ) { postingDefaultElementsOpen = true }
-                ExposedDropdownMenu(
-                    expanded = postingDefaultElementsOpen,
-                    onDismissRequest = { postingDefaultElementsOpen = false },
-                    modifier = Modifier.exposedDropdownSize(true),
-                ) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.postingAmountPresentByDefault) {
-                                        R.string.remove_amount
-                                    } else {
-                                        R.string.add_amount
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onPostingAmountPresentByDefaultChange(!state.postingAmountPresentByDefault)
-                            postingDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.postingCostPresentByDefault) {
-                                        R.string.remove_cost
-                                    } else {
-                                        R.string.add_cost
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onPostingCostPresentByDefaultChange(!state.postingCostPresentByDefault)
-                            postingDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.postingAssertionPresentByDefault) {
-                                        R.string.remove_assertion
-                                    } else {
-                                        R.string.add_assertion
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onPostingAssertionPresentByDefaultChange(!state.postingAssertionPresentByDefault)
-                            postingDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.postingAssertionCostPresentByDefault) {
-                                        R.string.remove_assertion_cost
-                                    } else {
-                                        R.string.add_assertion_cost
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onPostingAssertionCostPresentByDefaultChange(
-                                !state.postingAssertionCostPresentByDefault,
-                            )
-                            postingDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (state.postingCommentPresentByDefault) {
-                                        R.string.remove_comment
-                                    } else {
-                                        R.string.add_comment
-                                    },
-                                ),
-                            )
-                        },
-                        onClick = {
-                            callbacks.onPostingCommentPresentByDefaultChange(!state.postingCommentPresentByDefault)
-                            postingDefaultElementsOpen = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                }
-            }
-            HorizontalDivider()
-            var newDefaultCurrency by remember { mutableStateOf(state.defaultCurrency) }
-            var defaultCurrencyOpen by remember { mutableStateOf(false) }
-            Setting(
-                stringResource(R.string.default_currency),
-                state.defaultCurrency,
-            ) {
-                defaultCurrencyOpen = true
-            }
-            SettingDialog(
-                defaultCurrencyOpen,
-                R.string.change_default_currency,
-                true,
-                { callbacks.onDefaultCurrencyChange(newDefaultCurrency) },
-                { defaultCurrencyOpen = false },
-            ) {
-                OutlinedTextField(newDefaultCurrency, { newDefaultCurrency = it })
-            }
-            HorizontalDivider()
-            var newPostingWidth by remember { mutableStateOf("${state.postingWidth}") }
-            var postingWidthOpen by remember { mutableStateOf(false) }
-            Setting(stringResource(R.string.posting_width), "${state.postingWidth}") {
-                postingWidthOpen = true
-            }
-            SettingDialog(postingWidthOpen, R.string.change_posting_width, true, {
-                callbacks.onPostingWidthChange(Integer.parseInt(newPostingWidth))
-            }, { postingWidthOpen = false }) {
-                OutlinedTextField(
-                    newPostingWidth,
-                    {
-                        if (it.isEmpty() || it.matches(Regex("^\\d+$"))) {
-                            newPostingWidth = it
-                        }
+            SettingToggleMenu(
+                R.string.default_transaction_fields,
+                transactionDefaultElements.map { stringResource(it) }.joinToString(", "),
+                listOf(
+                    ToggleItem(
+                        R.string.add_status,
+                        R.string.remove_status,
+                        state.transactionStatusPresentByDefault,
+                    ) {
+                        callbacks.onTransactionStatusPresentByDefaultChange(
+                            !state.transactionStatusPresentByDefault,
+                        )
                     },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                )
-            }
-            HorizontalDivider()
-            var expandedStatus by rememberSaveable { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = expandedStatus,
-                onExpandedChange = { expandedStatus = !expandedStatus },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Setting(
-                    stringResource(R.string.default_status),
-                    statusMap[state.defaultStatus] ?: stringResource(
-                        R.string.status_unmarked,
-                    ),
-                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
-                ) { expandedStatus = true }
-                ExposedDropdownMenu(
-                    expanded = expandedStatus,
-                    onDismissRequest = { expandedStatus = false },
-                    modifier = Modifier.exposedDropdownSize(true),
-                ) {
-                    statusMap.forEach {
-                        DropdownMenuItem(
-                            text = { Text(it.value) },
-                            onClick = {
-                                callbacks.onDefaultStatusChange(it.key)
-                                expandedStatus = false
-                            },
-                            contentPadding =
-                                ExposedDropdownMenuDefaults.ItemContentPadding,
+                    ToggleItem(
+                        R.string.add_code,
+                        R.string.remove_code,
+                        state.transactionCodePresentByDefault,
+                    ) {
+                        callbacks.onTransactionCodePresentByDefaultChange(
+                            !state.transactionCodePresentByDefault,
                         )
-                    }
-                }
-            }
-            HorizontalDivider()
-            var expandedSeparator by rememberSaveable { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = expandedSeparator,
-                onExpandedChange = { expandedSeparator = !expandedSeparator },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Setting(
-                    stringResource(R.string.decimal_separator),
-                    separatorMap[state.decimalSeparator] ?: stringResource(
-                        R.string.separator_point,
-                    ),
-                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
-                ) { expandedSeparator = true }
-                ExposedDropdownMenu(
-                    expanded = expandedSeparator,
-                    onDismissRequest = { expandedSeparator = false },
-                    modifier = Modifier.exposedDropdownSize(true),
-                ) {
-                    separatorMap.forEach {
-                        DropdownMenuItem(
-                            text = { Text(it.value) },
-                            onClick = {
-                                callbacks.onDecimalSeparatorChange(it.key)
-                                expandedSeparator = false
-                            },
-                            contentPadding =
-                                ExposedDropdownMenuDefaults.ItemContentPadding,
+                    },
+                    ToggleItem(
+                        R.string.add_payee,
+                        R.string.remove_payee,
+                        state.transactionPayeePresentByDefault,
+                    ) {
+                        callbacks.onTransactionPayeePresentByDefaultChange(
+                            !state.transactionPayeePresentByDefault,
                         )
-                    }
-                }
-            }
-            HorizontalDivider()
-            var expandedCurrency by rememberSaveable { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = expandedCurrency,
-                onExpandedChange = { expandedCurrency = !expandedCurrency },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Setting(
-                    stringResource(R.string.currency_amount_order),
-                    currencyOrderMap[state.currencyBeforeAmount] ?: stringResource(
-                        R.string.currency_order_before,
-                    ),
-                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
-                ) { expandedCurrency = true }
-                ExposedDropdownMenu(
-                    expanded = expandedCurrency,
-                    onDismissRequest = { expandedCurrency = false },
-                    modifier = Modifier.exposedDropdownSize(true),
-                ) {
-                    currencyOrderMap.forEach {
-                        DropdownMenuItem(
-                            text = { Text(it.value) },
-                            onClick = {
-                                callbacks.onCurrencyBeforeAmountChange(it.key)
-                                expandedCurrency = false
-                            },
-                            contentPadding =
-                                ExposedDropdownMenuDefaults.ItemContentPadding,
+                    },
+                    ToggleItem(
+                        R.string.add_note,
+                        R.string.remove_note,
+                        state.transactionNotePresentByDefault,
+                    ) {
+                        callbacks.onTransactionNotePresentByDefaultChange(
+                            !state.transactionNotePresentByDefault,
                         )
-                    }
-                }
-            }
-            HorizontalDivider()
-            var expandedCurrencySpacing by rememberSaveable { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = expandedCurrencySpacing,
-                onExpandedChange = { expandedCurrencySpacing = !expandedCurrencySpacing },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Setting(
-                    stringResource(R.string.currency_amount_spacing),
-                    currencySpacingMap[state.currencyAmountSpacing] ?: stringResource(
-                        R.string.currency_amount_spacing_on,
-                    ),
-                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
-                ) { expandedCurrencySpacing = true }
-                ExposedDropdownMenu(
-                    expanded = expandedCurrencySpacing,
-                    onDismissRequest = { expandedCurrencySpacing = false },
-                    modifier = Modifier.exposedDropdownSize(true),
-                ) {
-                    currencySpacingMap.forEach {
-                        DropdownMenuItem(
-                            text = { Text(it.value) },
-                            onClick = {
-                                callbacks.onCurrencyAmountSpacingChange(it.key)
-                                expandedCurrencySpacing = false
-                            },
-                            contentPadding =
-                                ExposedDropdownMenuDefaults.ItemContentPadding,
+                    },
+                    ToggleItem(
+                        R.string.add_currency,
+                        R.string.remove_currency,
+                        state.transactionCurrenciesPresentByDefault,
+                    ) {
+                        callbacks.onTransactionCurrenciesPresentByDefaultChange(
+                            !state.transactionCurrenciesPresentByDefault,
                         )
-                    }
-                }
-            }
+                    },
+                ),
+            )
             HorizontalDivider()
-            var assetsPrefixesOpen by remember { mutableStateOf(false) }
-            Setting(
-                stringResource(R.string.assets_prefixes),
-                state.prefixes.assets.joinToString(", "),
-            ) { assetsPrefixesOpen = true }
-            PrefixListDialog(
-                assetsPrefixesOpen,
+            SettingToggleMenu(
+                R.string.default_posting_fields,
+                postingDefaultElements.map { stringResource(it) }.joinToString(", "),
+                listOf(
+                    ToggleItem(
+                        R.string.add_amount,
+                        R.string.remove_amount,
+                        state.postingAmountPresentByDefault,
+                    ) {
+                        callbacks.onPostingAmountPresentByDefaultChange(
+                            !state.postingAmountPresentByDefault,
+                        )
+                    },
+                    ToggleItem(
+                        R.string.add_cost,
+                        R.string.remove_cost,
+                        state.postingCostPresentByDefault,
+                    ) {
+                        callbacks.onPostingCostPresentByDefaultChange(
+                            !state.postingCostPresentByDefault,
+                        )
+                    },
+                    ToggleItem(
+                        R.string.add_assertion,
+                        R.string.remove_assertion,
+                        state.postingAssertionPresentByDefault,
+                    ) {
+                        callbacks.onPostingAssertionPresentByDefaultChange(
+                            !state.postingAssertionPresentByDefault,
+                        )
+                    },
+                    ToggleItem(
+                        R.string.add_assertion_cost,
+                        R.string.remove_assertion_cost,
+                        state.postingAssertionCostPresentByDefault,
+                    ) {
+                        callbacks.onPostingAssertionCostPresentByDefaultChange(
+                            !state.postingAssertionCostPresentByDefault,
+                        )
+                    },
+                    ToggleItem(
+                        R.string.add_comment,
+                        R.string.remove_comment,
+                        state.postingCommentPresentByDefault,
+                    ) {
+                        callbacks.onPostingCommentPresentByDefaultChange(
+                            !state.postingCommentPresentByDefault,
+                        )
+                    },
+                ),
+            )
+            HorizontalDivider()
+            SettingTextDialog(
+                R.string.default_currency,
+                R.string.change_default_currency,
+                state.defaultCurrency,
+                { callbacks.onDefaultCurrencyChange(it) },
+            )
+            HorizontalDivider()
+            SettingTextDialog(
+                R.string.posting_width,
+                R.string.change_posting_width,
+                "${state.postingWidth}",
+                { callbacks.onPostingWidthChange(Integer.parseInt(it)) },
+                filter = { it.matches(Regex("^\\d+$")) },
+                numeric = true,
+            )
+            HorizontalDivider()
+            SettingChoice(
+                R.string.default_status,
+                statusMap[state.defaultStatus] ?: stringResource(R.string.status_unmarked),
+                statusMap,
+                { callbacks.onDefaultStatusChange(it) },
+            )
+            HorizontalDivider()
+            SettingChoice(
+                R.string.decimal_separator,
+                separatorMap[state.decimalSeparator] ?: stringResource(R.string.separator_point),
+                separatorMap,
+                { callbacks.onDecimalSeparatorChange(it) },
+            )
+            HorizontalDivider()
+            SettingChoice(
+                R.string.currency_amount_order,
+                currencyOrderMap[state.currencyBeforeAmount] ?: stringResource(R.string.currency_order_before),
+                currencyOrderMap,
+                { callbacks.onCurrencyBeforeAmountChange(it) },
+            )
+            HorizontalDivider()
+            SettingChoice(
+                R.string.currency_amount_spacing,
+                currencySpacingMap[state.currencyAmountSpacing] ?: stringResource(R.string.currency_amount_spacing_on),
+                currencySpacingMap,
+                { callbacks.onCurrencyAmountSpacingChange(it) },
+            )
+            HorizontalDivider()
+            SettingPrefixList(
+                R.string.assets_prefixes,
                 R.string.change_assets_prefixes,
                 state.prefixes.assets,
                 { callbacks.onAssetsPrefixesChange(it) },
-                { assetsPrefixesOpen = false },
             )
             HorizontalDivider()
-            var liabilitiesPrefixesOpen by remember { mutableStateOf(false) }
-            Setting(
-                stringResource(R.string.liabilities_prefixes),
-                state.prefixes.liabilities.joinToString(", "),
-            ) { liabilitiesPrefixesOpen = true }
-            PrefixListDialog(
-                liabilitiesPrefixesOpen,
+            SettingPrefixList(
+                R.string.liabilities_prefixes,
                 R.string.change_liabilities_prefixes,
                 state.prefixes.liabilities,
                 { callbacks.onLiabilitiesPrefixesChange(it) },
-                { liabilitiesPrefixesOpen = false },
             )
             HorizontalDivider()
-            var equityPrefixesOpen by remember { mutableStateOf(false) }
-            Setting(
-                stringResource(R.string.equity_prefixes),
-                state.prefixes.equity.joinToString(", "),
-            ) { equityPrefixesOpen = true }
-            PrefixListDialog(
-                equityPrefixesOpen,
+            SettingPrefixList(
+                R.string.equity_prefixes,
                 R.string.change_equity_prefixes,
                 state.prefixes.equity,
                 { callbacks.onEquityPrefixesChange(it) },
-                { equityPrefixesOpen = false },
             )
             HorizontalDivider()
-            var incomePrefixesOpen by remember { mutableStateOf(false) }
-            Setting(
-                stringResource(R.string.income_prefixes),
-                state.prefixes.income.joinToString(", "),
-            ) { incomePrefixesOpen = true }
-            PrefixListDialog(
-                incomePrefixesOpen,
+            SettingPrefixList(
+                R.string.income_prefixes,
                 R.string.change_income_prefixes,
                 state.prefixes.income,
                 { callbacks.onIncomePrefixesChange(it) },
-                { incomePrefixesOpen = false },
             )
             HorizontalDivider()
-            var expensesPrefixesOpen by remember { mutableStateOf(false) }
-            Setting(
-                stringResource(R.string.expenses_prefixes),
-                state.prefixes.expenses.joinToString(", "),
-            ) { expensesPrefixesOpen = true }
-            PrefixListDialog(
-                expensesPrefixesOpen,
+            SettingPrefixList(
+                R.string.expenses_prefixes,
                 R.string.change_expenses_prefixes,
                 state.prefixes.expenses,
                 { callbacks.onExpensesPrefixesChange(it) },
-                { expensesPrefixesOpen = false },
             )
         }
     }

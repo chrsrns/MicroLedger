@@ -179,8 +179,7 @@ fun PostingList(
     currencyBeforeAmount: Boolean,
     currencyAmountSpacing: Boolean,
     decimalSeparator: String,
-    defaultCurrency: String,
-    unbalancedAmount: String?,
+    unbalancedAmount: Amount?,
     prefixes: AccountTypePrefixes,
     onPostingClick: (Int) -> Unit,
     onRemoveClick: (Int) -> Unit,
@@ -211,7 +210,6 @@ fun PostingList(
                     currencyBeforeAmount = currencyBeforeAmount,
                     currencyAmountSpacing = currencyAmountSpacing,
                     decimalSeparator = decimalSeparator,
-                    defaultCurrency = defaultCurrency,
                     unbalancedAmount = unbalancedAmount,
                     prefixes = prefixes,
                     onClick = { onPostingClick(index) },
@@ -237,8 +235,7 @@ fun PostingRowCompact(
     currencyBeforeAmount: Boolean,
     currencyAmountSpacing: Boolean,
     decimalSeparator: String,
-    defaultCurrency: String,
-    unbalancedAmount: String?,
+    unbalancedAmount: Amount?,
     prefixes: AccountTypePrefixes,
     onClick: () -> Unit,
     onRemove: () -> Unit,
@@ -264,7 +261,6 @@ fun PostingRowCompact(
                     currencyBeforeAmount = currencyBeforeAmount,
                     currencyAmountSpacing = currencyAmountSpacing,
                     decimalSeparator = decimalSeparator,
-                    defaultCurrency = defaultCurrency,
                 )
             }
             else -> {
@@ -344,12 +340,11 @@ fun CommentCompactRow(
 
 @Composable
 fun BalanceRow(
-    unbalancedAmount: String?,
+    unbalancedAmount: Amount?,
     currencyEnabled: Boolean,
     currencyBeforeAmount: Boolean,
     currencyAmountSpacing: Boolean,
     decimalSeparator: String,
-    defaultCurrency: String,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -361,18 +356,12 @@ fun BalanceRow(
             style = MaterialTheme.typography.bodyMedium,
         )
         val amountText =
-            if (!unbalancedAmount.isNullOrBlank() && defaultCurrency.isNotBlank()) {
-                Amount(unbalancedAmount, defaultCurrency, "")
-                    .format(currencyBeforeAmount, currencyAmountSpacing, currencyEnabled)
-            } else {
-                ""
-            }
+            unbalancedAmount?.format(currencyBeforeAmount, currencyAmountSpacing, currencyEnabled)
+                ?: ""
         if (amountText.isNotBlank()) {
             val amountColor =
-                postingAmountColor(
-                    Amount(unbalancedAmount!!, defaultCurrency, ""),
-                    decimalSeparator,
-                ) ?: LocalTextStyle.current.color
+                postingAmountColor(unbalancedAmount, decimalSeparator)
+                    ?: LocalTextStyle.current.color
             Text(
                 text = amountText,
                 color = amountColor,
@@ -410,7 +399,7 @@ fun PostingEditBottomSheet(
     currencyAmountSpacing: Boolean,
     decimalSeparator: String,
     defaultCurrency: String,
-    unbalancedAmount: String?,
+    unbalancedAmount: Amount?,
     prefixes: AccountTypePrefixes,
     onDismiss: () -> Unit,
     onSave: (Posting) -> Unit,
@@ -436,7 +425,7 @@ fun PostingEditBottomSheet(
                 AccountSelector(
                     value = account,
                     options = accounts,
-                    onAccountChange = { edited = edited.withAccount(it) },
+                    onAccountChange = { edited = edited.copy(account = it) },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -444,7 +433,7 @@ fun PostingEditBottomSheet(
             edited.amount?.let { amount ->
                 AmountEditor(
                     amount = amount,
-                    showHint = isBalance && !unbalancedAmount.isNullOrBlank(),
+                    showHint = isBalance && unbalancedAmount != null,
                     hint = unbalancedAmount,
                     currencyEnabled = currencyEnabled,
                     currencyBeforeAmount = currencyBeforeAmount,
@@ -493,7 +482,7 @@ fun PostingEditBottomSheet(
             edited.comment?.let { comment ->
                 CommentField(
                     comment = comment,
-                    onCommentChange = { edited = edited.withComment(it) },
+                    onCommentChange = { edited = edited.copy(comment = it) },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -522,10 +511,7 @@ fun PostingEditBottomSheet(
             )
 
             SheetFooter(
-                canSave =
-                    edited.isVirtual() ||
-                        !edited.account.isNullOrBlank() ||
-                        edited.isComment(),
+                canSave = !edited.isStub(),
                 onCancel = onDismiss,
                 onSave = {
                     onSave(edited)
@@ -579,7 +565,7 @@ private fun SheetHeader(
 private fun AmountEditor(
     amount: Amount,
     showHint: Boolean,
-    hint: String?,
+    hint: Amount?,
     currencyEnabled: Boolean,
     currencyBeforeAmount: Boolean,
     currencyAmountSpacing: Boolean,

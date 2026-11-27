@@ -48,7 +48,7 @@ class LedgerRepository
                 )
             }
 
-        fun matches(fileUri: Uri): Boolean {
+        private fun readLines(fileUri: Uri): List<String>? {
             val result = ArrayList<String>()
             fileUri
                 .let { context.contentResolver.openInputStream(it) }
@@ -60,183 +60,115 @@ class LedgerRepository
                         line = reader.readLine()
                     }
                 }
-            return result == fileContents.value
+                ?: return null
+            return result
         }
+
+        fun matches(fileUri: Uri): Boolean =
+            (readLines(fileUri) ?: throw IOException("openInputStream returned null")) ==
+                fileContents.value
 
         suspend fun deleteTransaction(
             fileUri: Uri,
             transaction: Transaction,
-            onFinish: suspend () -> Unit,
-            onMismatch: suspend () -> Unit,
-            onWriteError: suspend (IOException) -> Unit,
-            onReadError: suspend (IOException) -> Unit,
-        ) = writeTransformed(
-            fileUri,
-            emit = { emitDeleteTransaction(it, transaction.firstLine, transaction.lastLine) },
-            onFinish,
-            onMismatch,
-            onWriteError,
-            onReadError,
-        )
+        ): LedgerWriteResult =
+            writeTransformed(fileUri) {
+                emitDeleteTransaction(it, transaction.firstLine, transaction.lastLine)
+            }
 
         suspend fun replaceTransaction(
             fileUri: Uri,
             transaction: Transaction,
             text: String,
-            onFinish: suspend () -> Unit,
-            onMismatch: suspend () -> Unit,
-            onWriteError: suspend (IOException) -> Unit,
-            onReadError: suspend (IOException) -> Unit,
-        ) = writeTransformed(
-            fileUri,
-            emit = {
+        ): LedgerWriteResult =
+            writeTransformed(fileUri) {
                 emitReplaceTransaction(it, transaction.firstLine, transaction.lastLine, text)
-            },
-            onFinish,
-            onMismatch,
-            onWriteError,
-            onReadError,
-        )
+            }
 
         suspend fun appendTo(
             fileUri: Uri,
             text: String,
-            onFinish: suspend () -> Unit,
-            onMismatch: suspend () -> Unit,
-            onWriteError: suspend (IOException) -> Unit,
-            onReadError: suspend (IOException) -> Unit,
-        ) = writeTransformed(
-            fileUri,
-            emit = { emitAppend(it, text) },
-            onFinish,
-            onMismatch,
-            onWriteError,
-            onReadError,
-        )
+        ): LedgerWriteResult = writeTransformed(fileUri) { emitAppend(it, text) }
 
         private suspend fun writeTransformed(
             fileUri: Uri,
             emit: (List<String>) -> String,
-            onFinish: suspend () -> Unit,
-            onMismatch: suspend () -> Unit,
-            onWriteError: suspend (IOException) -> Unit,
-            onReadError: suspend (IOException) -> Unit,
-        ) {
+        ): LedgerWriteResult {
             try {
                 if (!matches(fileUri)) {
-                    onMismatch()
-                } else {
-                    context.contentResolver
-                        .openOutputStream(fileUri, "wt")
-                        ?.let { OutputStreamWriter(it) }
-                        ?.use { it.write(emit(fileContents.value!!)) }
-                    readFrom(fileUri, onFinish, onReadError)
+                    return LedgerWriteResult.Mismatch
                 }
+                context.contentResolver
+                    .openOutputStream(fileUri, "wt")
+                    ?.let { OutputStreamWriter(it) }
+                    ?.use { it.write(emit(fileContents.value!!)) }
+                    ?: return LedgerWriteResult.WriteError(
+                        IOException("openOutputStream returned null"),
+                    )
+                return readFrom(fileUri)
+                    ?.let { LedgerWriteResult.RefreshError(it) }
+                    ?: LedgerWriteResult.Success
             } catch (e: IOException) {
-                onWriteError(e)
+                return LedgerWriteResult.WriteError(e)
+            } catch (e: SecurityException) {
+                return LedgerWriteResult.WriteError(IOException(e))
             }
         }
 
-        suspend fun readFrom(
-            fileUri: Uri,
-            onFinish: suspend () -> Unit,
-            onReadError: suspend (IOException) -> Unit,
-        ) {
+        suspend fun readFrom(fileUri: Uri): IOException? {
             try {
-                val result = ArrayList<String>()
-                fileUri
-                    .let { context.contentResolver.openInputStream(it) }
-                    ?.let { BufferedReader(InputStreamReader(it)) }
-                    ?.use { reader ->
-                        var line = reader.readLine()
-                        while (line != null) {
-                            result.add(line)
-                            line = reader.readLine()
-                        }
-                    }
+                val result =
+                    readLines(fileUri) ?: return IOException("openInputStream returned null")
                 val extracted = extractTransactions(result)
                 val templates = TemplateParser.extractTemplates(result)
                 _fileContents.postValue(result)
                 _transactions.postValue(extracted)
                 _templates.postValue(templates)
-                onFinish()
+                return null
             } catch (e: IOException) {
-                onReadError(e)
+                return e
+            } catch (e: SecurityException) {
+                return IOException(e)
             }
         }
 
         suspend fun addTemplate(
             fileUri: Uri,
             template: TransactionTemplate,
-            onFinish: suspend () -> Unit,
-            onMismatch: suspend () -> Unit,
-            onWriteError: suspend (IOException) -> Unit,
-            onReadError: suspend (IOException) -> Unit,
-        ) = writeTransformed(
-            fileUri,
-            emit = {
+        ): LedgerWriteResult =
+            writeTransformed(fileUri) {
                 emitAddTemplate(
                     it,
-                    transactions.value?.firstOrNull()?.firstLine,
                     template.toCommentLines().joinToString("\n"),
                 )
-            },
-            onFinish,
-            onMismatch,
-            onWriteError,
-            onReadError,
-        )
+            }
 
         suspend fun updateTemplate(
             fileUri: Uri,
             template: TransactionTemplate,
-            onFinish: suspend () -> Unit,
-            onMismatch: suspend () -> Unit,
-            onWriteError: suspend (IOException) -> Unit,
-            onReadError: suspend (IOException) -> Unit,
-        ) {
-            val existing = _templates.value?.find { it.id == template.id }
-            if (existing == null) {
-                onFinish()
-                return
+        ): LedgerWriteResult {
+            val existing =
+                _templates.value?.find { it.id == template.id }
+                    ?: return LedgerWriteResult.Success
+            return writeTransformed(fileUri) {
+                emitUpdateTemplate(
+                    it,
+                    existing.firstLine,
+                    existing.lastLine,
+                    template.toCommentLines().joinToString("\n"),
+                )
             }
-            writeTransformed(
-                fileUri,
-                emit = {
-                    emitUpdateTemplate(
-                        it,
-                        existing.firstLine,
-                        existing.lastLine,
-                        template.toCommentLines().joinToString("\n"),
-                    )
-                },
-                onFinish,
-                onMismatch,
-                onWriteError,
-                onReadError,
-            )
         }
 
         suspend fun deleteTemplate(
             fileUri: Uri,
             templateId: String,
-            onFinish: suspend () -> Unit,
-            onMismatch: suspend () -> Unit,
-            onWriteError: suspend (IOException) -> Unit,
-            onReadError: suspend (IOException) -> Unit,
-        ) {
-            val existing = _templates.value?.find { it.id == templateId }
-            if (existing == null) {
-                onFinish()
-                return
+        ): LedgerWriteResult {
+            val existing =
+                _templates.value?.find { it.id == templateId }
+                    ?: return LedgerWriteResult.Success
+            return writeTransformed(fileUri) {
+                emitDeleteTemplate(it, existing.firstLine, existing.lastLine)
             }
-            writeTransformed(
-                fileUri,
-                emit = { emitDeleteTemplate(it, existing.firstLine, existing.lastLine) },
-                onFinish,
-                onMismatch,
-                onWriteError,
-                onReadError,
-            )
         }
     }

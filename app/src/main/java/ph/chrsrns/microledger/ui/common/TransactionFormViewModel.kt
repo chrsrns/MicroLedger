@@ -1,6 +1,7 @@
 package ph.chrsrns.microledger.ui.common
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -8,16 +9,19 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
 import ph.chrsrns.microledger.data.Cost
 import ph.chrsrns.microledger.data.CostType
 import ph.chrsrns.microledger.data.LedgerRepository
+import ph.chrsrns.microledger.data.LedgerWriteResult
 import ph.chrsrns.microledger.data.Posting
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.data.TransactionTemplate
+import ph.chrsrns.microledger.data.reporting.balancingAmount
 import ph.chrsrns.microledger.data.reporting.parseQuantity
 import ph.chrsrns.microledger.ui.util.Event
 import java.io.IOException
@@ -69,30 +73,23 @@ abstract class TransactionFormViewModel(
     val note: LiveData<String?> = _note
 
     val possiblePayees: LiveData<List<String>> =
-        ledgerRepository.payees.switchMap { payees ->
-            ledgerRepository.notes.switchMap { notes ->
-                note.switchMap { note ->
-                    val listToSearch: Set<String> = if (note == null) payees + notes else payees
-                    payee.map { search ->
-                        listToSearch
-                            .filter {
-                                it.contains(
-                                    (search ?: ""),
-                                    ignoreCase = true,
-                                )
-                            }.sorted()
-                    }
-                }
-            }
-        }
+        suggestionsFor(ledgerRepository.payees, ledgerRepository.notes, note, payee)
 
     val possibleNotes: LiveData<List<String>> =
-        ledgerRepository.notes.switchMap { notes ->
-            ledgerRepository.payees.switchMap { payees ->
-                payee.switchMap { payee ->
-                    val listToSearch: Set<String> = if (payee == null) notes + payees else notes
-                    note.map { search ->
-                        listToSearch
+        suggestionsFor(ledgerRepository.notes, ledgerRepository.payees, payee, note)
+
+    private fun suggestionsFor(
+        own: LiveData<Set<String>>,
+        other: LiveData<Set<String>>,
+        otherField: LiveData<String?>,
+        query: LiveData<String?>,
+    ): LiveData<List<String>> =
+        own.switchMap { ownSet ->
+            other.switchMap { otherSet ->
+                otherField.switchMap { fieldValue ->
+                    val pool: Set<String> = if (fieldValue == null) ownSet + otherSet else ownSet
+                    query.map { search ->
+                        pool
                             .filter {
                                 it.contains(
                                     (search ?: ""),
@@ -111,50 +108,21 @@ abstract class TransactionFormViewModel(
     private val _postings = MutableLiveData(listOf(newPosting()))
     val postings: LiveData<List<Posting>> = _postings
     val accounts: LiveData<List<String>> = ledgerRepository.accounts.map { it.sorted() }
-    val unbalancedAmount: LiveData<String> =
-        MediatorLiveData<String>().apply {
+    val unbalancedAmount: LiveData<Amount?> =
+        MediatorLiveData<Amount?>().apply {
             fun compute() {
                 val ps = postings.value ?: return
-                val relevantPostings =
-                    ps.filter { p ->
-                        !p.isVirtual() && !p.isComment() && !p.account.isNullOrBlank()
-                    }
-                if (relevantPostings.any { it.assertion != null && it.amount == null }) {
-                    value = ""
-                    return
-                }
-                if (relevantPostings.any { it.cost != null }) {
-                    value = ""
-                    return
-                }
-                if (relevantPostings
-                        .mapNotNull { p -> p.amount }
-                        .map { it.currency }
-                        .distinct()
-                        .count() > 1
+                val result = balancingAmount(ps, preferencesDataSource.getDecimalSeparator())
+                if (result == null ||
+                    parseQuantity(result.quantity, preferencesDataSource.getDecimalSeparator())
+                        .compareTo(BigDecimal.ZERO) == 0
                 ) {
-                    value = ""
+                    value = null
                     return
                 }
-
-                value =
-                    relevantPostings
-                        .mapNotNull { p -> p.amount }
-                        .map { p -> p.quantity }
-                        .map { quantity ->
-                            parseQuantity(quantity, preferencesDataSource.getDecimalSeparator())
-                        }.fold(BigDecimal.ZERO) { l, r -> l + r }
-                        .negate()
-                        .let { num ->
-                            if (num == BigDecimal.ZERO.setScale(num.scale())) {
-                                ""
-                            } else {
-                                num.toString().replace(
-                                    ".",
-                                    preferencesDataSource.getDecimalSeparator(),
-                                )
-                            }
-                        }
+                val quantity =
+                    result.quantity.replace(".", preferencesDataSource.getDecimalSeparator())
+                value = result.copy(quantity = quantity, original = "$quantity ${result.currency}".trim())
             }
             addSource(postings) { compute() }
             addSource(preferencesDataSource.decimalSeparator) { compute() }
@@ -169,12 +137,12 @@ abstract class TransactionFormViewModel(
                 if (realPostings.size < 2) {
                     return@map false
                 }
-                if (realPostings.any { it.account.isNullOrBlank() }) {
+                if (realPostings.any { it.isStub() }) {
                     return@map false
                 }
                 val nonComment = withoutSentinel.filter { !it.isComment() }
                 // If there is an unbalanced amount, and there are no postings with an empty amount, it's invalid
-                if (unbalancedAmount != "" &&
+                if (unbalancedAmount != null &&
                     nonComment.all { (it.amount?.quantity ?: "") != "" }
                 ) {
                     return@map false
@@ -230,7 +198,7 @@ abstract class TransactionFormViewModel(
                 note.value,
                 postings.value!!
                     .dropLast(1)
-                    .filter { it.isVirtual() || it.isComment() || !it.account.isNullOrBlank() },
+                    .filter { !it.isStub() },
             )
         return transaction.format(
             postingWidth,
@@ -241,6 +209,43 @@ abstract class TransactionFormViewModel(
     }
 
     abstract fun save(onFinish: suspend () -> Unit)
+
+    protected fun saveWith(
+        write: suspend (Uri) -> LedgerWriteResult,
+        onFinish: suspend () -> Unit,
+    ) {
+        val uri = preferencesDataSource.getFileUri()
+        if (uri == null) {
+            postError(Event(IOException("no file selected")))
+            return
+        }
+        setSaving(true)
+        viewModelScope.launch(IO) {
+            when (val result = write(uri)) {
+                is LedgerWriteResult.Success -> {
+                    postSaving(false)
+                    onFinish()
+                }
+                is LedgerWriteResult.RefreshError -> {
+                    // We ignore a read error, the write went through so the
+                    // only thing the user will experience is the
+                    // transaction not being in the transaction
+                    // overview. Which isn't optimal, but not a big problem
+                    // either.
+                    postSaving(false)
+                    onFinish()
+                }
+                is LedgerWriteResult.Mismatch -> {
+                    postSaving(false)
+                    postMismatch(Event(1))
+                }
+                is LedgerWriteResult.WriteError -> {
+                    postSaving(false)
+                    postError(Event(result.e))
+                }
+            }
+        }
+    }
 
     fun saveAsTemplate(
         name: String,
@@ -266,29 +271,27 @@ abstract class TransactionFormViewModel(
                     code = code.value,
                     postings = templatePostings(),
                 )
-            ledgerRepository.addTemplate(
-                uri,
-                template,
-                onFinish = {
+            when (val result = ledgerRepository.addTemplate(uri, template)) {
+                is LedgerWriteResult.Success -> {
                     postSaving(false)
                     viewModelScope.launch { onFinish(templateId) }
-                },
-                onMismatch = {
+                }
+                is LedgerWriteResult.Mismatch -> {
                     postSaving(false)
                     postMismatch(Event(0))
                     viewModelScope.launch { onFinish(null) }
-                },
-                onWriteError = { e: IOException ->
+                }
+                is LedgerWriteResult.WriteError -> {
                     postSaving(false)
-                    postError(Event(e))
+                    postError(Event(result.e))
                     viewModelScope.launch { onFinish(null) }
-                },
-                onReadError = { e: IOException ->
+                }
+                is LedgerWriteResult.RefreshError -> {
                     postSaving(false)
-                    postError(Event(e))
+                    postError(Event(result.e))
                     viewModelScope.launch { onFinish(null) }
-                },
-            )
+                }
+            }
         }
     }
 
@@ -418,9 +421,7 @@ abstract class TransactionFormViewModel(
         val current = postings.value ?: return emptyList()
         if (current.isEmpty()) return current
         val withoutSentinel = current.dropLast(1)
-        return withoutSentinel.filter {
-            it.isVirtual() || it.isComment() || !it.account.isNullOrBlank()
-        }
+        return withoutSentinel.filter { !it.isStub() && !it.isComment() }
     }
 
     fun defaultAmount() = Amount("", preferencesDataSource.getDefaultCurrency(), "")

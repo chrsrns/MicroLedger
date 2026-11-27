@@ -81,7 +81,7 @@ class PostingFieldEditsTest {
     @Test
     fun updatePostingAtReplacesRealIndex() {
         val list = listOf(real(1), real(2), sentinel)
-        val r = updatePostingAt(list, 0, { sentinel }) { it.withAccount("X") }
+        val r = updatePostingAt(list, 0, { sentinel }) { it.copy(account = "X") }
         assertEquals("X", r[0].account)
         assertEquals(sentinel, r.last())
         assertEquals(3, r.size)

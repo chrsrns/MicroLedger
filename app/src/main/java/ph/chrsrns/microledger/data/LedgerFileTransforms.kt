@@ -60,68 +60,14 @@ internal fun emitAppend(
 
 internal fun emitAddTemplate(
     contents: List<String>,
-    firstTransactionLine: Int?,
     text: String,
 ): String {
-    var newTemplateIndex = 0 // Index to place template
-    var addSeparator = true
-    var prepend = true
-
-    // If a transaction exists, insert new template to the comment before that transaction
-    if (firstTransactionLine != null) {
-        for (i in firstTransactionLine downTo 1) {
-            val fileContentLine = contents[i]
-
-            if (fileContentLine.isBlank()) addSeparator = false
-
-            if (fileContentLine.startsWith("; ")) {
-                newTemplateIndex = i + 1
-                break
-            }
-        }
-    } else {
-        // If no transactions yet, search for the last comment line
-        for (i in contents.size - 1 downTo 0) {
-            val fileContentLine = contents[i]
-
-            if (fileContentLine.isBlank()) addSeparator = false
-
-            if (fileContentLine.startsWith("; ")) {
-                newTemplateIndex = i
-                prepend = false
-                break
-            }
-        }
-    }
-
     val sb = StringBuilder()
-    contents.forEachIndexed { i, line ->
-        // If we encounter the index chosen for the template, write the
-        // template next to the original line
-        if (i == newTemplateIndex) {
-            if (prepend) {
-                sb.append(text).append("\n")
-                // Enforce a blank line separator
-                if (addSeparator) sb.append("\n")
-
-                sb.append(line).append("\n")
-            } else {
-                sb.append(line).append("\n")
-                sb.append(text).append("\n")
-
-                // Enforce a blank line separator
-                if (addSeparator) sb.append("\n")
-            }
-            return@forEachIndexed
-        }
-
+    // Templates go at the top of the file. No blank separator: a blank
+    // line would end the initial `;` block scan and orphan existing templates.
+    sb.append(text).append("\n")
+    contents.forEach { line ->
         sb.append(line).append("\n")
-    }
-    // An index past the end of the file (e.g. an empty journal) still
-    // emits the template text (V358)
-    if (newTemplateIndex >= contents.size) {
-        sb.append(text).append("\n")
-        if (addSeparator) sb.append("\n")
     }
     return sb.toString()
 }

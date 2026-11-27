@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.LedgerRepository
+import ph.chrsrns.microledger.data.LedgerWriteResult
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.ui.util.Event
 import java.io.IOException
@@ -105,17 +106,13 @@ class MainViewModel
             if (uri != null) {
                 _isRefreshing.value = true
                 viewModelScope.launch(IO) {
-                    ledgerRepository.readFrom(
-                        uri,
-                        {
-                            _selectedIndex.postValue(null)
-                            _isRefreshing.postValue(false)
-                        },
-                        {
-                            _isRefreshing.postValue(false)
-                            _latestReadError.postValue(Event(it))
-                        },
-                    )
+                    val error = ledgerRepository.readFrom(uri)
+                    _isRefreshing.postValue(false)
+                    if (error == null) {
+                        _selectedIndex.postValue(null)
+                    } else {
+                        _latestReadError.postValue(Event(error))
+                    }
                 }
             }
         }
@@ -134,26 +131,26 @@ class MainViewModel
             if (uri != null) {
                 _isRefreshing.value = true
                 viewModelScope.launch(IO) {
-                    ledgerRepository.deleteTransaction(
-                        uri,
-                        transaction,
-                        {
+                    when (
+                        val result = ledgerRepository.deleteTransaction(uri, transaction)
+                    ) {
+                        is LedgerWriteResult.Success -> {
                             _selectedIndex.postValue(null)
                             _isRefreshing.postValue(false)
-                        },
-                        {
+                        }
+                        is LedgerWriteResult.Mismatch -> {
                             _isRefreshing.postValue(false)
                             _latestMismatch.postValue(Event(1))
-                        },
-                        {
+                        }
+                        is LedgerWriteResult.WriteError -> {
                             _isRefreshing.postValue(false)
-                            _latestWriteError.postValue(Event(it))
-                        },
-                        {
+                            _latestWriteError.postValue(Event(result.e))
+                        }
+                        is LedgerWriteResult.RefreshError -> {
                             _isRefreshing.postValue(false)
-                            _latestReadError.postValue(Event(it))
-                        },
-                    )
+                            _latestReadError.postValue(Event(result.e))
+                        }
+                    }
                 }
             }
         }
