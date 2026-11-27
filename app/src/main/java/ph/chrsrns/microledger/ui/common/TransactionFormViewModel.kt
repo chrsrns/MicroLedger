@@ -1,6 +1,7 @@
 package ph.chrsrns.microledger.ui.common
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -8,6 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.data.AccountTypePrefixes
 import ph.chrsrns.microledger.data.Amount
@@ -214,6 +216,43 @@ abstract class TransactionFormViewModel(
     }
 
     abstract fun save(onFinish: suspend () -> Unit)
+
+    protected fun saveWith(
+        write: suspend (Uri) -> LedgerWriteResult,
+        onFinish: suspend () -> Unit,
+    ) {
+        val uri = preferencesDataSource.getFileUri()
+        if (uri == null) {
+            postError(Event(IOException("no file selected")))
+            return
+        }
+        setSaving(true)
+        viewModelScope.launch(IO) {
+            when (val result = write(uri)) {
+                is LedgerWriteResult.Success -> {
+                    postSaving(false)
+                    onFinish()
+                }
+                is LedgerWriteResult.RefreshError -> {
+                    // We ignore a read error, the write went through so the
+                    // only thing the user will experience is the
+                    // transaction not being in the transaction
+                    // overview. Which isn't optimal, but not a big problem
+                    // either.
+                    postSaving(false)
+                    onFinish()
+                }
+                is LedgerWriteResult.Mismatch -> {
+                    postSaving(false)
+                    postMismatch(Event(1))
+                }
+                is LedgerWriteResult.WriteError -> {
+                    postSaving(false)
+                    postError(Event(result.e))
+                }
+            }
+        }
+    }
 
     fun saveAsTemplate(
         name: String,

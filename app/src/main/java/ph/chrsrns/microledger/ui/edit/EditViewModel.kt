@@ -1,16 +1,11 @@
 package ph.chrsrns.microledger.ui.edit
 
 import android.app.Application
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
 import ph.chrsrns.microledger.data.LedgerRepository
-import ph.chrsrns.microledger.data.LedgerWriteResult
 import ph.chrsrns.microledger.data.PreferencesDataSource
 import ph.chrsrns.microledger.data.Transaction
 import ph.chrsrns.microledger.ui.common.TransactionFormViewModel
-import ph.chrsrns.microledger.ui.util.Event
 import javax.inject.Inject
 
 @HiltViewModel
@@ -28,40 +23,11 @@ class EditViewModel
             setFromTransaction(sourceTransaction)
         }
 
-        override fun save(onFinish: suspend () -> Unit) {
-            val uri = preferencesDataSource.getFileUri()
-            if (uri != null) {
-                setSaving(true)
-                viewModelScope.launch(IO) {
-                    when (
-                        val result =
-                            ledgerRepository.replaceTransaction(
-                                uri,
-                                sourceTransaction,
-                                toTransactionString(),
-                            )
-                    ) {
-                        is LedgerWriteResult.Success,
-                        is LedgerWriteResult.RefreshError,
-                        -> {
-                            // We ignore a read error, the write went through so the
-                            // only thing the user will experience is the
-                            // transaction not being in the transaction
-                            // overview. Which isn't optimal, but not a big problem
-                            // either.
-                            postSaving(false)
-                            onFinish()
-                        }
-                        is LedgerWriteResult.Mismatch -> {
-                            postSaving(false)
-                            postMismatch(Event(1))
-                        }
-                        is LedgerWriteResult.WriteError -> {
-                            postSaving(false)
-                            postError(Event(result.e))
-                        }
-                    }
-                }
-            }
-        }
+        override fun save(onFinish: suspend () -> Unit) =
+            saveWith(
+                { uri ->
+                    ledgerRepository.replaceTransaction(uri, sourceTransaction, toTransactionString())
+                },
+                onFinish,
+            )
     }
