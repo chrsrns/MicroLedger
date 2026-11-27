@@ -63,9 +63,9 @@ internal fun emitAddTemplate(
     text: String,
 ): String {
     val sb = StringBuilder()
-    // Templates go at the top of the file, inside the initial comment
-    // block region that TemplateParser scans.
-    sb.append(text).append("\n\n")
+    // Templates go at the top of the file. No blank separator: a blank
+    // line would end the initial `;` block scan and orphan existing templates.
+    sb.append(text).append("\n")
     contents.forEach { line ->
         sb.append(line).append("\n")
     }

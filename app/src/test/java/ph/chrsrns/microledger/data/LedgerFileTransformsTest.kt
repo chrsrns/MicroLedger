@@ -53,7 +53,7 @@ class LedgerFileTransformsTest {
     @Test
     fun addTemplateEmptyFileStillEmitsText() {
         val out = emitAddTemplate(emptyList(), "; template line")
-        assertEquals("; template line\n\n", out)
+        assertEquals("; template line\n", out)
     }
 
     @Test
@@ -66,7 +66,7 @@ class LedgerFileTransformsTest {
             )
         val out = emitAddTemplate(contents, "; tmpl")
         assertEquals(
-            "; tmpl\n\n; header comment\n2024-01-01 Payee\n  expenses:a  1.00 EUR\n",
+            "; tmpl\n; header comment\n2024-01-01 Payee\n  expenses:a  1.00 EUR\n",
             out,
         )
     }
@@ -75,14 +75,14 @@ class LedgerFileTransformsTest {
     fun addTemplateInsertsAtTopWhenOnlyComments() {
         val contents = listOf("; c1", "; c2")
         val out = emitAddTemplate(contents, "; tmpl")
-        assertEquals("; tmpl\n\n; c1\n; c2\n", out)
+        assertEquals("; tmpl\n; c1\n; c2\n", out)
     }
 
     @Test
     fun addTemplateInsertsAboveLeadingBlank() {
         val contents = listOf("", "; c1", "2024-01-01 Payee")
         val out = emitAddTemplate(contents, "; tmpl")
-        assertEquals("; tmpl\n\n\n; c1\n2024-01-01 Payee\n", out)
+        assertEquals("; tmpl\n\n; c1\n2024-01-01 Payee\n", out)
     }
 
     @Test
@@ -92,7 +92,7 @@ class LedgerFileTransformsTest {
         // initial-block scan cannot see it.
         val contents = listOf("; header", "", "2024-01-01 Payee")
         val out = emitAddTemplate(contents, "; tmpl")
-        assertEquals("; tmpl\n\n; header\n\n2024-01-01 Payee\n", out)
+        assertEquals("; tmpl\n; header\n\n2024-01-01 Payee\n", out)
     }
 
     @Test
