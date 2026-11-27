@@ -139,7 +139,6 @@ class LedgerRepository
             writeTransformed(fileUri) {
                 emitAddTemplate(
                     it,
-                    transactions.value?.firstOrNull()?.firstLine,
                     template.toCommentLines().joinToString("\n"),
                 )
             }

@@ -171,8 +171,9 @@ class LedgerRepositoryTemplateTest {
 
             val expectedFileOutput =
                 """
-            $startingTemplatePortion
             |${newTemplate.toCommentLines().joinToString("\n")}
+            |
+            $startingTemplatePortion
             |
             $startingTransactionsPortion
                 """.trimMargin()
@@ -212,9 +213,9 @@ class LedgerRepositoryTemplateTest {
 
             val expectedFileOutput =
                 """
-            |; Test Comment
             |${newTemplate.toCommentLines().joinToString("\n")}
             |
+            |; Test Comment
                 """.trimMargin()
             assertEquals(
                 expectedFileOutput,

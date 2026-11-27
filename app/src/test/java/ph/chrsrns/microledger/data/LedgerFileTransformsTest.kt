@@ -52,21 +52,19 @@ class LedgerFileTransformsTest {
 
     @Test
     fun addTemplateEmptyFileStillEmitsText() {
-        val out = emitAddTemplate(emptyList(), null, "; template line")
+        val out = emitAddTemplate(emptyList(), "; template line")
         assertEquals("; template line\n\n", out)
     }
 
     @Test
-    fun addTemplatePrependsBeforeFirstTransactionAfterComment() {
+    fun addTemplateInsertsAtTopOfFile() {
         val contents =
             listOf(
                 "; header comment",
                 "2024-01-01 Payee",
                 "  expenses:a  1.00 EUR",
             )
-        val out = emitAddTemplate(contents, 1, "; tmpl")
-        // The scan floor is index 1, so a comment at index 0 is never
-        // found and the template prepends at the top of the file.
+        val out = emitAddTemplate(contents, "; tmpl")
         assertEquals(
             "; tmpl\n\n; header comment\n2024-01-01 Payee\n  expenses:a  1.00 EUR\n",
             out,
@@ -74,26 +72,27 @@ class LedgerFileTransformsTest {
     }
 
     @Test
-    fun addTemplateAppendsAfterLastCommentWhenNoTransactions() {
+    fun addTemplateInsertsAtTopWhenOnlyComments() {
         val contents = listOf("; c1", "; c2")
-        val out = emitAddTemplate(contents, null, "; tmpl")
-        assertEquals("; c1\n; c2\n; tmpl\n\n", out)
+        val out = emitAddTemplate(contents, "; tmpl")
+        assertEquals("; tmpl\n\n; c1\n; c2\n", out)
     }
 
     @Test
-    fun addTemplateSeparatorWrittenWhenScanSeesNoBlank() {
+    fun addTemplateInsertsAboveLeadingBlank() {
         val contents = listOf("", "; c1", "2024-01-01 Payee")
-        val out = emitAddTemplate(contents, 2, "; tmpl")
-        assertEquals("\n; c1\n; tmpl\n\n2024-01-01 Payee\n", out)
+        val out = emitAddTemplate(contents, "; tmpl")
+        assertEquals("; tmpl\n\n\n; c1\n2024-01-01 Payee\n", out)
     }
 
     @Test
-    fun addTemplateNoSeparatorAfterBlankScanned() {
-        val contents = listOf("; c1", "", "2024-01-01 Payee")
-        val out = emitAddTemplate(contents, 2, "; tmpl")
-        // Scan finds no "; " line (index 0 is below the scan floor), so
-        // the template prepends at index 0 without an added separator.
-        assertEquals("; tmpl\n; c1\n\n2024-01-01 Payee\n", out)
+    fun addTemplateInsertsAboveSeparatedCommentBlock() {
+        // A comment block separated from transactions by blank lines no longer
+        // captures the template insertion point mid-file where the parser's
+        // initial-block scan cannot see it.
+        val contents = listOf("; header", "", "2024-01-01 Payee")
+        val out = emitAddTemplate(contents, "; tmpl")
+        assertEquals("; tmpl\n\n; header\n\n2024-01-01 Payee\n", out)
     }
 
     @Test
