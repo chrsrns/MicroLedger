@@ -421,7 +421,7 @@ abstract class TransactionFormViewModel(
         val current = postings.value ?: return emptyList()
         if (current.isEmpty()) return current
         val withoutSentinel = current.dropLast(1)
-        return withoutSentinel.filter { !it.isStub() }
+        return withoutSentinel.filter { !it.isStub() && !it.isComment() }
     }
 
     fun defaultAmount() = Amount("", preferencesDataSource.getDefaultCurrency(), "")

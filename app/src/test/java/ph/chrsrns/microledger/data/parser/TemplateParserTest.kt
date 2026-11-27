@@ -75,6 +75,32 @@ class TemplateParserTest {
     }
 
     @Test
+    fun toCommentLinesSkipsBlankAccountPostings() {
+        val template =
+            TransactionTemplate(
+                firstLine = 0,
+                lastLine = 0,
+                id = "id-1",
+                name = "T",
+                payee = null,
+                note = null,
+                status = null,
+                code = null,
+                postings =
+                    listOf(
+                        ph.chrsrns.microledger.data
+                            .Posting(" ", null, null, null, null, null),
+                        ph.chrsrns.microledger.data
+                            .Posting("Assets:A", null, null, null, null, null),
+                    ),
+            )
+
+        val accountLines = template.toCommentLines().filter { it.startsWith("; account:") }
+
+        assertEquals(listOf("; account: Assets:A"), accountLines)
+    }
+
+    @Test
     fun canParseMultipleTemplates() {
         val result =
             extractTemplates(
